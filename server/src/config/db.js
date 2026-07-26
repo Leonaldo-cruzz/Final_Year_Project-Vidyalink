@@ -1,10 +1,9 @@
 import mongoose from 'mongoose';
+import { env } from './env.js';
 
 export const connectDB = async () => {
-  const connectionUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/vidyalink';
-
   try {
-    const connection = await mongoose.connect(connectionUri);
+    const connection = await mongoose.connect(env.MONGODB_URI);
     console.log(`MongoDB connected: ${connection.connection.host}`);
   } catch (error) {
     throw new Error(`MongoDB connection failed: ${error.message}`);

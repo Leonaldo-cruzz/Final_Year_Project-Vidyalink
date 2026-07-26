@@ -1,5 +1,5 @@
 import User from '../models/user.model.js';
-import { AccountStatus, UserRoles } from '../config/constants.js';
+import { AccountStatus } from '../config/constants.js';
 import ApiError from '../utils/ApiError.js';
 import {
   generateTokenPair,
@@ -9,51 +9,40 @@ import {
 } from '../utils/jwt.util.js';
 
 class AuthService {
-  async issueTokenPair(user) {
-    const { accessToken, refreshToken } = generateTokenPair(user);
-    user.refreshToken = hashRefreshToken(refreshToken);
-    await user.save({ validateBeforeSave: false });
-    return { accessToken, refreshToken };
+  sanitizeUser(user) {
+    const {
+      password: _password,
+      refreshToken: _refreshToken,
+      __v: _version,
+      ...safeUser
+    } = user.toObject();
+
+    return safeUser;
   }
 
-  async rotateRefreshToken(user) {
+  async issueTokenPair(user) {
     const { accessToken, refreshToken } = generateTokenPair(user);
-    const rotatedUser = await User.findOneAndUpdate(
-      {
-        _id: user._id,
-        refreshToken: user.refreshToken,
-        status: AccountStatus.ACTIVE,
-      },
-      { refreshToken: hashRefreshToken(refreshToken) },
-      { new: true }
-    );
 
-    if (!rotatedUser) {
-      await User.findByIdAndUpdate(user._id, { refreshToken: null });
-      throw ApiError.unauthorized('Refresh token has been revoked. Please log in again.');
-    }
+    user.refreshToken = hashRefreshToken(refreshToken);
+    await user.save({ validateBeforeSave: false });
 
     return { accessToken, refreshToken };
   }
 
   async register(userData) {
-    const email = userData.email.toLowerCase();
-    if (userData.role === UserRoles.ADMIN) {
-      throw ApiError.forbidden('Administrator accounts cannot be created through public registration');
-    }
+    const existingUser = await User.findOne({ email: userData.email });
 
-    const existingUser = await User.findOne({ email });
     if (existingUser) {
-      throw ApiError.conflict('An account with this email already exists');
+      throw ApiError.conflict('Email already registered');
     }
 
-    const user = await User.create({ ...userData, email });
-    const { accessToken, refreshToken } = await this.issueTokenPair(user);
-    return { user, accessToken, refreshToken };
+    const user = await User.create(userData);
+    return this.sanitizeUser(user);
   }
 
-  async login(email, password) {
-    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+  async login({ email, password }) {
+    const user = await User.findOne({ email }).select('+password');
+
     if (!user) {
       throw ApiError.unauthorized('Invalid email or password');
     }
@@ -68,7 +57,22 @@ class AuthService {
     }
 
     const { accessToken, refreshToken } = await this.issueTokenPair(user);
-    return { user, accessToken, refreshToken };
+
+    return {
+      accessToken,
+      refreshToken,
+      user: this.sanitizeUser(user),
+    };
+  }
+
+  async getCurrentUser(userId) {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      throw ApiError.notFound('User not found');
+    }
+
+    return this.sanitizeUser(user);
   }
 
   async logout(userId) {
@@ -86,29 +90,26 @@ class AuthService {
     }
 
     const user = await User.findById(decoded.sub).select('+refreshToken');
-    if (!user) {
+    if (!user || !refreshTokensMatch(user.refreshToken, incomingRefreshToken)) {
       throw ApiError.unauthorized('Invalid refresh token');
-    }
-
-    if (!refreshTokensMatch(user.refreshToken, incomingRefreshToken)) {
-      user.refreshToken = null;
-      await user.save({ validateBeforeSave: false });
-      throw ApiError.unauthorized('Refresh token has been revoked. Please log in again.');
     }
 
     if (user.status !== AccountStatus.ACTIVE) {
       throw ApiError.forbidden('Your account has been deactivated or suspended');
     }
 
-    return this.rotateRefreshToken(user);
-  }
+    const { accessToken, refreshToken } = generateTokenPair(user);
+    const rotatedUser = await User.findOneAndUpdate(
+      { _id: user._id, refreshToken: user.refreshToken },
+      { refreshToken: hashRefreshToken(refreshToken) },
+      { new: true }
+    );
 
-  async getCurrentUser(userId) {
-    const user = await User.findById(userId);
-    if (!user) {
-      throw ApiError.notFound('User not found');
+    if (!rotatedUser) {
+      throw ApiError.unauthorized('Refresh token has been revoked. Please log in again.');
     }
-    return user;
+
+    return { accessToken, refreshToken };
   }
 }
 

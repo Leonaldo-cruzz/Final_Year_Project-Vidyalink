@@ -1,9 +1,10 @@
 import User from '../models/user.model.js';
 import { AccountStatus } from '../config/constants.js';
 import ApiError from '../utils/ApiError.js';
+import asyncHandler from '../utils/asyncHandler.js';
 import { verifyAccessToken } from '../utils/jwt.util.js';
 
-const authenticate = async (req, _res, next) => {
+const authenticate = asyncHandler(async (req, _res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     throw ApiError.unauthorized('Access token is required');
@@ -29,7 +30,7 @@ const authenticate = async (req, _res, next) => {
   }
 
   req.user = user;
-  return next();
-};
+  next();
+});
 
 export default authenticate;

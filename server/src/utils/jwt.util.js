@@ -2,32 +2,33 @@ import { createHash, timingSafeEqual } from 'node:crypto';
 import jwt from 'jsonwebtoken';
 
 import ApiError from './ApiError.js';
+import { env } from '../config/env.js';
 
 const getAccessTokenSecret = () => {
-  if (!process.env.JWT_SECRET) throw ApiError.internal('JWT_SECRET is not configured');
-  return process.env.JWT_SECRET;
+  if (!env.JWT_SECRET) throw ApiError.internal('JWT_SECRET is not configured');
+  return env.JWT_SECRET;
 };
 
 const getRefreshTokenSecret = () => {
-  if (!process.env.JWT_REFRESH_SECRET) throw ApiError.internal('JWT_REFRESH_SECRET is not configured');
-  return process.env.JWT_REFRESH_SECRET;
+  if (!env.JWT_REFRESH_SECRET) throw ApiError.internal('JWT_REFRESH_SECRET is not configured');
+  return env.JWT_REFRESH_SECRET;
 };
 
 const getJwtOptions = () => ({
-  issuer: process.env.JWT_ISSUER || 'vidyalink-api',
-  audience: process.env.JWT_AUDIENCE || 'vidyalink-client',
+  issuer: env.JWT_ISSUER,
+  audience: env.JWT_AUDIENCE,
 });
 
 export const generateAccessToken = (payload) => jwt.sign(payload, getAccessTokenSecret(), {
   ...getJwtOptions(),
   algorithm: 'HS256',
-  expiresIn: process.env.JWT_EXPIRES_IN || '15m',
+  expiresIn: env.JWT_EXPIRES_IN,
 });
 
 export const generateRefreshToken = (payload) => jwt.sign(payload, getRefreshTokenSecret(), {
   ...getJwtOptions(),
   algorithm: 'HS256',
-  expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
+  expiresIn: env.JWT_REFRESH_EXPIRES_IN,
 });
 
 export const verifyAccessToken = (token) => {
