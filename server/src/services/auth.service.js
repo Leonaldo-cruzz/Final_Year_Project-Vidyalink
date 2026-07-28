@@ -9,17 +9,24 @@ import {
 } from '../utils/jwt.util.js';
 
 class AuthService {
+  /**
+   * Remove sensitive fields (password, refreshToken, __v) from user object before returning.
+   */
   sanitizeUser(user) {
+    const userObj = user.toObject ? user.toObject() : user;
     const {
       password: _password,
       refreshToken: _refreshToken,
       __v: _version,
       ...safeUser
-    } = user.toObject();
+    } = userObj;
 
     return safeUser;
   }
 
+  /**
+   * Helper to issue access/refresh token pair and persist hashed refresh token in DB.
+   */
   async issueTokenPair(user) {
     const { accessToken, refreshToken } = generateTokenPair(user);
 
@@ -29,6 +36,9 @@ class AuthService {
     return { accessToken, refreshToken };
   }
 
+  /**
+   * Register a new user account
+   */
   async register(userData) {
     const existingUser = await User.findOne({ email: userData.email });
 
@@ -40,6 +50,18 @@ class AuthService {
     return this.sanitizeUser(user);
   }
 
+  /**
+   * Login user with email and password credentials.
+   *
+   * Flow:
+   * 1. Find user by email with explicitly included password field (.select('+password'))
+   * 2. Throw ApiError(401, 'Invalid email or password') if user not found
+   * 3. Compare candidate password via user.comparePassword(password)
+   * 4. Verify account status
+   * 5. Generate access & refresh tokens using existing model methods / utilities
+   * 6. Save hashed refresh token to user document in DB
+   * 7. Remove password from response and return { accessToken, refreshToken, user }
+   */
   async login({ email, password }) {
     const user = await User.findOne({ email }).select('+password');
 
@@ -65,6 +87,9 @@ class AuthService {
     };
   }
 
+  /**
+   * Get current authenticated user details by userId
+   */
   async getCurrentUser(userId) {
     const user = await User.findById(userId);
 
@@ -75,21 +100,28 @@ class AuthService {
     return this.sanitizeUser(user);
   }
 
+  /**
+   * Logout user by clearing stored refresh token
+   */
   async logout(userId) {
     await User.findByIdAndUpdate(userId, { refreshToken: null });
   }
 
+  /**
+   * Refresh expired access token using incoming refresh token
+   */
   async refreshToken(incomingRefreshToken) {
     if (!incomingRefreshToken) {
       throw ApiError.unauthorized('Refresh token is required');
     }
 
     const decoded = verifyRefreshToken(incomingRefreshToken);
-    if (!decoded.sub) {
+    if (!decoded.sub && !decoded._id) {
       throw ApiError.unauthorized('Invalid refresh token');
     }
 
-    const user = await User.findById(decoded.sub).select('+refreshToken');
+    const userId = decoded.sub || decoded._id;
+    const user = await User.findById(userId).select('+refreshToken');
     if (!user || !refreshTokensMatch(user.refreshToken, incomingRefreshToken)) {
       throw ApiError.unauthorized('Invalid refresh token');
     }
@@ -99,13 +131,12 @@ class AuthService {
     }
 
     const { accessToken, refreshToken } = generateTokenPair(user);
-    const rotatedUser = await User.findOneAndUpdate(
+    const updatedUser = await User.findOneAndUpdate(
       { _id: user._id, refreshToken: user.refreshToken },
-      { refreshToken: hashRefreshToken(refreshToken) },
-      { new: true }
+      { refreshToken: hashRefreshToken(refreshToken) }
     );
 
-    if (!rotatedUser) {
+    if (!updatedUser) {
       throw ApiError.unauthorized('Refresh token has been revoked. Please log in again.');
     }
 
