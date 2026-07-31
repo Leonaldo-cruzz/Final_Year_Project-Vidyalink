@@ -1,21 +1,32 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '@/context/AuthContext';
+import { FullPageSpinner } from '@/components/ui/Spinner';
+import { ROUTES } from '@/constants';
 
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+/**
+ * ProtectedRoute — guards private pages.
+ * Shows a spinner while the session is being restored.
+ * Redirects to login if not authenticated.
+ * Optionally enforces role-based access.
+ */
+const ProtectedRoute = ({ children, allowedRoles }) => {
+  const { user, isAuthenticated, loading } = useAuth();
   const location = useLocation();
 
+  // Still restoring session from HTTP-Only cookie
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-400">
-        <div className="text-sm font-medium animate-pulse">Loading authentication state...</div>
-      </div>
-    );
+    return <FullPageSpinner message="Verifying session…" />;
   }
 
+  // Not authenticated — redirect to login, preserving intended destination
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to={ROUTES.LOGIN} state={{ from: location }} replace />;
+  }
+
+  // Role guard
+  if (allowedRoles && allowedRoles.length > 0 && !allowedRoles.includes(user?.role)) {
+    return <Navigate to={ROUTES.NOT_FOUND} replace />;
   }
 
   return children;

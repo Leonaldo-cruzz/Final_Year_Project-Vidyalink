@@ -1,182 +1,233 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import Navbar from '../components/Navbar';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Eye, EyeOff, LogIn, AlertCircle, Zap } from 'lucide-react';
 
+import { useAuth } from '@/context/AuthContext';
+import { ROLE_ROUTE_MAP, ROUTES } from '@/constants';
+
+// ── Zod Schema ────────────────────────────────────────────────
+const loginSchema = z.object({
+  email: z
+    .string()
+    .min(1, 'Email is required')
+    .email('Enter a valid email address'),
+  password: z
+    .string()
+    .min(1, 'Password is required')
+    .min(6, 'Password must be at least 6 characters'),
+});
+
+// ── Demo Accounts ─────────────────────────────────────────────
+const DEMO_ACCOUNTS = [
+  { label: 'Student',   icon: '🎓', email: 'student@vidyalink.edu'   },
+  { label: 'Faculty',   icon: '🏫', email: 'faculty@vidyalink.edu'   },
+  { label: 'Recruiter', icon: '💼', email: 'recruiter@vidyalink.edu' },
+  { label: 'Alumni',    icon: '🌟', email: 'alumni@vidyalink.edu'    },
+];
+
+// ── Component ─────────────────────────────────────────────────
 const Login = () => {
-  const { login, isAuthenticated, error: authError, setError } = useAuth();
+  const { login, isAuthenticated, user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-
-  const from = location.state?.from?.pathname || '/dashboard';
-
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
   const [showPassword, setShowPassword] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [localError, setLocalError] = useState('');
+  const [submitError, setSubmitError] = useState('');
 
+  const from = location.state?.from?.pathname || null;
+  const sessionExpired = new URLSearchParams(location.search).get('session') === 'expired';
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm({ resolver: zodResolver(loginSchema) });
+
+  // Redirect if already authenticated
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate(from, { replace: true });
+    if (!loading && isAuthenticated && user) {
+      const dest = from || ROLE_ROUTE_MAP[user.role] || '/dashboard/student';
+      navigate(dest, { replace: true });
     }
-  }, [isAuthenticated, navigate, from]);
+  }, [isAuthenticated, loading, user, from, navigate]);
 
-  useEffect(() => {
-    return () => setError(null);
-  }, [setError]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    setLocalError('');
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLocalError('');
-
-    if (!formData.email.trim() || !formData.password) {
-      setLocalError('Please enter both email and password.');
-      return;
-    }
-
+  const onSubmit = async (data) => {
+    setSubmitError('');
     try {
-      setSubmitting(true);
-      await login(formData);
-      navigate(from, { replace: true });
+      const loggedInUser = await login(data);
+      const dest = from || ROLE_ROUTE_MAP[loggedInUser.role] || '/dashboard/student';
+      navigate(dest, { replace: true });
     } catch (err) {
-      setLocalError(err.message || 'Invalid credentials');
-    } finally {
-      setSubmitting(false);
+      setSubmitError(err.message || 'Invalid email or password');
     }
   };
 
-  const fillDemoUser = (roleEmail) => {
-    setFormData({
-      email: roleEmail,
-      password: 'Password123!',
-    });
-    setLocalError('');
+  const fillDemo = (email) => {
+    setValue('email', email, { shouldValidate: false });
+    setValue('password', 'Password123!', { shouldValidate: false });
+    setSubmitError('');
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
-      <Navbar />
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-mesh"
+         style={{ background: 'linear-gradient(135deg, #020617 0%, #0a0f2e 50%, #020617 100%)' }}>
+      {/* Background glows */}
+      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] rounded-full bg-blue-600/8 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] rounded-full bg-purple-600/6 blur-3xl pointer-events-none" />
 
-      <div className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8 relative">
-        {/* Glow */}
-        <div className="absolute w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none -top-10" />
-
-        <div className="max-w-md w-full bg-slate-900/80 border border-slate-800 rounded-3xl p-8 backdrop-blur-xl shadow-2xl relative z-10">
-          <div className="text-center mb-8">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center mx-auto mb-4 text-indigo-400">
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-              </svg>
-            </div>
-            <h1 className="text-2xl font-extrabold text-white tracking-tight">Welcome Back</h1>
-            <p className="text-slate-400 text-sm mt-1">Sign in to your VidyaLink academic account</p>
+      <div className="w-full max-w-md mx-auto px-4 py-12 relative z-10 fade-in-up">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 shadow-lg shadow-blue-500/30 mb-4">
+            <Zap className="w-7 h-7 text-white" />
           </div>
+          <h1 className="text-3xl font-extrabold text-white tracking-tight mb-1">
+            Welcome back
+          </h1>
+          <p className="text-slate-400 text-sm">
+            Sign in to your VidyaLink account
+          </p>
+        </div>
 
-          {(localError || authError) && (
-            <div className="mb-6 bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-xs font-semibold text-red-400 flex items-start space-x-3">
-              <svg className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>{localError || authError}</span>
+        {/* Card */}
+        <div className="glass-card p-8">
+
+          {/* Session expired banner */}
+          {sessionExpired && (
+            <div className="mb-5 flex items-center gap-3 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-400 text-sm">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>Your session expired. Please sign in again.</span>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Error banner */}
+          {submitError && (
+            <div className="mb-5 flex items-start gap-3 p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <span>{submitError}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
+            {/* Email */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-widest mb-2">
                 Email Address
               </label>
               <input
+                {...register('email')}
                 type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="name@university.edu"
-                required
-                className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-500 outline-none transition-all"
+                id="login-email"
+                placeholder="you@university.edu"
+                autoComplete="email"
+                className={`form-input ${errors.email ? 'error' : ''}`}
               />
+              {errors.email && (
+                <p className="mt-1.5 text-xs text-red-400 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />{errors.email.message}
+                </p>
+              )}
             </div>
 
+            {/* Password */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-widest">
                   Password
                 </label>
+                <Link
+                  to={ROUTES.FORGOT}
+                  className="text-xs text-blue-400 hover:text-blue-300 transition-colors font-medium"
+                >
+                  Forgot password?
+                </Link>
               </div>
               <div className="relative">
                 <input
+                  {...register('password')}
                   type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
+                  id="login-password"
                   placeholder="••••••••"
-                  required
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-500 outline-none transition-all pr-10"
+                  autoComplete="current-password"
+                  className={`form-input pr-11 ${errors.password ? 'error' : ''}`}
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 text-xs font-medium focus:outline-none"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
-                  {showPassword ? 'Hide' : 'Show'}
+                  {showPassword
+                    ? <EyeOff className="w-4 h-4" />
+                    : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+              {errors.password && (
+                <p className="mt-1.5 text-xs text-red-400 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />{errors.password.message}
+                </p>
+              )}
             </div>
 
+            {/* Submit */}
             <button
               type="submit"
-              disabled={submitting}
-              className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-bold text-sm shadow-lg shadow-indigo-500/25 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              id="login-submit"
+              disabled={isSubmitting}
+              className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl font-bold text-sm text-white
+                         bg-gradient-to-r from-blue-600 to-blue-500
+                         hover:from-blue-500 hover:to-blue-400
+                         shadow-lg shadow-blue-500/25
+                         transition-all duration-200
+                         disabled:opacity-50 disabled:cursor-not-allowed
+                         focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900"
             >
-              {submitting ? (
+              {isSubmitting ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Authenticating...</span>
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Signing in…</span>
                 </>
               ) : (
-                <span>Sign In</span>
+                <>
+                  <LogIn className="w-4 h-4" />
+                  <span>Sign In</span>
+                </>
               )}
             </button>
           </form>
 
-          {/* Quick Demo Fill Buttons */}
-          <div className="mt-8 pt-6 border-t border-slate-800/80">
-            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider text-center mb-3">
-              Quick Test Autofill
+          {/* Demo Quick-Fill */}
+          <div className="mt-7 pt-6 border-t border-slate-800/70">
+            <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest text-center mb-3">
+              Quick Demo Autofill
             </p>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <button
-                type="button"
-                onClick={() => fillDemoUser('alex.student@vidyalink.edu')}
-                className="px-3 py-2 bg-slate-950 border border-slate-800 hover:border-indigo-500/40 rounded-lg text-slate-300 text-left truncate transition-colors"
-              >
-                🎓 Student Demo
-              </button>
-              <button
-                type="button"
-                onClick={() => fillDemoUser('prof.sarah@vidyalink.edu')}
-                className="px-3 py-2 bg-slate-950 border border-slate-800 hover:border-purple-500/40 rounded-lg text-slate-300 text-left truncate transition-colors"
-              >
-                🏫 Faculty Demo
-              </button>
+            <div className="grid grid-cols-2 gap-2">
+              {DEMO_ACCOUNTS.map(({ label, icon, email }) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => fillDemo(email)}
+                  className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-slate-900 border border-slate-800
+                             hover:border-blue-500/40 hover:bg-slate-800/80 text-slate-300 text-xs font-medium
+                             transition-all duration-150 text-left"
+                >
+                  <span>{icon}</span>
+                  <span>{label}</span>
+                </button>
+              ))}
             </div>
           </div>
 
-          <div className="mt-6 text-center text-xs text-slate-400">
+          {/* Register link */}
+          <p className="mt-6 text-center text-sm text-slate-400">
             Don't have an account?{' '}
-            <Link to="/register" className="font-bold text-indigo-400 hover:text-indigo-300 transition-colors">
-              Create one now
+            <Link to={ROUTES.REGISTER} className="font-semibold text-blue-400 hover:text-blue-300 transition-colors">
+              Create one →
             </Link>
-          </div>
+          </p>
         </div>
       </div>
     </div>

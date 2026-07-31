@@ -1,35 +1,61 @@
 import React from 'react';
 
+const VARIANT_BASE = {
+  primary: 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white shadow-lg shadow-blue-500/25',
+  secondary: 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700',
+  ghost: 'bg-transparent hover:bg-slate-800/70 text-slate-300 hover:text-white border border-transparent hover:border-slate-700',
+  outline: 'bg-transparent border border-slate-700 text-slate-300 hover:border-blue-500/50 hover:text-blue-400',
+  danger: 'bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/25 hover:border-red-500/50',
+  success: 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/25',
+};
+
+const SIZE_BASE = {
+  xs: 'h-7 px-3 text-[11px] rounded-lg gap-1.5',
+  sm: 'h-8 px-3.5 text-xs rounded-lg gap-2',
+  md: 'h-10 px-5 text-sm rounded-xl gap-2',
+  lg: 'h-12 px-6 text-base rounded-xl gap-2.5',
+};
+
 const Button = ({
   children,
-  type = 'button',
   variant = 'primary',
+  size = 'md',
+  loading = false,
+  leftIcon: LeftIcon,
+  rightIcon: RightIcon,
+  fullWidth = false,
   className = '',
-  disabled = false,
+  disabled,
   ...props
 }) => {
-  const baseStyle =
-    'w-full py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2';
-
-  const variants = {
-    primary:
-      'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20',
-    secondary:
-      'bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-200 hover:bg-slate-800',
-    outline:
-      'border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10',
-    ghost:
-      'text-slate-400 hover:text-white hover:bg-slate-900',
-  };
+  const isDisabled = disabled || loading;
 
   return (
     <button
-      type={type}
-      disabled={disabled}
-      className={`${baseStyle} ${variants[variant] || variants.primary} ${className}`}
+      disabled={isDisabled}
+      className={`
+        inline-flex items-center justify-center font-semibold
+        transition-all duration-150 cursor-pointer select-none
+        focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 focus:ring-offset-slate-950
+        disabled:opacity-50 disabled:cursor-not-allowed
+        ${VARIANT_BASE[variant] || VARIANT_BASE.primary}
+        ${SIZE_BASE[size] || SIZE_BASE.md}
+        ${fullWidth ? 'w-full' : ''}
+        ${className}
+      `}
       {...props}
     >
-      {children}
+      {loading ? (
+        <span className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin flex-shrink-0" />
+      ) : LeftIcon ? (
+        <LeftIcon className="w-4 h-4 flex-shrink-0" />
+      ) : null}
+
+      <span>{children}</span>
+
+      {!loading && RightIcon && (
+        <RightIcon className="w-4 h-4 flex-shrink-0" />
+      )}
     </button>
   );
 };

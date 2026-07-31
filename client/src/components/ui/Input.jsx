@@ -1,27 +1,72 @@
 import React, { forwardRef } from 'react';
+import { AlertCircle } from 'lucide-react';
 
-const Input = forwardRef(
-  ({ label, error, type = 'text', className = '', ...props }, ref) => {
-    return (
-      <div className="w-full space-y-1.5">
-        {label && (
-          <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
-            {label}
-          </label>
+/**
+ * Reusable Input component with label, helper text, error state, and icon support.
+ */
+const Input = forwardRef(({
+  label,
+  id,
+  error,
+  helperText,
+  leftIcon: LeftIcon,
+  rightIcon: RightIcon,
+  rightAction,
+  className = '',
+  required,
+  ...props
+}, ref) => {
+  return (
+    <div className={`w-full ${className}`}>
+      {label && (
+        <label
+          htmlFor={id}
+          className="block text-xs font-semibold text-slate-300 uppercase tracking-widest mb-2"
+        >
+          {label}
+          {required && <span className="text-red-400 ml-1">*</span>}
+        </label>
+      )}
+
+      <div className="relative">
+        {LeftIcon && (
+          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+            <LeftIcon className="w-4 h-4" />
+          </div>
         )}
+
         <input
           ref={ref}
-          type={type}
-          className={`w-full bg-slate-950 border ${
-            error ? 'border-red-500/50' : 'border-slate-800'
-          } focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 outline-none transition-all ${className}`}
+          id={id}
+          className={`
+            form-input
+            ${LeftIcon ? 'pl-10' : ''}
+            ${RightIcon || rightAction ? 'pr-11' : ''}
+            ${error ? 'error' : ''}
+          `}
           {...props}
         />
-        {error && <p className="text-xs text-red-400 font-medium">{error}</p>}
+
+        {(RightIcon || rightAction) && (
+          <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
+            {rightAction || (RightIcon && <RightIcon className="w-4 h-4 text-slate-500" />)}
+          </div>
+        )}
       </div>
-    );
-  }
-);
+
+      {error && (
+        <p className="mt-1.5 text-xs text-red-400 flex items-center gap-1">
+          <AlertCircle className="w-3 h-3 flex-shrink-0" />
+          {error}
+        </p>
+      )}
+
+      {!error && helperText && (
+        <p className="mt-1.5 text-xs text-slate-500">{helperText}</p>
+      )}
+    </div>
+  );
+});
 
 Input.displayName = 'Input';
 

@@ -1,29 +1,135 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-import Landing from '../pages/Landing';
-import Login from '../pages/Login';
-import Register from '../pages/Register';
-import Dashboard from '../pages/Dashboard';
-import NotFound from '../pages/NotFound';
-import ProtectedRoute from '../components/common/ProtectedRoute';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 
-const AppRoutes = () => {
-  return (
-    <Routes>
-      <Route path="/" element={<Landing />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
+// Auth pages
+import Login         from '@/pages/Login';
+import Register      from '@/pages/Register';
+import ForgotPassword from '@/pages/auth/ForgotPassword';
+
+// Role dashboards
+import StudentDashboard   from '@/pages/student/StudentDashboard';
+import FacultyDashboard   from '@/pages/faculty/FacultyDashboard';
+import RecruiterDashboard from '@/pages/recruiter/RecruiterDashboard';
+import AlumniDashboard    from '@/pages/alumni/AlumniDashboard';
+import AdminDashboard     from '@/pages/admin/AdminDashboard';
+
+// Shared pages
+import Profile        from '@/pages/Profile';
+import ProjectsList   from '@/pages/projects/ProjectsList';
+import CreateProject  from '@/pages/projects/CreateProject';
+import NotFound       from '@/pages/NotFound';
+
+// Route guards
+import ProtectedRoute from '@/components/common/ProtectedRoute';
+
+// Constants
+import { ROLES } from '@/constants';
+
+const AppRoutes = () => (
+  <Routes>
+    {/* Public routes */}
+    <Route path="/"               element={<Navigate to="/login" replace />} />
+    <Route path="/login"          element={<Login />} />
+    <Route path="/register"       element={<Register />} />
+    <Route path="/forgot-password" element={<ForgotPassword />} />
+
+    {/* Role dashboards — each protected by role */}
+    <Route
+      path="/dashboard/student"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.ADMIN]}>
+          <StudentDashboard />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/dashboard/faculty"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.FACULTY, ROLES.ADMIN]}>
+          <FacultyDashboard />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/dashboard/recruiter"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.RECRUITER, ROLES.ADMIN]}>
+          <RecruiterDashboard />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/dashboard/alumni"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.ALUMNI, ROLES.ADMIN]}>
+          <AlumniDashboard />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/dashboard/admin"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+          <AdminDashboard />
+        </ProtectedRoute>
+      }
+    />
+
+    {/* Legacy /dashboard — redirect based on role */}
+    <Route
+      path="/dashboard"
+      element={
+        <ProtectedRoute>
+          <RoleRedirect />
+        </ProtectedRoute>
+      }
+    />
+
+    {/* Shared protected routes */}
+    <Route
+      path="/profile"
+      element={
+        <ProtectedRoute>
+          <Profile />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/projects"
+      element={
+        <ProtectedRoute>
+          <ProjectsList />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/projects/new"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.FACULTY, ROLES.ADMIN]}>
+          <CreateProject />
+        </ProtectedRoute>
+      }
+    />
+
+    {/* 404 */}
+    <Route path="*" element={<NotFound />} />
+  </Routes>
+);
+
+// Redirects /dashboard to the correct role dashboard
+const ROLE_ROUTE_MAP = {
+  student:   '/dashboard/student',
+  faculty:   '/dashboard/faculty',
+  recruiter: '/dashboard/recruiter',
+  alumni:    '/dashboard/alumni',
+  admin:     '/dashboard/admin',
+};
+
+const RoleRedirect = () => {
+  const { user } = useAuth();
+  const dest = user?.role ? ROLE_ROUTE_MAP[user.role] : '/dashboard/student';
+  return <Navigate to={dest} replace />;
 };
 
 export default AppRoutes;

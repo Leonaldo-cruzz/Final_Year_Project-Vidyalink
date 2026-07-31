@@ -1,302 +1,305 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import Navbar from '../components/Navbar';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Eye, EyeOff, UserPlus, AlertCircle, Zap, CheckCircle2, Circle } from 'lucide-react';
 
-const ROLES = [
-  { id: 'student', label: 'Student', desc: 'Enrolled learner or candidate' },
-  { id: 'faculty', label: 'Faculty', desc: 'Professor or research guide' },
-  { id: 'alumni', label: 'Alumni', desc: 'Graduate & industry mentor' },
-  { id: 'recruiter', label: 'Recruiter', desc: 'Talent acquisition partner' },
-];
+import { useAuth } from '@/context/AuthContext';
+import { ROUTES, REGISTER_ROLES, PASSWORD_RULES, ROLE_ROUTE_MAP } from '@/constants';
 
+// ── Zod Schema ────────────────────────────────────────────────
+const registerSchema = z.object({
+  fullName: z
+    .string()
+    .min(3, 'Full name must be at least 3 characters')
+    .max(80, 'Full name must not exceed 80 characters')
+    .regex(/^[a-zA-Z\s'-]+$/, 'Name can only contain letters, spaces, hyphens, and apostrophes'),
+  email: z
+    .string()
+    .min(1, 'Email is required')
+    .email('Enter a valid email address'),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Must contain an uppercase letter')
+    .regex(/[a-z]/, 'Must contain a lowercase letter')
+    .regex(/[0-9]/, 'Must contain a number')
+    .regex(/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]/, 'Must contain a special character'),
+  role: z.enum(['student', 'faculty', 'recruiter', 'alumni']),
+  college: z.string().max(120).optional(),
+  branch: z.string().max(80).optional(),
+  graduationYear: z
+    .string()
+    .optional()
+    .refine((v) => !v || (Number(v) >= 1950 && Number(v) <= 2100), {
+      message: 'Enter a valid graduation year',
+    }),
+});
+
+// ── Component ─────────────────────────────────────────────────
 const Register = () => {
-  const { register, login, isAuthenticated, error: authError, setError } = useAuth();
+  const { register: registerUser, login, isAuthenticated, user, loading } = useAuth();
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
-  const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    password: '',
-    role: 'student',
-    college: '',
-    branch: '',
-    graduationYear: '',
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(registerSchema),
+    defaultValues: { role: 'student' },
   });
 
-  const [submitting, setSubmitting] = useState(false);
-  const [localError, setLocalError] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const watchedPassword = watch('password', '');
+  const watchedRole = watch('role', 'student');
 
+  // Redirect if already authenticated
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard', { replace: true });
+    if (!loading && isAuthenticated && user) {
+      navigate(ROLE_ROUTE_MAP[user.role] || '/dashboard/student', { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, loading, user, navigate]);
 
-  useEffect(() => {
-    return () => setError(null);
-  }, [setError]);
-
-  // Password rules evaluation
-  const passRules = {
-    minLen: formData.password.length >= 8,
-    hasUpper: /[A-Z]/.test(formData.password),
-    hasLower: /[a-z]/.test(formData.password),
-    hasNumber: /[0-9]/.test(formData.password),
-    hasSpecial: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]/.test(formData.password),
-  };
-
-  const isPasswordValid = Object.values(passRules).every(Boolean);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    setLocalError('');
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLocalError('');
-
-    if (!formData.fullName.trim() || formData.fullName.trim().length < 3) {
-      setLocalError('Full name must be at least 3 characters.');
-      return;
-    }
-
-    if (!formData.email.trim()) {
-      setLocalError('Please enter a valid email address.');
-      return;
-    }
-
-    if (!isPasswordValid) {
-      setLocalError('Password does not meet required strength criteria.');
-      return;
-    }
-
+  const onSubmit = async (data) => {
+    setSubmitError('');
     const payload = {
-      fullName: formData.fullName.trim(),
-      email: formData.email.trim().toLowerCase(),
-      password: formData.password,
-      role: formData.role,
-      ...(formData.college.trim() && { college: formData.college.trim() }),
-      ...(formData.branch.trim() && { branch: formData.branch.trim() }),
-      ...(formData.graduationYear && { graduationYear: Number(formData.graduationYear) }),
+      fullName: data.fullName.trim(),
+      email: data.email.trim().toLowerCase(),
+      password: data.password,
+      role: data.role,
+      ...(data.college?.trim()      && { college: data.college.trim() }),
+      ...(data.branch?.trim()       && { branch: data.branch.trim() }),
+      ...(data.graduationYear       && { graduationYear: Number(data.graduationYear) }),
     };
 
     try {
-      setSubmitting(true);
-      await register(payload);
-
-      // Auto login after successful registration
-      try {
-        await login({ email: payload.email, password: payload.password });
-        navigate('/dashboard');
-      } catch {
-        navigate('/login', { state: { registered: true } });
-      }
+      await registerUser(payload);
+      // Auto-login after register
+      const loggedInUser = await login({ email: payload.email, password: payload.password });
+      navigate(ROLE_ROUTE_MAP[loggedInUser.role] || '/dashboard/student', { replace: true });
     } catch (err) {
-      setLocalError(err.message || 'Registration failed.');
-    } finally {
-      setSubmitting(false);
+      setSubmitError(err.message || 'Registration failed. Please try again.');
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
-      <Navbar />
+    <div
+      className="min-h-screen flex items-center justify-center relative overflow-hidden"
+      style={{ background: 'linear-gradient(135deg, #020617 0%, #0a0f2e 50%, #020617 100%)' }}
+    >
+      {/* Background glows */}
+      <div className="absolute top-0 right-1/4 w-[500px] h-[500px] rounded-full bg-blue-600/8 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-10 left-1/4 w-[400px] h-[400px] rounded-full bg-purple-600/6 blur-3xl pointer-events-none" />
 
-      <div className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8 relative">
-        <div className="absolute w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-3xl pointer-events-none -top-20" />
-
-        <div className="max-w-xl w-full bg-slate-900/80 border border-slate-800 rounded-3xl p-8 backdrop-blur-xl shadow-2xl relative z-10 my-8">
-          <div className="text-center mb-8">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center mx-auto mb-4 text-indigo-400">
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-              </svg>
-            </div>
-            <h1 className="text-2xl font-extrabold text-white tracking-tight">Create Account</h1>
-            <p className="text-slate-400 text-sm mt-1">Join VidyaLink's unified academic network</p>
+      <div className="w-full max-w-2xl mx-auto px-4 py-12 relative z-10 fade-in-up">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 shadow-lg shadow-blue-500/30 mb-4">
+            <Zap className="w-7 h-7 text-white" />
           </div>
+          <h1 className="text-3xl font-extrabold text-white tracking-tight mb-1">
+            Create your account
+          </h1>
+          <p className="text-slate-400 text-sm">
+            Join VidyaLink's unified academic network
+          </p>
+        </div>
 
-          {(localError || authError) && (
-            <div className="mb-6 bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-xs font-semibold text-red-400 flex items-start space-x-3">
-              <svg className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>{localError || authError}</span>
+        {/* Card */}
+        <div className="glass-card p-8">
+
+          {/* Error banner */}
+          {submitError && (
+            <div className="mb-6 flex items-start gap-3 p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <span>{submitError}</span>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Role Selection Tabs */}
+          <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-6">
+
+            {/* Role Selector */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                Select Your Role
+              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-widest mb-3">
+                I am a…
               </label>
-              <div className="grid grid-cols-2 gap-2">
-                {ROLES.map((r) => (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {REGISTER_ROLES.map((r) => (
                   <button
                     key={r.id}
                     type="button"
-                    onClick={() => setFormData((prev) => ({ ...prev, role: r.id }))}
-                    className={`p-3 rounded-xl border text-left transition-all ${
-                      formData.role === r.id
-                        ? 'bg-indigo-600/15 border-indigo-500 text-white'
-                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
-                    }`}
+                    onClick={() => setValue('role', r.id, { shouldValidate: true })}
+                    className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border text-center transition-all duration-150
+                      ${watchedRole === r.id
+                        ? 'bg-blue-600/15 border-blue-500 text-white'
+                        : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-300'}`}
                   >
-                    <div className="text-xs font-bold capitalize">{r.label}</div>
-                    <div className="text-[10px] text-slate-500 leading-tight mt-0.5">{r.desc}</div>
+                    <span className="text-xl">{r.icon}</span>
+                    <span className="text-xs font-bold">{r.label}</span>
+                    <span className="text-[10px] text-slate-500 leading-tight">{r.desc}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Basic Info */}
+            {/* Full Name + Email */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-widest mb-2">
                   Full Name *
                 </label>
                 <input
+                  {...register('fullName')}
                   type="text"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                  placeholder="e.g. Alex Johnson"
-                  required
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-500 outline-none transition-all"
+                  id="register-fullname"
+                  placeholder="Alex Johnson"
+                  autoComplete="name"
+                  className={`form-input ${errors.fullName ? 'error' : ''}`}
                 />
+                {errors.fullName && (
+                  <p className="mt-1.5 text-xs text-red-400 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />{errors.fullName.message}
+                  </p>
+                )}
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-widest mb-2">
                   Email Address *
                 </label>
                 <input
+                  {...register('email')}
                   type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="alex@university.edu"
-                  required
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-500 outline-none transition-all"
+                  id="register-email"
+                  placeholder="you@university.edu"
+                  autoComplete="email"
+                  className={`form-input ${errors.email ? 'error' : ''}`}
                 />
+                {errors.email && (
+                  <p className="mt-1.5 text-xs text-red-400 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />{errors.email.message}
+                  </p>
+                )}
               </div>
             </div>
 
             {/* Password */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-widest mb-2">
                 Password *
               </label>
               <div className="relative">
                 <input
+                  {...register('password')}
                   type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
+                  id="register-password"
                   placeholder="••••••••"
-                  required
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-500 outline-none transition-all pr-10"
+                  autoComplete="new-password"
+                  className={`form-input pr-11 ${errors.password ? 'error' : ''}`}
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 text-xs font-medium focus:outline-none"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
-                  {showPassword ? 'Hide' : 'Show'}
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
 
-              {/* Strength Checklist */}
-              {formData.password.length > 0 && (
-                <div className="mt-3 grid grid-cols-2 gap-1.5 text-[11px] bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
-                  <span className={passRules.minLen ? 'text-emerald-400 font-semibold' : 'text-slate-500'}>
-                    {passRules.minLen ? '✓' : '○'} Min 8 characters
-                  </span>
-                  <span className={passRules.hasUpper ? 'text-emerald-400 font-semibold' : 'text-slate-500'}>
-                    {passRules.hasUpper ? '✓' : '○'} Uppercase letter
-                  </span>
-                  <span className={passRules.hasLower ? 'text-emerald-400 font-semibold' : 'text-slate-500'}>
-                    {passRules.hasLower ? '✓' : '○'} Lowercase letter
-                  </span>
-                  <span className={passRules.hasNumber ? 'text-emerald-400 font-semibold' : 'text-slate-500'}>
-                    {passRules.hasNumber ? '✓' : '○'} Number
-                  </span>
-                  <span className={passRules.hasSpecial ? 'text-emerald-400 font-semibold' : 'text-slate-500'}>
-                    {passRules.hasSpecial ? '✓' : '○'} Special character
-                  </span>
+              {/* Password Strength */}
+              {watchedPassword.length > 0 && (
+                <div className="mt-3 p-3.5 rounded-xl bg-slate-900/70 border border-slate-800/80 grid grid-cols-2 gap-1.5">
+                  {PASSWORD_RULES.map(({ key, label, test }) => {
+                    const passed = test(watchedPassword);
+                    return (
+                      <span key={key} className={`flex items-center gap-1.5 text-[11px] font-medium ${passed ? 'text-emerald-400' : 'text-slate-500'}`}>
+                        {passed
+                          ? <CheckCircle2 className="w-3 h-3" />
+                          : <Circle className="w-3 h-3" />}
+                        {label}
+                      </span>
+                    );
+                  })}
                 </div>
               )}
             </div>
 
-            {/* Optional Academic Details */}
-            <div className="border-t border-slate-800/80 pt-4 space-y-4">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-                Academic Info (Optional)
-              </span>
-
+            {/* Academic Info (optional) */}
+            <div className="border-t border-slate-800/60 pt-5">
+              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-3">
+                Academic Details (Optional)
+              </p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <input
-                    type="text"
-                    name="college"
-                    value={formData.college}
-                    onChange={handleChange}
-                    placeholder="College / University"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-100 placeholder-slate-500 outline-none"
-                  />
-                </div>
-                <div>
-                  <input
-                    type="text"
-                    name="branch"
-                    value={formData.branch}
-                    onChange={handleChange}
-                    placeholder="Branch / Major"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-100 placeholder-slate-500 outline-none"
-                  />
-                </div>
-                <div>
-                  <input
-                    type="number"
-                    name="graduationYear"
-                    value={formData.graduationYear}
-                    onChange={handleChange}
-                    placeholder="Graduation Year"
-                    min="1900"
-                    max="2100"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-100 placeholder-slate-500 outline-none"
-                  />
-                </div>
+                <input
+                  {...register('college')}
+                  type="text"
+                  id="register-college"
+                  placeholder="College / University"
+                  className="form-input text-sm"
+                />
+                <input
+                  {...register('branch')}
+                  type="text"
+                  id="register-branch"
+                  placeholder="Branch / Major"
+                  className="form-input text-sm"
+                />
+                <input
+                  {...register('graduationYear')}
+                  type="number"
+                  id="register-gradyear"
+                  placeholder="Graduation Year"
+                  min="1950"
+                  max="2100"
+                  className="form-input text-sm"
+                />
               </div>
+              {errors.graduationYear && (
+                <p className="mt-1.5 text-xs text-red-400 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />{errors.graduationYear.message}
+                </p>
+              )}
             </div>
 
+            {/* Submit */}
             <button
               type="submit"
-              disabled={submitting}
-              className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-bold text-sm shadow-lg shadow-indigo-500/25 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              id="register-submit"
+              disabled={isSubmitting}
+              className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl font-bold text-sm text-white
+                         bg-gradient-to-r from-blue-600 to-blue-500
+                         hover:from-blue-500 hover:to-blue-400
+                         shadow-lg shadow-blue-500/25
+                         transition-all duration-200
+                         disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {submitting ? (
+              {isSubmitting ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Creating Account...</span>
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Creating account…</span>
                 </>
               ) : (
-                <span>Complete Registration</span>
+                <>
+                  <UserPlus className="w-4 h-4" />
+                  <span>Create Account</span>
+                </>
               )}
             </button>
           </form>
 
-          <div className="mt-6 text-center text-xs text-slate-400">
+          {/* Login link */}
+          <p className="mt-6 text-center text-sm text-slate-400">
             Already have an account?{' '}
-            <Link to="/login" className="font-bold text-indigo-400 hover:text-indigo-300 transition-colors">
-              Sign in instead
+            <Link to={ROUTES.LOGIN} className="font-semibold text-blue-400 hover:text-blue-300 transition-colors">
+              Sign in →
             </Link>
-          </div>
+          </p>
         </div>
       </div>
     </div>
