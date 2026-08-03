@@ -33,17 +33,48 @@ export const generateRefreshToken = (payload) => jwt.sign(payload, getRefreshTok
 
 export const verifyAccessToken = (token) => {
   try {
-    return jwt.verify(token, getAccessTokenSecret(), { ...getJwtOptions(), algorithms: ['HS256'] });
+    const decoded = jwt.verify(token, getAccessTokenSecret(), {
+      ...getJwtOptions(),
+      algorithms: ['HS256'],
+    });
+
+    if (env.NODE_ENV === 'development') {
+      console.log('[JWT Debug] verifyAccessToken payload:', decoded);
+      console.log('[JWT Debug] decoded.sub:', decoded.sub);
+      console.log('[JWT Debug] decoded._id:', decoded._id);
+    }
+
+    return decoded;
   } catch (error) {
-    if (error.name === 'TokenExpiredError') throw ApiError.unauthorized('Access token has expired');
+    if (env.NODE_ENV === 'development') {
+      console.error('[JWT Debug] verifyAccessToken failed:', error.name, error.message);
+    }
+
+    if (error.name === 'TokenExpiredError') {
+      throw ApiError.unauthorized('Access token has expired');
+    }
+
     throw ApiError.unauthorized('Invalid access token');
   }
 };
 
 export const verifyRefreshToken = (token) => {
   try {
-    return jwt.verify(token, getRefreshTokenSecret(), { ...getJwtOptions(), algorithms: ['HS256'] });
+    const decoded = jwt.verify(token, getRefreshTokenSecret(), {
+      ...getJwtOptions(),
+      algorithms: ['HS256'],
+    });
+
+    if (env.NODE_ENV === 'development') {
+      console.log('[JWT Debug] verifyRefreshToken payload:', decoded);
+    }
+
+    return decoded;
   } catch (error) {
+    if (env.NODE_ENV === 'development') {
+      console.error('[JWT Debug] verifyRefreshToken failed:', error.name, error.message);
+    }
+
     if (error.name === 'TokenExpiredError') throw ApiError.unauthorized('Refresh token has expired');
     throw ApiError.unauthorized('Invalid refresh token');
   }
@@ -51,8 +82,13 @@ export const verifyRefreshToken = (token) => {
 
 export const generateTokenPair = (user) => {
   const subject = String(user._id);
-  const accessToken = generateAccessToken({ email: user.email, role: user.role, sub: subject });
-  const refreshToken = generateRefreshToken({ sub: subject });
+  const accessToken = generateAccessToken({
+    _id: subject,
+    sub: subject,
+    email: user.email,
+    role: user.role,
+  });
+  const refreshToken = generateRefreshToken({ _id: subject, sub: subject });
   return { accessToken, refreshToken };
 };
 

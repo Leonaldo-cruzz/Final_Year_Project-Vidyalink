@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
+import { generateAccessToken, generateRefreshToken } from "../utils/jwt.util.js";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -151,40 +151,22 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
  * @throws {Error} If ACCESS_TOKEN_SECRET is not defined.
  */
 userSchema.methods.generateAccessToken = function () {
-  return jwt.sign(
-    {
-      _id: this._id,
-      email: this.email,
-      role: this.role,
-      fullName: this.fullName,
-    },
-    env.JWT_SECRET,
-    {
-      expiresIn: env.JWT_EXPIRES_IN,
-    }
-  );
+  const subject = String(this._id);
+  return generateAccessToken({
+    _id: subject,
+    sub: subject,
+    email: this.email,
+    role: this.role,
+    fullName: this.fullName,
+  });
 };
 
-/**
- * Generates a long-lived JWT refresh token used to rotate access tokens.
- *
- * Required environment variables:
- *   - REFRESH_TOKEN_SECRET  (required)
- *   - REFRESH_TOKEN_EXPIRY  (optional, defaults to "7d")
- *
- * @returns {string} Signed JWT refresh token.
- * @throws {Error} If REFRESH_TOKEN_SECRET is not defined.
- */
 userSchema.methods.generateRefreshToken = function () {
-  return jwt.sign(
-    {
-      _id: this._id,
-    },
-    env.JWT_REFRESH_SECRET,
-    {
-      expiresIn: env.JWT_REFRESH_EXPIRES_IN,
-    }
-  );
+  const subject = String(this._id);
+  return generateRefreshToken({
+    _id: subject,
+    sub: subject,
+  });
 };
 
 // ─── Model Export ─────────────────────────────────────────────────────────────

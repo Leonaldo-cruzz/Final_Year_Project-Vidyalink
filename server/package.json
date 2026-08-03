@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
+    "test:api": "node src/scripts/test-api.js",
     "lint": "eslint . --ext js --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {

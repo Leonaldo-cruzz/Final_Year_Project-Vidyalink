@@ -46,6 +46,10 @@ export const ROUTES = {
   PROJECTS:  '/projects',
   PROJECT_DETAIL: '/projects/:id',
   CREATE_PROJECT: '/projects/new',
+  WORKSPACES: '/workspaces',
+  WORKSPACE_DETAIL: '/workspace/:workspaceId',
+  PORTFOLIO: '/portfolio/me',
+  VERIFY_PORTFOLIO: '/portfolio/verify/:certificateId',
 
   // Fallback
   NOT_FOUND: '*',
@@ -83,28 +87,34 @@ export const NAV_ITEMS = {
   [ROLES.STUDENT]: [
     { label: 'Dashboard',   icon: 'LayoutDashboard', path: ROUTES.STUDENT_DASHBOARD },
     { label: 'Projects',    icon: 'FolderKanban',    path: ROUTES.PROJECTS },
+    { label: 'Workspaces',  icon: 'Briefcase',       path: ROUTES.WORKSPACES },
+    { label: 'Portfolio',   icon: 'Award',           path: ROUTES.PORTFOLIO },
     { label: 'My Profile',  icon: 'UserCircle',      path: ROUTES.PROFILE },
   ],
   [ROLES.FACULTY]: [
     { label: 'Dashboard',       icon: 'LayoutDashboard', path: ROUTES.FACULTY_DASHBOARD },
     { label: 'Projects',        icon: 'FolderKanban',    path: ROUTES.PROJECTS },
+    { label: 'Workspaces',      icon: 'Briefcase',       path: ROUTES.WORKSPACES },
     { label: 'Post Project',    icon: 'PlusSquare',      path: ROUTES.CREATE_PROJECT },
     { label: 'My Profile',      icon: 'UserCircle',      path: ROUTES.PROFILE },
   ],
   [ROLES.RECRUITER]: [
     { label: 'Dashboard',       icon: 'LayoutDashboard', path: ROUTES.RECRUITER_DASHBOARD },
-    { label: 'Talent Pool',     icon: 'Users',           path: ROUTES.PROJECTS },
+    { label: 'Projects',        icon: 'FolderKanban',    path: ROUTES.PROJECTS },
+    { label: 'Workspaces',      icon: 'Briefcase',       path: ROUTES.WORKSPACES },
     { label: 'My Profile',      icon: 'UserCircle',      path: ROUTES.PROFILE },
   ],
   [ROLES.ALUMNI]: [
     { label: 'Dashboard',       icon: 'LayoutDashboard', path: ROUTES.ALUMNI_DASHBOARD },
     { label: 'Projects',        icon: 'FolderKanban',    path: ROUTES.PROJECTS },
+    { label: 'Workspaces',      icon: 'Briefcase',       path: ROUTES.WORKSPACES },
     { label: 'My Profile',      icon: 'UserCircle',      path: ROUTES.PROFILE },
   ],
   [ROLES.ADMIN]: [
     { label: 'Dashboard',       icon: 'LayoutDashboard', path: ROUTES.ADMIN_DASHBOARD },
     { label: 'Users',           icon: 'Users',           path: '/admin/users' },
     { label: 'Projects',        icon: 'FolderKanban',    path: ROUTES.PROJECTS },
+    { label: 'Workspaces',      icon: 'Briefcase',       path: ROUTES.WORKSPACES },
     { label: 'My Profile',      icon: 'UserCircle',      path: ROUTES.PROFILE },
   ],
 };

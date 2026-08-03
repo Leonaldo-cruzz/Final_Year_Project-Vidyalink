@@ -18,6 +18,10 @@ import AdminDashboard     from '@/pages/admin/AdminDashboard';
 import Profile        from '@/pages/Profile';
 import ProjectsList   from '@/pages/projects/ProjectsList';
 import CreateProject  from '@/pages/projects/CreateProject';
+import ApplicantManagement from '@/pages/recruiter/ApplicantManagement';
+import WorkspaceList   from '@/pages/workspace/WorkspaceList';
+import WorkspaceDetail from '@/pages/workspace/WorkspaceDetail';
+import VerifiedPortfolio from '@/pages/portfolio/VerifiedPortfolio';
 import NotFound       from '@/pages/NotFound';
 
 // Route guards
@@ -33,6 +37,7 @@ const AppRoutes = () => (
     <Route path="/login"          element={<Login />} />
     <Route path="/register"       element={<Register />} />
     <Route path="/forgot-password" element={<ForgotPassword />} />
+    <Route path="/portfolio/verify/:certificateId" element={<VerifiedPortfolio />} />
 
     {/* Role dashboards — each protected by role */}
     <Route
@@ -106,8 +111,40 @@ const AppRoutes = () => (
     <Route
       path="/projects/new"
       element={
-        <ProtectedRoute allowedRoles={[ROLES.FACULTY, ROLES.ADMIN]}>
+        <ProtectedRoute allowedRoles={[ROLES.FACULTY, ROLES.RECRUITER, ROLES.ADMIN]}>
           <CreateProject />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/projects/:projectId/applicants"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.FACULTY, ROLES.RECRUITER, ROLES.ADMIN]}>
+          <ApplicantManagement />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/workspaces"
+      element={
+        <ProtectedRoute>
+          <WorkspaceList />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/workspace/:workspaceId"
+      element={
+        <ProtectedRoute>
+          <WorkspaceDetail />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/portfolio/me"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.ADMIN]}>
+          <VerifiedPortfolio />
         </ProtectedRoute>
       }
     />

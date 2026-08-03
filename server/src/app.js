@@ -8,6 +8,11 @@ import rateLimit from 'express-rate-limit';
 
 import authRoutes from './routes/auth.routes.js';
 import profileRoutes from './routes/profile.routes.js';
+import projectRoutes from './routes/project.routes.js';
+import applicationRoutes from './routes/application.routes.js';
+import workspaceRoutes from './routes/workspace.routes.js';
+import milestoneRoutes from './routes/milestone.routes.js';
+import portfolioRoutes from './routes/portfolio.routes.js';
 import errorHandler from './middleware/errorHandler.js';
 import ApiError from './utils/ApiError.js';
 import ApiResponse from './utils/ApiResponse.js';
@@ -58,12 +63,23 @@ export const createApp = () => {
   });
   app.use(apiPrefix, limiter);
 
+  app.get('/', (_req, res) => ApiResponse.ok(res, 'VidyaLink API Server Running', {
+    version: 'v1',
+    healthCheck: `${apiPrefix}/health`,
+  }));
+
   app.get(`${apiPrefix}/health`, (_req, res) => ApiResponse.ok(res, 'Service is healthy', {
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
   }));
   app.use(`${apiPrefix}/auth`, authRoutes);
   app.use(`${apiPrefix}/profile`, profileRoutes);
+  app.use(`${apiPrefix}/projects`, projectRoutes);
+  app.use(`${apiPrefix}/applications`, applicationRoutes);
+  app.use(`${apiPrefix}/workspaces`, workspaceRoutes);
+  app.use(`${apiPrefix}/milestones`, milestoneRoutes);
+  app.use(`${apiPrefix}/portfolios`, portfolioRoutes);
+
   app.use((_req, res) => ApiResponse.error(res, 404, 'Route not found'));
   app.use(errorHandler);
 
