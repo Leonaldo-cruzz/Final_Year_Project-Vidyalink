@@ -51,6 +51,7 @@ export const ROUTES = {
   PORTFOLIO: '/portfolio/me',
   RESUME: '/resume',
   CERTIFICATES: '/certificates',
+  GITHUB: '/github',
   VERIFY_PORTFOLIO: '/portfolio/verify/:certificateId',
 
   // Fallback
@@ -91,6 +92,7 @@ export const NAV_ITEMS = {
     { label: 'Projects',     icon: 'FolderKanban',    path: ROUTES.PROJECTS },
     { label: 'Workspaces',   icon: 'Briefcase',       path: ROUTES.WORKSPACES },
     { label: 'Certificates', icon: 'Award',           path: ROUTES.CERTIFICATES },
+    { label: 'GitHub',       icon: 'Code2',           path: ROUTES.GITHUB },
     { label: 'Portfolio',    icon: 'Award',           path: ROUTES.PORTFOLIO },
     { label: 'Resume',       icon: 'FileText',        path: ROUTES.RESUME },
     { label: 'My Profile',   icon: 'UserCircle',      path: ROUTES.PROFILE },

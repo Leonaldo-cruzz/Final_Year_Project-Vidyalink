@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard, FolderKanban, UserCircle, Users,
+  LayoutDashboard, FolderKanban, UserCircle, Users, Code2,
   PlusSquare, Briefcase, Award, ChevronLeft, ChevronRight, Zap, LogOut, FileText,
 } from 'lucide-react';
 
@@ -11,7 +11,7 @@ import { getInitials } from '@/utils/formatters';
 
 // Icon map from string name to Lucide component
 const ICON_MAP = {
-  LayoutDashboard, FolderKanban, UserCircle, Users, PlusSquare, Briefcase, Award, FileText,
+  LayoutDashboard, FolderKanban, UserCircle, Users, Code2, PlusSquare, Briefcase, Award, FileText,
 };
 
 const Sidebar = ({ collapsed, onToggle }) => {

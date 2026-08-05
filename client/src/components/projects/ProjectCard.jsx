@@ -1,176 +1,70 @@
 import React from 'react';
-import { Building, MapPin, Clock, DollarSign, Users, Award, ExternalLink, Send, Edit, Trash2 } from 'lucide-react';
+import { Code2 as Github, ExternalLink, Eye, FilePenLine, Image as ImageIcon, Star, Trash2 } from 'lucide-react';
+
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
+import { formatDate } from '@/utils/formatters';
 
 const STATUS_VARIANTS = {
-  open: 'success',
-  in_progress: 'info',
-  completed: 'default',
-  closed: 'danger',
+  Completed: 'emerald',
+  'In Progress': 'blue',
+  Prototype: 'amber',
+  Archived: 'slate',
 };
 
-const DIFFICULTY_VARIANTS = {
-  Beginner: 'success',
-  Intermediate: 'warning',
-  Advanced: 'danger',
+const VERIFICATION_VARIANTS = {
+  Verified: 'emerald',
+  Pending: 'amber',
+  Rejected: 'rose',
 };
 
-const ProjectCard = ({
-  project,
-  isStudent,
-  isRecruiter,
-  onApply,
-  onViewDetails,
-  onEdit,
-  onDelete,
-  onViewApplicants,
-}) => {
-  const {
-    title,
-    description,
-    company,
-    domain,
-    requiredSkills = [],
-    difficulty = 'Intermediate',
-    duration = '1 Month',
-    stipend = 0,
-    mode = 'Remote',
-    status = 'open',
-    applicantsCount = 0,
-  } = project;
+const ProjectCard = ({ project, onView, onEdit, onDelete, onToggleFeatured }) => {
+  const screenshot = project.screenshots?.[0];
 
   return (
-    <div className="group flex flex-col rounded-2xl border border-slate-800/80 bg-slate-900/70 p-5 hover:border-blue-500/40 hover:bg-slate-900/90 transition-all card-hover shadow-lg">
-      {/* Top Header */}
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[11px] font-bold text-blue-400 uppercase tracking-wider flex items-center gap-1">
-              <Building className="w-3 h-3" /> {company}
-            </span>
-            <span className="text-slate-600">•</span>
-            <span className="text-[11px] font-semibold text-slate-400">{domain}</span>
+    <Card className="group flex h-full flex-col overflow-hidden transition-all hover:-translate-y-0.5 hover:border-blue-500/40">
+      <div className="relative aspect-[16/9] bg-gradient-to-br from-blue-950 via-slate-900 to-purple-950">
+        {screenshot ? (
+          <img src={screenshot} alt={`${project.title} project`} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+        ) : (
+          <div className="flex h-full items-center justify-center"><ImageIcon className="h-10 w-10 text-blue-300/40" /></div>
+        )}
+        <button type="button" onClick={() => onToggleFeatured?.(project)} className={`absolute right-3 top-3 rounded-full border p-2 backdrop-blur ${project.featured ? 'border-amber-400/50 bg-amber-500/20 text-amber-300' : 'border-slate-700 bg-slate-950/60 text-slate-400 hover:text-amber-300'}`} aria-label={project.featured ? 'Remove featured flag' : 'Mark project as featured'}>
+          <Star className="h-4 w-4" fill={project.featured ? 'currentColor' : 'none'} />
+        </button>
+      </div>
+
+      <div className="flex flex-1 flex-col p-5">
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <Badge variant={STATUS_VARIANTS[project.projectStatus] || 'slate'} size="sm">{project.projectStatus}</Badge>
+          <Badge variant={VERIFICATION_VARIANTS[project.verificationStatus] || 'slate'} size="sm">{project.verificationStatus}</Badge>
+        </div>
+
+        <h3 className="line-clamp-2 text-lg font-bold leading-snug text-white">{project.title}</h3>
+        <p className="mt-2 line-clamp-3 min-h-[3.75rem] text-sm leading-relaxed text-slate-400">{project.shortDescription}</p>
+
+        <div className="mt-4 flex min-h-7 flex-wrap gap-1.5">
+          {project.technologies?.slice(0, 5).map((technology) => <span key={technology} className="rounded-md border border-slate-700/70 bg-slate-800/70 px-2 py-1 text-[11px] font-medium text-slate-300">{technology}</span>)}
+          {project.technologies?.length > 5 && <span className="px-1 py-1 text-[11px] text-slate-500">+{project.technologies.length - 5}</span>}
+        </div>
+
+        <div className="mt-4 flex items-center justify-between border-t border-slate-800/70 pt-3 text-[11px] text-slate-500">
+          <span>{project.category}</span>
+          <span>{formatDate(project.updatedAt || project.createdAt)}</span>
+        </div>
+
+        <div className="mt-auto flex flex-wrap items-center gap-2 pt-4">
+          <Button type="button" variant="secondary" size="xs" leftIcon={Eye} onClick={() => onView(project)}>Details</Button>
+          {project.githubRepository && <a href={project.githubRepository} target="_blank" rel="noreferrer" aria-label="Open GitHub repository" className="inline-flex h-7 items-center gap-1 rounded-lg border border-slate-700 px-2.5 text-[11px] text-slate-300 hover:border-blue-500/50 hover:text-white"><Github className="h-3.5 w-3.5" /> GitHub</a>}
+          {project.liveDeployment && <a href={project.liveDeployment} target="_blank" rel="noreferrer" aria-label="Open live deployment" className="inline-flex h-7 items-center gap-1 rounded-lg border border-slate-700 px-2.5 text-[11px] text-slate-300 hover:border-blue-500/50 hover:text-white"><ExternalLink className="h-3.5 w-3.5" /> Live</a>}
+          <div className="ml-auto flex gap-1">
+            <Button type="button" variant="ghost" size="xs" leftIcon={FilePenLine} onClick={() => onEdit(project)} aria-label="Edit project" />
+            <Button type="button" variant="danger" size="xs" leftIcon={Trash2} onClick={() => onDelete(project)} aria-label="Delete project" />
           </div>
-          <h3
-            onClick={() => onViewDetails?.(project)}
-            className="text-base font-bold text-white group-hover:text-blue-400 transition-colors cursor-pointer line-clamp-1"
-          >
-            {title}
-          </h3>
-        </div>
-
-        <Badge variant={STATUS_VARIANTS[status] || 'default'} size="sm" className="capitalize shrink-0">
-          {status.replace('_', ' ')}
-        </Badge>
-      </div>
-
-      {/* Description */}
-      <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed mb-4">
-        {description}
-      </p>
-
-      {/* Meta Specs Grid */}
-      <div className="grid grid-cols-2 gap-2 text-xs text-slate-300 mb-4 p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
-        <div className="flex items-center gap-1.5 truncate">
-          <MapPin className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-          <span className="truncate">{mode}</span>
-        </div>
-        <div className="flex items-center gap-1.5 truncate">
-          <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-          <span className="truncate">{duration}</span>
-        </div>
-        <div className="flex items-center gap-1.5 truncate">
-          <DollarSign className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-          <span className="font-semibold text-emerald-400 truncate">
-            {stipend > 0 ? `₹${stipend.toLocaleString()}/mo` : 'Unpaid / Experience'}
-          </span>
-        </div>
-        <div className="flex items-center gap-1.5 truncate">
-          <Award className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-          <span className="truncate">{difficulty}</span>
         </div>
       </div>
-
-      {/* Required Skills */}
-      {requiredSkills.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5 mb-4">
-          {requiredSkills.slice(0, 4).map((skill, idx) => (
-            <span
-              key={idx}
-              className="text-[10px] px-2 py-0.5 rounded-md bg-slate-800 border border-slate-700/60 text-slate-300 font-medium"
-            >
-              {skill}
-            </span>
-          ))}
-          {requiredSkills.length > 4 && (
-            <span className="text-[10px] text-slate-500 font-medium">
-              +{requiredSkills.length - 4} more
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* Card Footer Actions */}
-      <div className="mt-auto pt-3 border-t border-slate-800/80 flex items-center justify-between">
-        <div className="flex items-center gap-1.5 text-xs text-slate-400">
-          <Users className="w-3.5 h-3.5 text-blue-400" />
-          <span><strong className="text-slate-200 font-semibold">{applicantsCount}</strong> Applicants</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {isStudent && status === 'open' && (
-            <Button
-              size="sm"
-              variant="primary"
-              leftIcon={Send}
-              onClick={() => onApply?.(project)}
-            >
-              Apply
-            </Button>
-          )}
-
-          {isRecruiter && (
-            <>
-              <Button
-                size="sm"
-                variant="secondary"
-                leftIcon={Users}
-                onClick={() => onViewApplicants?.(project)}
-              >
-                Applicants
-              </Button>
-              {onEdit && (
-                <button
-                  onClick={() => onEdit(project)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-                  title="Edit Project"
-                >
-                  <Edit className="w-4 h-4" />
-                </button>
-              )}
-              {onDelete && (
-                <button
-                  onClick={() => onDelete(project)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-800 transition-colors"
-                  title="Delete Project"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              )}
-            </>
-          )}
-
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => onViewDetails?.(project)}
-          >
-            Details
-          </Button>
-        </div>
-      </div>
-    </div>
+    </Card>
   );
 };
 

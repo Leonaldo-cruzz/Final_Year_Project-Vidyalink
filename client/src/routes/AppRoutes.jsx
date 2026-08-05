@@ -16,14 +16,17 @@ import AdminDashboard     from '@/pages/admin/AdminDashboard';
 
 // Shared pages
 import Profile        from '@/pages/Profile';
-import ProjectsList   from '@/pages/projects/ProjectsList';
+import Projects        from '@/pages/projects/Projects';
 import CreateProject  from '@/pages/projects/CreateProject';
+import EditProject    from '@/pages/projects/EditProject';
+import ProjectDetails from '@/pages/projects/ProjectDetails';
 import ApplicantManagement from '@/pages/recruiter/ApplicantManagement';
 import WorkspaceList   from '@/pages/workspace/WorkspaceList';
 import WorkspaceDetail from '@/pages/workspace/WorkspaceDetail';
 import VerifiedPortfolio from '@/pages/portfolio/VerifiedPortfolio';
 import Resume from '@/pages/student/Resume';
 import Certificates from '@/pages/student/Certificates';
+import GithubIntegration from '@/pages/student/GithubIntegration';
 import NotFound       from '@/pages/NotFound';
 
 // Route guards
@@ -105,16 +108,32 @@ const AppRoutes = () => (
     <Route
       path="/projects"
       element={
-        <ProtectedRoute>
-          <ProjectsList />
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
+          <Projects />
         </ProtectedRoute>
       }
     />
     <Route
       path="/projects/new"
       element={
-        <ProtectedRoute allowedRoles={[ROLES.FACULTY, ROLES.RECRUITER, ROLES.ADMIN]}>
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
           <CreateProject />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/projects/:projectId/edit"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
+          <EditProject />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/projects/:projectId"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
+          <ProjectDetails />
         </ProtectedRoute>
       }
     />
@@ -163,6 +182,14 @@ const AppRoutes = () => (
       element={
         <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.ADMIN]}>
           <Certificates />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/github"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
+          <GithubIntegration />
         </ProtectedRoute>
       }
     />

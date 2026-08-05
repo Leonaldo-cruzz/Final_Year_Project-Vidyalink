@@ -1,39 +1,28 @@
 import mongoose from 'mongoose';
 
-const projectSequenceSchema = new mongoose.Schema(
-  {
-    _id: {
-      type: String,
-      required: true,
-    },
-    sequence: {
-      type: Number,
-      required: true,
-      default: 0,
-    },
-  },
-  {
-    versionKey: false,
-  }
-);
+export const PROJECT_CATEGORIES = [
+  'Web Development',
+  'Mobile App',
+  'AI / ML',
+  'Cloud',
+  'Cyber Security',
+  'IoT',
+  'Blockchain',
+  'Desktop Application',
+  'Research',
+  'Other',
+];
+
+export const PROJECT_STATUSES = ['Completed', 'In Progress', 'Prototype', 'Archived'];
+export const VERIFICATION_STATUSES = ['Pending', 'Verified', 'Rejected'];
 
 const projectSchema = new mongoose.Schema(
   {
-    createdBy: {
+    userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
       index: true,
-    },
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-    },
-    projectId: {
-      type: String,
-      unique: true,
-      immutable: true,
-      sparse: true,
     },
     title: {
       type: String,
@@ -42,84 +31,95 @@ const projectSchema = new mongoose.Schema(
       minlength: 2,
       maxlength: 150,
     },
-    description: {
+    shortDescription: {
       type: String,
       required: true,
       trim: true,
       minlength: 10,
-      maxlength: 5000,
+      maxlength: 500,
     },
-    company: {
+    detailedDescription: {
       type: String,
       required: true,
       trim: true,
-      default: 'VidyaLink Partner',
+      minlength: 20,
+      maxlength: 5000,
+    },
+    category: {
+      type: String,
+      enum: PROJECT_CATEGORIES,
+      required: true,
     },
     domain: {
       type: String,
+      trim: true,
+      maxlength: 100,
+      default: null,
+    },
+    technologies: {
+      type: [{ type: String, trim: true, maxlength: 50 }],
       required: true,
-      trim: true,
-      default: 'Software Development',
+      validate: {
+        validator: (technologies) => technologies.length > 0,
+        message: 'At least one technology is required',
+      },
     },
-    requiredSkills: {
-      type: [{ type: String, trim: true, maxlength: 50 }],
-      default: [],
-    },
-    techStack: {
-      type: [{ type: String, trim: true, maxlength: 50 }],
-      default: [],
-    },
-    difficulty: {
-      type: String,
-      enum: ['Beginner', 'Intermediate', 'Advanced'],
-      default: 'Intermediate',
-    },
-    duration: {
+    githubRepository: {
       type: String,
       trim: true,
-      default: '1 Month',
+      maxlength: 2048,
+      default: null,
     },
-    stipend: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-    mode: {
+    liveDeployment: {
       type: String,
-      enum: ['Remote', 'Hybrid', 'In-office'],
-      default: 'Remote',
+      trim: true,
+      maxlength: 2048,
+      default: null,
     },
-    deadline: {
+    demoVideo: {
+      type: String,
+      trim: true,
+      maxlength: 2048,
+      default: null,
+    },
+    documentationUrl: {
+      type: String,
+      trim: true,
+      maxlength: 2048,
+      default: null,
+    },
+    screenshots: {
+      type: [{ type: String, trim: true, maxlength: 2048 }],
+      default: [],
+    },
+    teamMembers: {
+      type: [{ type: String, trim: true, maxlength: 100 }],
+      default: [],
+    },
+    startDate: {
       type: Date,
       default: null,
     },
-    status: {
+    endDate: {
+      type: Date,
+      default: null,
+    },
+    projectStatus: {
       type: String,
-      enum: ['open', 'in_progress', 'completed', 'closed'],
-      default: 'open',
+      enum: PROJECT_STATUSES,
+      default: 'In Progress',
       index: true,
-    },
-    selectedStudent: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      default: null,
-    },
-    githubUrl: {
-      type: String,
-      trim: true,
-      maxlength: 2048,
-      default: null,
-    },
-    liveUrl: {
-      type: String,
-      trim: true,
-      maxlength: 2048,
-      default: null,
     },
     verificationStatus: {
       type: String,
-      enum: ['Pending', 'Verified', 'Rejected'],
+      enum: VERIFICATION_STATUSES,
       default: 'Pending',
+      index: true,
+    },
+    featured: {
+      type: Boolean,
+      default: false,
+      index: true,
     },
   },
   {
@@ -127,36 +127,9 @@ const projectSchema = new mongoose.Schema(
   }
 );
 
-projectSchema.pre('save', function (next) {
-  if (!this.user && this.createdBy) {
-    this.user = this.createdBy;
-  }
-  if (!this.createdBy && this.user) {
-    this.createdBy = this.user;
-  }
-  if (!this.requiredSkills || this.requiredSkills.length === 0) {
-    if (this.techStack && this.techStack.length > 0) {
-      this.requiredSkills = this.techStack;
-    }
-  }
-  next();
-});
+projectSchema.index({ userId: 1, createdAt: -1 });
+projectSchema.index({ userId: 1, verificationStatus: 1, projectStatus: 1 });
 
-projectSchema.index({ createdBy: 1, createdAt: -1 });
-projectSchema.index({ status: 1, domain: 1, difficulty: 1, mode: 1 });
-
-const ProjectSequence = mongoose.model('ProjectSequence', projectSequenceSchema);
-const Project = mongoose.model('Project', projectSchema);
-
-export const generateProjectId = async () => {
-  const year = new Date().getUTCFullYear();
-  const counter = await ProjectSequence.findByIdAndUpdate(
-    `project:${year}`,
-    { $inc: { sequence: 1 } },
-    { new: true, upsert: true, setDefaultsOnInsert: true }
-  );
-
-  return `VLP-${year}-${String(counter.sequence).padStart(6, '0')}`;
-};
+const Project = mongoose.models.Project || mongoose.model('Project', projectSchema);
 
 export default Project;

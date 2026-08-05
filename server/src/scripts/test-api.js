@@ -209,13 +209,16 @@ async function runApiTests() {
     token: accessToken,
     body: {
       title: 'VidyaLink Core Service',
-      description: 'Backend REST API providing authentication, project showcase, and profile management.',
-      techStack: ['Node.js', 'Express', 'MongoDB'],
-      githubUrl: 'https://github.com/example/vidyalink-core',
+      shortDescription: 'Backend REST API for the VidyaLink student platform.',
+      detailedDescription: 'Backend REST API providing authentication, project showcase, and profile management.',
+      category: 'Web Development',
+      domain: 'Education Technology',
+      technologies: ['Node.js', 'Express', 'MongoDB'],
+      githubRepository: 'https://github.com/example/vidyalink-core',
     },
   });
   if (assertStep('POST /projects (Create Project)', createProjectRes, 201)) {
-    projectId = createProjectRes.data.data.project.projectId;
+    projectId = createProjectRes.data.data._id;
   }
 
   const getProjectsRes = await request('/projects', {
@@ -230,7 +233,7 @@ async function runApiTests() {
     assertStep(`GET /projects/${projectId} (Get Project by ID)`, getSingleProjectRes, 200);
 
     const updateProjectRes = await request(`/projects/${projectId}`, {
-      method: 'PATCH',
+      method: 'PUT',
       token: accessToken,
       body: {
         title: 'VidyaLink SaaS Microservice Architecture',
