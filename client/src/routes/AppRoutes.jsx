@@ -22,6 +22,8 @@ import ApplicantManagement from '@/pages/recruiter/ApplicantManagement';
 import WorkspaceList   from '@/pages/workspace/WorkspaceList';
 import WorkspaceDetail from '@/pages/workspace/WorkspaceDetail';
 import VerifiedPortfolio from '@/pages/portfolio/VerifiedPortfolio';
+import Resume from '@/pages/student/Resume';
+import Certificates from '@/pages/student/Certificates';
 import NotFound       from '@/pages/NotFound';
 
 // Route guards
@@ -145,6 +147,22 @@ const AppRoutes = () => (
       element={
         <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.ADMIN]}>
           <VerifiedPortfolio />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/resume"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.ADMIN]}>
+          <Resume />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/certificates"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.ADMIN]}>
+          <Certificates />
         </ProtectedRoute>
       }
     />

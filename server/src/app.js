@@ -5,6 +5,8 @@ import morgan from 'morgan';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import authRoutes from './routes/auth.routes.js';
 import profileRoutes from './routes/profile.routes.js';
@@ -13,10 +15,17 @@ import applicationRoutes from './routes/application.routes.js';
 import workspaceRoutes from './routes/workspace.routes.js';
 import milestoneRoutes from './routes/milestone.routes.js';
 import portfolioRoutes from './routes/portfolio.routes.js';
+import projectEngagementRoutes from './routes/projectEngagement.routes.js';
+import resumeRoutes from './routes/resume.routes.js';
+import certificateRoutes from './routes/certificate.routes.js';
 import errorHandler from './middleware/errorHandler.js';
 import ApiError from './utils/ApiError.js';
 import ApiResponse from './utils/ApiResponse.js';
 import { env } from './config/env.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const uploadsDirectory = path.resolve(__dirname, '../uploads');
 
 const getAllowedOrigins = () => {
   const origins = env.CORS_ORIGIN || env.CLIENT_URL;
@@ -53,6 +62,7 @@ export const createApp = () => {
   app.use(express.urlencoded({ extended: true, limit: '10kb' }));
   app.use(cookieParser());
   app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+  app.use('/uploads', express.static(uploadsDirectory, { maxAge: '1d' }));
 
   const limiter = rateLimit({
     windowMs: env.RATE_LIMIT_WINDOW_MS,
@@ -79,6 +89,9 @@ export const createApp = () => {
   app.use(`${apiPrefix}/workspaces`, workspaceRoutes);
   app.use(`${apiPrefix}/milestones`, milestoneRoutes);
   app.use(`${apiPrefix}/portfolios`, portfolioRoutes);
+  app.use(`${apiPrefix}/engagements`, projectEngagementRoutes);
+  app.use(`${apiPrefix}/resume`, resumeRoutes);
+  app.use(`${apiPrefix}/certificates`, certificateRoutes);
 
   app.use((_req, res) => ApiResponse.error(res, 404, 'Route not found'));
   app.use(errorHandler);

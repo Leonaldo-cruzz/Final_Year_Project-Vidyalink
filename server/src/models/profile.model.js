@@ -15,6 +15,23 @@ const isValidHttpUrl = (value) => {
   }
 };
 
+const isValidProfilePicture = (value) => {
+  if (value === null || value === undefined) return true;
+  if (isValidHttpUrl(value)) return true;
+
+  return /^\/uploads\/profile-photos\/[a-f\d-]+\.(?:jpg|jpeg|png|webp)$/i.test(value);
+};
+
+const isValidPhone = (value) => (
+  value === null || value === undefined || /^\+?[1-9]\d{7,14}$/.test(value)
+);
+
+const isValidGithubUsername = (value) => (
+  value === null
+  || value === undefined
+  || /^(?!-)[A-Za-z\d]+(?:-[A-Za-z\d]+)*$/.test(value)
+);
+
 const optionalUrlField = (fieldName) => ({
   type: String,
   trim: true,
@@ -71,9 +88,15 @@ const profileSchema = new mongoose.Schema(
     },
     graduationYear: {
       type: Number,
-      required: [true, 'Graduation year is required'],
       min: [1900, 'Graduation year must be after 1900'],
       max: currentYear + 20,
+      default: null,
+    },
+    currentYear: {
+      type: Number,
+      min: [1, 'Current year must be at least 1'],
+      max: [10, 'Current year cannot exceed 10'],
+      default: null,
     },
     headline: {
       type: String,
@@ -87,7 +110,26 @@ const profileSchema = new mongoose.Schema(
       maxlength: 2000,
       default: null,
     },
-    profilePicture: optionalUrlField('profile picture'),
+    profilePicture: {
+      type: String,
+      trim: true,
+      maxlength: 2048,
+      default: null,
+      validate: {
+        validator: isValidProfilePicture,
+        message: ({ value }) => `${value} is not a valid profile picture URL`,
+      },
+    },
+    phone: {
+      type: String,
+      trim: true,
+      maxlength: 16,
+      default: null,
+      validate: {
+        validator: isValidPhone,
+        message: 'Phone number must use international format, for example +919876543210',
+      },
+    },
     cgpa: {
       type: Number,
       min: 0,
@@ -101,6 +143,16 @@ const profileSchema = new mongoose.Schema(
       ...stringListField('Interests'),
     },
     github: optionalUrlField('GitHub'),
+    githubUsername: {
+      type: String,
+      trim: true,
+      maxlength: 39,
+      default: null,
+      validate: {
+        validator: isValidGithubUsername,
+        message: 'GitHub username must be 1-39 characters and may contain letters, numbers, and hyphens',
+      },
+    },
     linkedin: optionalUrlField('LinkedIn'),
     portfolio: optionalUrlField('portfolio'),
     resumeUrl: optionalUrlField('resume'),

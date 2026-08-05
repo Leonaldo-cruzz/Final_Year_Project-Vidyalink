@@ -21,6 +21,12 @@ class ProfileController {
     return ApiResponse.ok(res, 'Profile updated successfully', { profile });
   });
 
+  updateProfilePhoto = asyncHandler(async (req, res) => {
+    const profile = await profileService.updateProfilePhoto(req.user._id, req.file);
+
+    return ApiResponse.ok(res, 'Profile photo updated successfully', { profile });
+  });
+
   deleteProfile = asyncHandler(async (req, res) => {
     await profileService.deleteProfile(req.user._id);
 

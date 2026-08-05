@@ -1,94 +1,49 @@
 import mongoose from 'mongoose';
 
-const activitySchema = new mongoose.Schema(
-  {
-    actor: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
-    type: {
-      type: String,
-      enum: [
-        'engagement_created',
-        'engagement_updated',
-        'milestone_created',
-        'milestone_updated',
-        'deliverable_created',
-        'deliverable_submitted',
-        'deliverable_reviewed',
-        'comment_added',
-      ],
-      required: true,
-    },
-    message: {
-      type: String,
-      required: true,
-      trim: true,
-      maxlength: 500,
-    },
-    milestone: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Milestone',
-      default: null,
-    },
-    deliverable: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Deliverable',
-      default: null,
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
-  },
-  { _id: true }
-);
+export const ENGAGEMENT_STATUSES = [
+  'Not Started',
+  'In Progress',
+  'Completed',
+  'On Hold',
+  'Cancelled',
+];
 
 const projectEngagementSchema = new mongoose.Schema(
   {
-    project: {
+    projectOpportunityId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Project',
       required: true,
+      unique: true,
       index: true,
+      alias: 'project',
     },
-    student: {
+    studentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
       index: true,
+      alias: 'student',
     },
-    recruiter: {
+    recruiterId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
       index: true,
+      alias: 'recruiter',
     },
-    faculty: {
+    facultyId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       default: null,
       index: true,
-    },
-    application: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Application',
-      required: true,
+      alias: 'faculty',
     },
     status: {
       type: String,
-      enum: ['active', 'completed', 'terminated'],
-      default: 'active',
+      enum: ENGAGEMENT_STATUSES,
+      default: 'Not Started',
       index: true,
-    },
-    startDate: {
-      type: Date,
-      default: Date.now,
-    },
-    completedDate: {
-      type: Date,
-      default: null,
     },
     progressPercentage: {
       type: Number,
@@ -96,34 +51,33 @@ const projectEngagementSchema = new mongoose.Schema(
       max: 100,
       default: 0,
     },
-    activity: {
-      type: [activitySchema],
-      default: [],
+    currentMilestone: {
+      type: String,
+      trim: true,
+      maxlength: 200,
+      default: null,
+    },
+    startDate: {
+      type: Date,
+      default: Date.now,
+    },
+    expectedEndDate: {
+      type: Date,
+      default: null,
+    },
+    completedDate: {
+      type: Date,
+      default: null,
     },
   },
   {
     timestamps: true,
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true },
   }
 );
 
-projectEngagementSchema.index({ project: 1, student: 1 }, { unique: true });
-projectEngagementSchema.index({ student: 1, status: 1, updatedAt: -1 });
-projectEngagementSchema.index({ recruiter: 1, status: 1, updatedAt: -1 });
-projectEngagementSchema.index({ faculty: 1, status: 1, updatedAt: -1 });
-
-projectEngagementSchema.virtual('milestones', {
-  ref: 'Milestone',
-  localField: '_id',
-  foreignField: 'engagement',
-});
-
-projectEngagementSchema.virtual('deliverables', {
-  ref: 'Deliverable',
-  localField: '_id',
-  foreignField: 'engagement',
-});
+projectEngagementSchema.index({ studentId: 1, status: 1, updatedAt: -1 });
+projectEngagementSchema.index({ recruiterId: 1, status: 1, updatedAt: -1 });
+projectEngagementSchema.index({ facultyId: 1, status: 1, updatedAt: -1 });
 
 const ProjectEngagement = mongoose.model('ProjectEngagement', projectEngagementSchema);
 

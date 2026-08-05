@@ -5,7 +5,7 @@ import {
   XCircle,
   Star,
   ExternalLink,
-  Github,
+  Code2 as Github,
   FileText,
   ArrowLeft,
   Loader2,

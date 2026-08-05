@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Send, FileText, Github, Ban, Calendar, ExternalLink, Loader2, Sparkles } from 'lucide-react';
+import { Send, FileText, Code2 as Github, Ban, Calendar, ExternalLink, Loader2, Sparkles } from 'lucide-react';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { SectionCard } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';

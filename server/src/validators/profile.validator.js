@@ -28,6 +28,17 @@ const optionalUrl = (fieldName) => z
     `${fieldName} must use HTTP or HTTPS`
   );
 
+const optionalProfilePicture = z
+  .string()
+  .trim()
+  .max(2048, 'Profile picture URL must not exceed 2048 characters')
+  .refine(
+    (value) => /^https?:\/\//i.test(value) || /^\/uploads\/profile-photos\/[a-f\d-]+\.(?:jpg|jpeg|png|webp)$/i.test(value),
+    'Profile picture must be an HTTP(S) URL or a valid uploaded image path'
+  )
+  .nullable()
+  .optional();
+
 const optionalStringList = (fieldName) => z
   .array(
     z.string()
@@ -38,8 +49,24 @@ const optionalStringList = (fieldName) => z
   .max(MAX_LIST_ENTRIES, `${fieldName} cannot exceed ${MAX_LIST_ENTRIES} entries`)
   .optional();
 
+const optionalPhone = z
+  .string()
+  .trim()
+  .regex(/^\+?[1-9]\d{7,14}$/, 'Phone number must use international format, for example +919876543210')
+  .nullable()
+  .optional();
+
+const optionalGithubUsername = z
+  .string()
+  .trim()
+  .min(1, 'GitHub username cannot be empty')
+  .max(39, 'GitHub username must not exceed 39 characters')
+  .regex(/^(?!-)[A-Za-z\d]+(?:-[A-Za-z\d]+)*$/, 'GitHub username may contain letters, numbers, and hyphens')
+  .nullable()
+  .optional();
+
 const profileFields = {
-  fullName: requiredText('Full name', 3, 100),
+  fullName: requiredText('Full name', 2, 100),
   college: requiredText('College', 2, 200),
   branch: requiredText('Branch', 2, 100),
   graduationYear: z.coerce
@@ -47,6 +74,13 @@ const profileFields = {
     .int('Graduation year must be a whole number')
     .min(1900, 'Graduation year must be after 1900')
     .max(currentYear + 20, `Graduation year must not exceed ${currentYear + 20}`),
+  currentYear: z.coerce
+    .number()
+    .int('Current year must be a whole number')
+    .min(1, 'Current year must be at least 1')
+    .max(10, 'Current year cannot exceed 10')
+    .nullable()
+    .optional(),
   headline: optionalText('Headline', 200),
   bio: optionalText('Bio', 2000),
   degree: optionalText('Degree', 150),
@@ -62,10 +96,15 @@ const profileFields = {
   linkedin: optionalUrl('LinkedIn URL'),
   portfolio: optionalUrl('Portfolio URL'),
   resumeUrl: optionalUrl('Resume URL'),
-  profilePicture: optionalUrl('Profile picture URL'),
+  profilePicture: optionalProfilePicture,
+  phone: optionalPhone,
+  githubUsername: optionalGithubUsername,
 };
 
-const createProfileBodySchema = z.object(profileFields).strict();
+const createProfileBodySchema = z.object({
+  ...profileFields,
+  graduationYear: profileFields.graduationYear.optional(),
+}).strict();
 
 export const createProfileSchema = z.object({
   body: createProfileBodySchema,

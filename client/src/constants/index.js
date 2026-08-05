@@ -49,6 +49,8 @@ export const ROUTES = {
   WORKSPACES: '/workspaces',
   WORKSPACE_DETAIL: '/workspace/:workspaceId',
   PORTFOLIO: '/portfolio/me',
+  RESUME: '/resume',
+  CERTIFICATES: '/certificates',
   VERIFY_PORTFOLIO: '/portfolio/verify/:certificateId',
 
   // Fallback
@@ -85,11 +87,13 @@ export const API = {
 // ── Sidebar Nav (role-specific) ───────────────────────────────
 export const NAV_ITEMS = {
   [ROLES.STUDENT]: [
-    { label: 'Dashboard',   icon: 'LayoutDashboard', path: ROUTES.STUDENT_DASHBOARD },
-    { label: 'Projects',    icon: 'FolderKanban',    path: ROUTES.PROJECTS },
-    { label: 'Workspaces',  icon: 'Briefcase',       path: ROUTES.WORKSPACES },
-    { label: 'Portfolio',   icon: 'Award',           path: ROUTES.PORTFOLIO },
-    { label: 'My Profile',  icon: 'UserCircle',      path: ROUTES.PROFILE },
+    { label: 'Dashboard',    icon: 'LayoutDashboard', path: ROUTES.STUDENT_DASHBOARD },
+    { label: 'Projects',     icon: 'FolderKanban',    path: ROUTES.PROJECTS },
+    { label: 'Workspaces',   icon: 'Briefcase',       path: ROUTES.WORKSPACES },
+    { label: 'Certificates', icon: 'Award',           path: ROUTES.CERTIFICATES },
+    { label: 'Portfolio',    icon: 'Award',           path: ROUTES.PORTFOLIO },
+    { label: 'Resume',       icon: 'FileText',        path: ROUTES.RESUME },
+    { label: 'My Profile',   icon: 'UserCircle',      path: ROUTES.PROFILE },
   ],
   [ROLES.FACULTY]: [
     { label: 'Dashboard',       icon: 'LayoutDashboard', path: ROUTES.FACULTY_DASHBOARD },
