@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Users, Bookmark, Briefcase, Search, Star, ArrowRight, FolderKanban } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Bookmark, Briefcase, Search, Star, ArrowRight } from 'lucide-react';
 
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { StatCard, SectionCard, ActionCard } from '@/components/ui/Card';
-import Badge from '@/components/ui/Badge';
 import Avatar from '@/components/ui/Avatar';
+import Spinner from '@/components/ui/Spinner';
 import { useAuth } from '@/context/AuthContext';
+import { getMyProjects } from '@/services/projectService';
 import { ROUTES } from '@/constants';
 
 const TALENT_POOL = [
@@ -19,6 +20,24 @@ const TALENT_POOL = [
 const RecruiterDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  const [myProjects, setMyProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        setLoading(true);
+        const data = await getMyProjects();
+        setMyProjects(data.data || []);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProjects();
+  }, []);
 
   return (
     <DashboardLayout>
@@ -35,7 +54,7 @@ const RecruiterDashboard = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 stagger">
         <StatCard label="Talent Viewed"   value="148" icon={Users}     color="emerald" trend={22} trendLabel="this week" />
         <StatCard label="Shortlisted"     value="31"  icon={Bookmark}  color="blue" />
-        <StatCard label="Open Roles"      value="5"   icon={Briefcase} color="amber" />
+        <StatCard label="Open Roles"      value={loading ? '-' : myProjects.length}   icon={Briefcase} color="amber" />
         <StatCard label="Avg Match Score" value="87%" icon={Star}      color="purple" />
       </div>
 
@@ -43,7 +62,7 @@ const RecruiterDashboard = () => {
         {/* Talent Pool */}
         <div className="lg:col-span-2">
           <SectionCard
-            title="Top Matching Talent"
+            title="Top Matching Talent (AI Suggestions)"
             subtitle="Sorted by AI skill-match score"
             action={
               <button className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition-colors">
@@ -87,18 +106,18 @@ const RecruiterDashboard = () => {
           <SectionCard title="Quick Actions">
             <div className="space-y-3">
               <ActionCard
-                label="Search Talent"
-                desc="Filter by skills, college, GPA"
-                icon={Search}
-                color="emerald"
-                onClick={() => {}}
-              />
-              <ActionCard
                 label="Post a Role"
                 desc="Publish a new job or internship"
                 icon={Briefcase}
                 color="amber"
-                onClick={() => {}}
+                onClick={() => navigate(ROUTES.CREATE_PROJECT)}
+              />
+              <ActionCard
+                label="My Roles"
+                desc="Manage your posted opportunities"
+                icon={FolderKanban}
+                color="emerald"
+                onClick={() => navigate(ROUTES.PROJECTS)}
               />
               <ActionCard
                 label="Shortlisted Profiles"

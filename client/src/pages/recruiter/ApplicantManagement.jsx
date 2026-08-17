@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  CheckCircle2,
   XCircle,
   Star,
-  ExternalLink,
   Code2 as Github,
   FileText,
   ArrowLeft,

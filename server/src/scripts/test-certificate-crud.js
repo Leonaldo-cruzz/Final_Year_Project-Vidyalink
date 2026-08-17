@@ -5,7 +5,6 @@ import { fileURLToPath } from 'node:url';
 
 import env from '../config/env.js';
 import User from '../models/user.model.js';
-import Certificate from '../models/certificate.model.js';
 import certificateService from '../services/certificate.service.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -92,10 +91,11 @@ async function runCertificateCrudTests() {
       createdCert &&
       createdCert._id &&
       createdCert.title === createData.title &&
-      createdCert.verificationStatus === 'Pending'
+      createdCert.verification === null &&
+      !('verificationStatus' in createdCert)
     ) {
       logPass(`Certificate Created Successfully! ID: ${createdCert._id}`);
-      logPass(`Default Verification Status is 'Pending'`);
+      logPass('Certificate has no embedded verification status');
     } else {
       throw new Error('Create certificate verification failed');
     }
@@ -164,10 +164,11 @@ async function runCertificateCrudTests() {
       updatedCert &&
       updatedCert.title === 'AWS Certified Solutions Architect - Associate' &&
       updatedCert.issuer === 'Amazon Web Services Inc.' &&
-      updatedCert.verificationStatus === 'Pending'
+      updatedCert.verification === null &&
+      !('verificationStatus' in updatedCert)
     ) {
       logPass(`Certificate Updated Successfully! New Title: "${updatedCert.title}"`);
-      logPass(`Verification Status remains 'Pending' after student update`);
+      logPass('Verification remains centrally managed after student update');
     } else {
       throw new Error('Update certificate failed');
     }

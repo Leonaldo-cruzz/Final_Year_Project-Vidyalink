@@ -20,6 +20,7 @@ import Avatar from '@/components/ui/Avatar';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import VerificationBadge from '@/components/verification/VerificationBadge';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/services/api';
 import { getErrorMessage } from '@/utils/formatters';
@@ -250,6 +251,14 @@ const Profile = () => {
               <p className="text-slate-400 text-sm flex items-center gap-1.5 mt-1"><Mail className="w-3.5 h-3.5" />{user?.email}</p>
               <div className="flex flex-wrap items-center gap-2 mt-3">
                 <Badge role={user?.role} dot>{user?.role}</Badge>
+                {profileData?._id && (
+                  <VerificationBadge
+                    targetType="PROFILE"
+                    targetId={profileData._id}
+                    size="sm"
+                    showDetails={true}
+                  />
+                )}
                 {profileData?.profileCompletion !== undefined && (
                   <span className="text-xs text-slate-500">{profileData.profileCompletion}% profile complete</span>
                 )}

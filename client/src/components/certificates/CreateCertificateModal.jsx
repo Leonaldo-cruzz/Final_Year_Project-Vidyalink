@@ -6,16 +6,9 @@ import {
   UploadCloud,
   FileText,
   AlertCircle,
-  Award,
-  Calendar,
-  Building,
-  Link,
-  Hash,
-  Sparkles,
 } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
 import { createCertificate } from '@/services/certificateService';
 import { getErrorMessage } from '@/utils/formatters';
 

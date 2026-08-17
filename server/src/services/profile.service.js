@@ -1,6 +1,7 @@
 import Profile from '../models/profile.model.js';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import verificationService from './verification.service.js';
 import ApiError from '../utils/ApiError.js';
 import {
   PROFILE_PHOTO_DIRECTORY,
@@ -91,7 +92,7 @@ class ProfileService {
     try {
       await profile.save();
       await profile.populate('user', 'email fullName role avatar status');
-      return profile;
+      return verificationService.attachToTarget(userId, 'PROFILE', profile);
     } catch (error) {
       if (error.code === 11000) {
         throw ApiError.conflict('Profile already exists');
@@ -108,7 +109,7 @@ class ProfileService {
       throw ApiError.notFound('Profile not found');
     }
 
-    return profile;
+    return verificationService.attachToTarget(userId, 'PROFILE', profile);
   }
 
   async updateProfile(userId, updateData) {
@@ -123,7 +124,7 @@ class ProfileService {
 
     await profile.save();
     await profile.populate('user', 'email fullName role avatar status');
-    return profile;
+    return verificationService.attachToTarget(userId, 'PROFILE', profile);
   }
 
   async updateProfilePhoto(userId, file) {
@@ -150,7 +151,7 @@ class ProfileService {
     }
 
     await removeFile(previousPhotoPath);
-    return profile;
+    return verificationService.attachToTarget(userId, 'PROFILE', profile);
   }
 
   async deleteProfile(userId) {

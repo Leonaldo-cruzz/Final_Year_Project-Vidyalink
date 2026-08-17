@@ -6,8 +6,6 @@ import { z } from 'zod';
 import {
   FolderKanban,
   Plus,
-  CheckCircle2,
-  XCircle,
   Clock,
   ExternalLink,
   Award,
@@ -15,8 +13,7 @@ import {
   Loader2,
   Trash2,
   UploadCloud,
-  ShieldCheck,
-  AlertCircle
+  ShieldCheck
 } from 'lucide-react';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { SectionCard } from '@/components/ui/Card';

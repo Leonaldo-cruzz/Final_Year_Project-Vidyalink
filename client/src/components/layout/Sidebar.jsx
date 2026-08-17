@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, FolderKanban, UserCircle, Users, Code2,
-  PlusSquare, Briefcase, Award, ChevronLeft, ChevronRight, Zap, LogOut, FileText,
+  PlusSquare, Briefcase, Award, ChevronLeft, ChevronRight, Zap, LogOut, FileText, ClipboardCheck,
+  Send, BadgeCheck, MessageSquare,
 } from 'lucide-react';
 
 import { useAuth } from '@/context/AuthContext';
@@ -11,13 +12,25 @@ import { getInitials } from '@/utils/formatters';
 
 // Icon map from string name to Lucide component
 const ICON_MAP = {
-  LayoutDashboard, FolderKanban, UserCircle, Users, Code2, PlusSquare, Briefcase, Award, FileText,
+  LayoutDashboard,
+  FolderKanban,
+  UserCircle,
+  Users,
+  Code2,
+  PlusSquare,
+  Briefcase,
+  Award,
+  FileText,
+  ClipboardCheck,
+  Send,
+  BadgeCheck,
+  MessageSquare,
 };
 
 const Sidebar = ({ collapsed, onToggle }) => {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
   const [loggingOut, setLoggingOut] = useState(false);
+  const navigate = useNavigate();
 
   const navItems = (user?.role ? NAV_ITEMS[user.role] : []) || [];
   const roleColor = user?.role ? ROLE_COLORS[user.role] : ROLE_COLORS['student'];

@@ -4,6 +4,7 @@ import { Code2 as Github, ExternalLink, Eye, FilePenLine, Image as ImageIcon, St
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
+import VerificationBadge from '@/components/verification/VerificationBadge';
 import { formatDate } from '@/utils/formatters';
 
 const STATUS_VARIANTS = {
@@ -11,12 +12,6 @@ const STATUS_VARIANTS = {
   'In Progress': 'blue',
   Prototype: 'amber',
   Archived: 'slate',
-};
-
-const VERIFICATION_VARIANTS = {
-  Verified: 'emerald',
-  Pending: 'amber',
-  Rejected: 'rose',
 };
 
 const ProjectCard = ({ project, onView, onEdit, onDelete, onToggleFeatured }) => {
@@ -36,9 +31,15 @@ const ProjectCard = ({ project, onView, onEdit, onDelete, onToggleFeatured }) =>
       </div>
 
       <div className="flex flex-1 flex-col p-5">
-        <div className="mb-3 flex flex-wrap items-center gap-2">
+        <div className="mb-3 flex flex-wrap items-center gap-2 justify-between">
           <Badge variant={STATUS_VARIANTS[project.projectStatus] || 'slate'} size="sm">{project.projectStatus}</Badge>
-          <Badge variant={VERIFICATION_VARIANTS[project.verificationStatus] || 'slate'} size="sm">{project.verificationStatus}</Badge>
+          <VerificationBadge
+            verification={project.verification}
+            targetType="PROJECT"
+            targetId={project._id}
+            size="sm"
+            showDetails={false}
+          />
         </div>
 
         <h3 className="line-clamp-2 text-lg font-bold leading-snug text-white">{project.title}</h3>

@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import Project from '../models/project.model.js';
+import verificationService, { normalizeVerificationStatus } from './verification.service.js';
 import ApiError from '../utils/ApiError.js';
 import {
   PROJECT_SCREENSHOT_DIRECTORY,
@@ -58,17 +59,19 @@ class ProjectService {
       userId,
       ...data,
       screenshots: getUploadedScreenshotUrls(files),
-      verificationStatus: 'Pending',
     });
 
-    return project;
+    return verificationService.attachToTarget(userId, 'PROJECT', project);
   }
 
   async getProjects(userId, { filter, search, sort } = {}) {
     const query = { userId };
 
-    if (filter === 'Verified' || filter === 'Pending') {
-      query.verificationStatus = filter;
+    const verificationStatus = normalizeVerificationStatus(filter);
+    if (verificationStatus) {
+      query._id = {
+        $in: await verificationService.getTargetIdsByStatus(userId, 'PROJECT', verificationStatus),
+      };
     } else if (filter === 'Completed' || filter === 'In Progress') {
       query.projectStatus = filter;
     } else if (filter === 'Featured') {
@@ -92,13 +95,14 @@ class ProjectService {
       'Recently Updated': { updatedAt: -1 },
     };
 
-    return Project.find(query).sort(sortOptions[sort] || { createdAt: -1 });
+    const projects = await Project.find(query).sort(sortOptions[sort] || { createdAt: -1 });
+    return verificationService.attachToTargets(userId, 'PROJECT', projects);
   }
 
   async getProjectById(userId, id) {
     const project = await Project.findOne({ _id: id, userId });
     if (!project) throw ApiError.notFound('Project not found');
-    return project;
+    return verificationService.attachToTarget(userId, 'PROJECT', project);
   }
 
   async updateProject(userId, id, projectData, files = []) {
@@ -123,7 +127,7 @@ class ProjectService {
     }
 
     await project.save();
-    return project;
+    return verificationService.attachToTarget(userId, 'PROJECT', project);
   }
 
   async deleteProject(userId, id) {

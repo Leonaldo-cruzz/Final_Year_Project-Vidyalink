@@ -10,9 +10,18 @@ import ForgotPassword from '@/pages/auth/ForgotPassword';
 // Role dashboards
 import StudentDashboard   from '@/pages/student/StudentDashboard';
 import FacultyDashboard   from '@/pages/faculty/FacultyDashboard';
+import FacultyVerificationDashboard from '@/pages/faculty/FacultyVerificationDashboard';
+import VerificationDetail from '@/pages/faculty/VerificationDetail';
 import RecruiterDashboard from '@/pages/recruiter/RecruiterDashboard';
 import AlumniDashboard    from '@/pages/alumni/AlumniDashboard';
 import AdminDashboard     from '@/pages/admin/AdminDashboard';
+
+// Admin specific pages
+import AdminUsers         from '@/pages/admin/AdminUsers';
+import AdminVerifications from '@/pages/admin/AdminVerifications';
+
+// Alumni specific pages
+import AlumniMentorship   from '@/pages/alumni/AlumniMentorship';
 
 // Shared pages
 import Profile        from '@/pages/Profile';
@@ -27,6 +36,7 @@ import VerifiedPortfolio from '@/pages/portfolio/VerifiedPortfolio';
 import Resume from '@/pages/student/Resume';
 import Certificates from '@/pages/student/Certificates';
 import GithubIntegration from '@/pages/student/GithubIntegration';
+import StudentApplications from '@/pages/student/StudentApplications';
 import NotFound       from '@/pages/NotFound';
 
 // Route guards
@@ -62,6 +72,22 @@ const AppRoutes = () => (
       }
     />
     <Route
+      path="/faculty/verifications"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.FACULTY, ROLES.ADMIN]}>
+          <FacultyVerificationDashboard />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/faculty/verifications/:verificationId"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.FACULTY, ROLES.ADMIN]}>
+          <VerificationDetail />
+        </ProtectedRoute>
+      }
+    />
+    <Route
       path="/dashboard/recruiter"
       element={
         <ProtectedRoute allowedRoles={[ROLES.RECRUITER, ROLES.ADMIN]}>
@@ -78,10 +104,34 @@ const AppRoutes = () => (
       }
     />
     <Route
+      path="/alumni/mentorship"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.ALUMNI, ROLES.ADMIN]}>
+          <AlumniMentorship />
+        </ProtectedRoute>
+      }
+    />
+    <Route
       path="/dashboard/admin"
       element={
         <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
           <AdminDashboard />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/admin/users"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+          <AdminUsers />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/admin/verifications"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+          <AdminVerifications />
         </ProtectedRoute>
       }
     />
@@ -108,7 +158,7 @@ const AppRoutes = () => (
     <Route
       path="/projects"
       element={
-        <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.FACULTY, ROLES.RECRUITER, ROLES.ALUMNI, ROLES.ADMIN]}>
           <Projects />
         </ProtectedRoute>
       }
@@ -116,7 +166,7 @@ const AppRoutes = () => (
     <Route
       path="/projects/new"
       element={
-        <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.FACULTY, ROLES.RECRUITER, ROLES.ADMIN]}>
           <CreateProject />
         </ProtectedRoute>
       }
@@ -124,7 +174,7 @@ const AppRoutes = () => (
     <Route
       path="/projects/:projectId/edit"
       element={
-        <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.FACULTY, ROLES.RECRUITER, ROLES.ADMIN]}>
           <EditProject />
         </ProtectedRoute>
       }
@@ -132,7 +182,7 @@ const AppRoutes = () => (
     <Route
       path="/projects/:projectId"
       element={
-        <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.FACULTY, ROLES.RECRUITER, ROLES.ALUMNI, ROLES.ADMIN]}>
           <ProjectDetails />
         </ProtectedRoute>
       }
@@ -190,6 +240,14 @@ const AppRoutes = () => (
       element={
         <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
           <GithubIntegration />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/applications"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
+          <StudentApplications />
         </ProtectedRoute>
       }
     />

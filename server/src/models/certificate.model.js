@@ -11,8 +11,6 @@ export const CERTIFICATE_CATEGORIES = [
   'Other',
 ];
 
-export const VERIFICATION_STATUS = ['Pending', 'Verified', 'Rejected'];
-
 const certificateSchema = new mongoose.Schema(
   {
     userId: {
@@ -67,20 +65,6 @@ const certificateSchema = new mongoose.Schema(
     skills: {
       type: [String],
       default: [],
-    },
-    verificationStatus: {
-      type: String,
-      enum: VERIFICATION_STATUS,
-      default: 'Pending',
-    },
-    verifiedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      default: null,
-    },
-    rejectionReason: {
-      type: String,
-      default: null,
     },
   },
   {

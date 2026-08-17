@@ -1,32 +1,62 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { Users, FolderKanban, ShieldCheck, Activity, UserCheck, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { StatCard, SectionCard } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Avatar from '@/components/ui/Avatar';
+import Spinner, { FullPageSpinner } from '@/components/ui/Spinner';
 import { useAuth } from '@/context/AuthContext';
-import { ROUTES } from '@/constants';
-import { formatDate } from '@/utils/formatters';
-
-const RECENT_USERS = [
-  { id: 1, name: 'Priya Sharma',   email: 'priya@vidyalink.edu',   role: 'student',   status: 'active',   joined: '2024-12-01' },
-  { id: 2, name: 'Dr. Ramesh K',   email: 'ramesh@vidyalink.edu',  role: 'faculty',   status: 'active',   joined: '2024-11-28' },
-  { id: 3, name: 'Sarah Recruiter',email: 'sarah@corp.com',         role: 'recruiter', status: 'pending',  joined: '2024-12-03' },
-  { id: 4, name: 'Arun Alumni',    email: 'arun@vidyalink.edu',    role: 'alumni',    status: 'active',   joined: '2024-11-30' },
-  { id: 5, name: 'Test User',      email: 'test@test.com',          role: 'student',   status: 'inactive', joined: '2024-12-02' },
-];
+import { formatDate, getErrorMessage } from '@/utils/formatters';
+import adminService from '@/services/adminService';
+import { ROLES, ROUTES } from '@/constants';
 
 const STATUS_CONFIG = {
   active:   { variant: 'emerald', label: 'Active' },
-  pending:  { variant: 'amber',   label: 'Pending' },
+  blocked:  { variant: 'rose',    label: 'Blocked' },
   inactive: { variant: 'slate',   label: 'Inactive' },
+  pending:  { variant: 'amber',   label: 'Pending' },
 };
 
 const AdminDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [analytics, setAnalytics] = useState(null);
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        setLoading(true);
+        const data = await adminService.getAdminAnalytics();
+        setAnalytics(data.data); // data.data because ApiResponse wrapper
+      } catch (err) {
+        setError(getErrorMessage(err, 'Failed to load analytics'));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnalytics();
+  }, []);
+
+  if (loading) return <FullPageSpinner message="Loading admin analytics..." />;
+
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center gap-3 rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+          <AlertCircle className="h-5 w-5 flex-shrink-0" />
+          {error}
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  const { stats, recentUsers } = analytics || {};
 
   return (
     <DashboardLayout>
@@ -42,9 +72,9 @@ const AdminDashboard = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 stagger">
-        <StatCard label="Total Users"       value="1,284" icon={Users}       color="blue"    trend={12} trendLabel="this month" />
-        <StatCard label="Active Projects"   value="47"    icon={FolderKanban} color="emerald" trend={8}  trendLabel="this week" />
-        <StatCard label="Pending Approvals" value="12"    icon={UserCheck}    color="amber" />
+        <StatCard label="Total Users"       value={stats?.totalUsers || 0} icon={Users}       color="blue"    />
+        <StatCard label="Active Projects"   value={stats?.activeProjects || 0}    icon={FolderKanban} color="emerald" />
+        <StatCard label="Pending Verifications" value={stats?.verifications?.pending || 0}    icon={UserCheck}    color="amber" />
         <StatCard label="System Health"     value="99.8%" icon={Activity}     color="purple" />
       </div>
 
@@ -54,7 +84,10 @@ const AdminDashboard = () => {
         subtitle="Latest accounts created on the platform"
         className="mb-6"
         action={
-          <button className="text-xs font-semibold text-rose-400 hover:text-rose-300 flex items-center gap-1 transition-colors">
+          <button 
+            onClick={() => navigate('/admin/users')}
+            className="text-xs font-semibold text-rose-400 hover:text-rose-300 flex items-center gap-1 transition-colors"
+          >
             Manage All Users →
           </button>
         }
@@ -68,38 +101,38 @@ const AdminDashboard = () => {
                 <th className="pb-3 text-left">Role</th>
                 <th className="pb-3 text-left hidden md:table-cell">Joined</th>
                 <th className="pb-3 text-left">Status</th>
-                <th className="pb-3 text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
-              {RECENT_USERS.map((u) => {
-                const { variant, label } = STATUS_CONFIG[u.status] || STATUS_CONFIG.inactive;
-                return (
-                  <tr key={u.id} className="hover:bg-slate-800/30 transition-colors">
-                    <td className="py-3 pr-4">
-                      <div className="flex items-center gap-3">
-                        <Avatar name={u.name} size="sm" />
-                        <span className="font-semibold text-slate-100 truncate max-w-[120px]">{u.name}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 pr-4 text-slate-400 text-xs hidden sm:table-cell truncate max-w-[160px]">{u.email}</td>
-                    <td className="py-3 pr-4">
-                      <Badge role={u.role} size="sm">{u.role}</Badge>
-                    </td>
-                    <td className="py-3 pr-4 text-slate-500 text-xs hidden md:table-cell">
-                      {formatDate(u.joined)}
-                    </td>
-                    <td className="py-3 pr-4">
-                      <Badge variant={variant} size="sm">{label}</Badge>
-                    </td>
-                    <td className="py-3 text-right">
-                      <button className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition-all font-semibold">
-                        View
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
+              {recentUsers && recentUsers.length > 0 ? (
+                recentUsers.map((u) => {
+                  const { variant, label } = STATUS_CONFIG[u.status] || STATUS_CONFIG.inactive;
+                  return (
+                    <tr key={u._id} className="hover:bg-slate-800/30 transition-colors">
+                      <td className="py-3 pr-4">
+                        <div className="flex items-center gap-3">
+                          <Avatar name={u.fullName} size="sm" />
+                          <span className="font-semibold text-slate-100 truncate max-w-[120px]">{u.fullName}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 pr-4 text-slate-400 text-xs hidden sm:table-cell truncate max-w-[160px]">{u.email}</td>
+                      <td className="py-3 pr-4">
+                        <Badge role={u.role} size="sm">{u.role}</Badge>
+                      </td>
+                      <td className="py-3 pr-4 text-slate-500 text-xs hidden md:table-cell">
+                        {formatDate(u.createdAt)}
+                      </td>
+                      <td className="py-3 pr-4">
+                        <Badge variant={variant} size="sm">{label}</Badge>
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan="5" className="py-6 text-center text-slate-500">No users found.</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

@@ -1,6 +1,7 @@
 /* global AbortController, clearTimeout, fetch, setTimeout */
 
 import GitHubAccount from '../models/githubAccount.model.js';
+import verificationService from './verification.service.js';
 import ApiError from '../utils/ApiError.js';
 import { githubUsernamePattern } from '../validators/github.validator.js';
 
@@ -91,13 +92,13 @@ class GithubService {
       { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true }
     );
 
-    return account;
+    return verificationService.attachToTarget(userId, 'GITHUB', account);
   }
 
   async getProfile(userId) {
     const account = await GitHubAccount.findOne({ userId });
     if (!account) throw ApiError.notFound('No GitHub account is connected');
-    return account;
+    return verificationService.attachToTarget(userId, 'GITHUB', account);
   }
 
   async sync(userId) {
@@ -113,7 +114,7 @@ class GithubService {
       connectionStatus: 'Connected',
     });
     await account.save();
-    return account;
+    return verificationService.attachToTarget(userId, 'GITHUB', account);
   }
 
   async disconnect(userId) {
@@ -122,7 +123,7 @@ class GithubService {
 
     account.connectionStatus = 'Disconnected';
     await account.save();
-    return account;
+    return verificationService.attachToTarget(userId, 'GITHUB', account);
   }
 }
 

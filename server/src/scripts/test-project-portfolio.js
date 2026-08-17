@@ -29,7 +29,8 @@ const run = async () => {
       featured: true,
     });
 
-    assert.equal(created.verificationStatus, 'Pending');
+    assert.equal(created.verification, null);
+    assert.equal('verificationStatus' in created, false);
     assert.equal(created.featured, true);
     assert.deepEqual(created.technologies, ['React', 'Node.js']);
 

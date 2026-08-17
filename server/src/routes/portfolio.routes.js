@@ -8,6 +8,7 @@ const router = Router();
 router.get('/verify/:certificateId', portfolioController.verifyCertificate);
 
 // Protected endpoint for student's portfolio
+router.get('/me/overview', authenticate, portfolioController.getStudentPortfolioOverview);
 router.get('/me', authenticate, portfolioController.getStudentPortfolios);
 
 export default router;

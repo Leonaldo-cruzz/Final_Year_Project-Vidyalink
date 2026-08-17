@@ -1,11 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FolderKanban, Users, ClipboardCheck, PlusCircle, ArrowRight, BookOpen } from 'lucide-react';
+import { FolderKanban, Users, ClipboardCheck, PlusCircle, BookOpen } from 'lucide-react';
 
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { StatCard, SectionCard, ActionCard } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
-import Avatar from '@/components/ui/Avatar';
 import { useAuth } from '@/context/AuthContext';
 import { ROUTES } from '@/constants';
 

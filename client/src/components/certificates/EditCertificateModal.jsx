@@ -6,11 +6,6 @@ import {
   UploadCloud,
   FileText,
   AlertCircle,
-  Award,
-  Calendar,
-  Building,
-  Link,
-  Hash,
 } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';

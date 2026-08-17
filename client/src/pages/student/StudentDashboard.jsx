@@ -1,34 +1,62 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FolderKanban, Star, Send, UserCircle,
-  ArrowRight, Briefcase, TrendingUp, Award,
+  ArrowRight, Briefcase, Award, Clock
 } from 'lucide-react';
 
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { StatCard, SectionCard, ActionCard } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
+import Spinner from '@/components/ui/Spinner';
 import { useAuth } from '@/context/AuthContext';
+import { getStudentApplications } from '@/services/applicationService';
+import { getMyProjects } from '@/services/projectService';
+import api from '@/services/api';
 import { ROUTES } from '@/constants';
 import { formatDate } from '@/utils/formatters';
 
-const RECENT_ACTIVITY = [
-  { id: 1, type: 'project',   text: 'Applied to "AI Crop Prediction System"', time: '2 hours ago',   status: 'pending' },
-  { id: 2, type: 'match',     text: 'Skill match found: React + Node.js role', time: '5 hours ago',  status: 'new' },
-  { id: 3, type: 'profile',   text: 'Profile completion reached 75%',          time: '1 day ago',    status: 'info' },
-  { id: 4, type: 'project',   text: 'Applied to "Blockchain for Supply Chain"', time: '2 days ago',  status: 'approved' },
-];
-
 const STATUS_COLOR = {
-  pending:  { badge: 'amber',   label: 'Pending' },
-  new:      { badge: 'blue',    label: 'New' },
-  info:     { badge: 'slate',   label: 'Info' },
-  approved: { badge: 'emerald', label: 'Approved' },
+  'Applied':  { badge: 'blue',   label: 'Applied' },
+  'Under Review':      { badge: 'amber',    label: 'Under Review' },
+  'Shortlisted':     { badge: 'purple',   label: 'Shortlisted' },
+  'Interview Scheduled': { badge: 'amber', label: 'Interview Scheduled' },
+  'Selected': { badge: 'emerald', label: 'Selected' },
+  'Rejected': { badge: 'rose', label: 'Rejected' },
+  'Withdrawn': { badge: 'slate', label: 'Withdrawn' },
 };
 
 const StudentDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  const [applications, setApplications] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [appData, projData, profData] = await Promise.all([
+          getStudentApplications(),
+          getMyProjects(),
+          api.get('/profile/me'),
+        ]);
+        setApplications(appData.data || []);
+        setProjects(projData.data || []);
+        setProfile(profData.data?.data || null);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const profileScore = profile?.profileCompletion || 0;
 
   return (
     <DashboardLayout>
@@ -44,41 +72,54 @@ const StudentDashboard = () => {
 
       {/* Stats Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 stagger">
-        <StatCard label="Active Projects"    value="3"   icon={FolderKanban} color="blue"    trend={12}  trendLabel="this month" />
-        <StatCard label="Skill Matches"      value="14"  icon={Star}         color="amber"   trend={8}   trendLabel="this week" />
-        <StatCard label="Applications Sent"  value="7"   icon={Send}         color="emerald" trend={5}   trendLabel="this month" />
-        <StatCard label="Profile Score"      value="75%" icon={Award}        color="purple" />
+        <StatCard label="Active Projects"    value={loading ? '-' : projects.length}   icon={FolderKanban} color="blue" />
+        <StatCard label="Skill Matches"      value="14"  icon={Star}         color="amber" />
+        <StatCard label="Applications Sent"  value={loading ? '-' : applications.length}   icon={Send}         color="emerald" />
+        <StatCard label="Profile Score"      value={`${profileScore}%`} icon={Award}        color="purple" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Activity */}
         <div className="lg:col-span-2">
           <SectionCard
-            title="Recent Activity"
+            title="Recent Applications"
             subtitle="Your latest interactions on the platform"
             action={
-              <button className="text-xs font-semibold text-blue-400 hover:text-blue-300 flex items-center gap-1 transition-colors">
+              <button 
+                onClick={() => navigate('/dashboard/student')}
+                className="text-xs font-semibold text-blue-400 hover:text-blue-300 flex items-center gap-1 transition-colors"
+              >
                 View all <ArrowRight className="w-3 h-3" />
               </button>
             }
           >
             <ul className="space-y-3">
-              {RECENT_ACTIVITY.map((item) => {
-                const { badge, label } = STATUS_COLOR[item.status] || STATUS_COLOR.info;
-                return (
-                  <li
-                    key={item.id}
-                    className="flex items-center gap-4 p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/60 hover:border-slate-700/60 transition-colors"
-                  >
-                    <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" />
-                    <p className="text-sm text-slate-200 flex-1 min-w-0 truncate">{item.text}</p>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <Badge variant={badge} size="sm">{label}</Badge>
-                      <span className="text-[11px] text-slate-500 hidden sm:block">{item.time}</span>
-                    </div>
-                  </li>
-                );
-              })}
+              {loading ? (
+                <div className="flex justify-center py-4"><Spinner /></div>
+              ) : applications.length > 0 ? (
+                applications.slice(0, 5).map((app) => {
+                  const { badge, label } = STATUS_COLOR[app.status] || { badge: 'slate', label: app.status };
+                  return (
+                    <li
+                      key={app._id}
+                      className="flex flex-col sm:flex-row sm:items-center gap-4 p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/60 hover:border-slate-700/60 transition-colors cursor-pointer"
+                      onClick={() => navigate(`/projects/${app.project?._id || app.projectOpportunityId}`)}
+                    >
+                      <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 hidden sm:block" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-slate-200 truncate">{app.project?.title || 'Unknown Project'}</p>
+                        <p className="text-xs text-slate-500 truncate mt-0.5">{app.project?.shortDescription}</p>
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0 mt-2 sm:mt-0">
+                        <Badge variant={badge} size="sm">{label}</Badge>
+                        <span className="text-[11px] text-slate-500 flex items-center gap-1"><Clock className="w-3 h-3" /> {formatDate(app.createdAt)}</span>
+                      </div>
+                    </li>
+                  );
+                })
+              ) : (
+                <p className="text-center text-sm text-slate-500 py-4">No recent applications found.</p>
+              )}
             </ul>
           </SectionCard>
         </div>
@@ -102,11 +143,11 @@ const StudentDashboard = () => {
                 onClick={() => navigate(ROUTES.PROFILE)}
               />
               <ActionCard
-                label="Explore Careers"
-                desc="Find recruiter opportunities"
-                icon={Briefcase}
+                label="My Applications"
+                desc="Check application statuses"
+                icon={Send}
                 color="emerald"
-                onClick={() => {}}
+                onClick={() => navigate('/dashboard/student')} // You can route to StudentApplications component if it has a route
               />
             </div>
           </SectionCard>
@@ -116,20 +157,20 @@ const StudentDashboard = () => {
             <div className="space-y-3">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-slate-400">Overall Score</span>
-                <span className="font-bold text-blue-400">75%</span>
+                <span className="font-bold text-blue-400">{profileScore}%</span>
               </div>
               <div className="h-2 rounded-full bg-slate-800 overflow-hidden">
                 <div
                   className="h-full rounded-full bg-gradient-to-r from-blue-600 to-blue-400 transition-all duration-700"
-                  style={{ width: '75%' }}
+                  style={{ width: `${profileScore}%` }}
                 />
               </div>
               <div className="space-y-1.5">
                 {[
-                  { label: 'Basic Info',      done: true },
-                  { label: 'Skills Added',    done: true },
-                  { label: 'GitHub Linked',   done: false },
-                  { label: 'Resume Uploaded', done: false },
+                  { label: 'Basic Info',      done: profileScore > 10 },
+                  { label: 'Skills Added',    done: profile?.skills?.length > 0 },
+                  { label: 'Bio Added',   done: !!profile?.bio },
+                  { label: 'Contact Info', done: !!profile?.contactEmail },
                 ].map(({ label, done }) => (
                   <div key={label} className="flex items-center gap-2 text-xs">
                     <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center flex-shrink-0 ${done ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-600'}`}>

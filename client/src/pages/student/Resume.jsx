@@ -15,7 +15,7 @@ import {
   FileCheck,
   Calendar,
   HardDrive,
-  Info,
+  ShieldCheck,
 } from 'lucide-react';
 
 import DashboardLayout from '@/layouts/DashboardLayout';
@@ -24,7 +24,9 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Spinner, { FullPageSpinner } from '@/components/ui/Spinner';
 import Badge from '@/components/ui/Badge';
+import VerificationBadge from '@/components/verification/VerificationBadge';
 import { getResume, uploadResume, replaceResume, deleteResume } from '@/services/resumeService';
+import { submitVerification } from '@/services/verificationService';
 import { getErrorMessage, formatDate } from '@/utils/formatters';
 
 // ── Validation Schema ─────────────────────────────────────────
@@ -60,11 +62,11 @@ const Resume = () => {
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [actionError, setActionError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [submittingVerification, setSubmittingVerification] = useState(false);
 
   const fileInputRef = useRef(null);
 
   const {
-    register,
     handleSubmit,
     setValue,
     reset,
@@ -195,6 +197,21 @@ const Resume = () => {
     }
   };
 
+  // Submit for Verification Handler
+  const handleSubmitVerification = async () => {
+    if (!resume) return;
+    try {
+      setSubmittingVerification(true);
+      showError('');
+      await submitVerification({ targetType: 'RESUME', targetId: resume._id });
+      showSuccess('Resume submitted for faculty verification! You will be notified once reviewed.');
+    } catch (err) {
+      showError(getErrorMessage(err, 'Failed to submit for verification'));
+    } finally {
+      setSubmittingVerification(false);
+    }
+  };
+
   if (loading) {
     return <FullPageSpinner message="Loading resume details…" />;
   }
@@ -215,10 +232,14 @@ const Resume = () => {
           </div>
 
           {resume && (
-            <Badge variant="success" size="md" className="flex items-center gap-1.5 py-1.5 px-3">
-              <FileCheck className="w-4 h-4 text-emerald-400" />
-              <span>Resume Active</span>
-            </Badge>
+            <div className="flex items-center gap-2">
+              <VerificationBadge
+                targetType="RESUME"
+                targetId={resume._id}
+                size="md"
+                showDetails={true}
+              />
+            </div>
           )}
         </div>
       </div>
@@ -256,6 +277,15 @@ const Resume = () => {
                     onClick={() => setPreviewModalOpen(true)}
                   >
                     Preview
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    leftIcon={ShieldCheck}
+                    loading={submittingVerification}
+                    onClick={handleSubmitVerification}
+                  >
+                    Submit for Verification
                   </Button>
                   <Button
                     variant="danger"

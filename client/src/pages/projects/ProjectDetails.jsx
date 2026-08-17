@@ -6,6 +6,7 @@ import DashboardLayout from '@/layouts/DashboardLayout';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
+import VerificationBadge from '@/components/verification/VerificationBadge';
 import { getProjectById } from '@/services/projectService';
 import { formatDate, getErrorMessage } from '@/utils/formatters';
 import { FullPageSpinner } from '@/components/ui/Spinner';
@@ -39,7 +40,16 @@ const ProjectDetails = () => {
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
           <div>
             <button type="button" onClick={() => navigate('/projects')} className="mb-3 inline-flex items-center gap-1 text-xs font-semibold text-slate-400 hover:text-white"><ArrowLeft className="h-3.5 w-3.5" /> Back to portfolio</button>
-            <div className="flex flex-wrap items-center gap-2"><Badge variant="blue" size="sm">{project.category}</Badge><Badge variant={project.verificationStatus === 'Verified' ? 'emerald' : project.verificationStatus === 'Rejected' ? 'rose' : 'amber'} size="sm">{project.verificationStatus}</Badge></div>
+            <div className="flex flex-wrap items-center gap-3">
+              <Badge variant="blue" size="sm">{project.category}</Badge>
+              <VerificationBadge
+                verification={project.verification}
+                targetType="PROJECT"
+                targetId={project._id}
+                size="sm"
+                showDetails={true}
+              />
+            </div>
             <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-white">{project.title}</h1>
             <p className="mt-2 max-w-3xl text-base text-slate-400">{project.shortDescription}</p>
           </div>

@@ -50,10 +50,16 @@ export const deleteProject = async (id) => {
   return response.data;
 };
 
+export const getMyProjects = async (params = {}) => {
+  const response = await api.get('/projects/my', { params });
+  return response.data;
+};
+
 export default {
   getProjects,
   getProjectById,
   createProject,
   updateProject,
   deleteProject,
+  getMyProjects,
 };

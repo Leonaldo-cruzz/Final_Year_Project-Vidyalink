@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FolderKanban, PlusCircle, Search, Filter, Loader2, Sparkles, Send, Briefcase } from 'lucide-react';
+import { FolderKanban, PlusCircle, Search, Loader2, Send } from 'lucide-react';
 
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { SectionCard } from '@/components/ui/Card';

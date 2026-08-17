@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Award, ShieldCheck, CheckCircle2, Share2, ExternalLink, Calendar, User, Building, Code2, Loader2, Sparkles } from 'lucide-react';
+import { Award, ShieldCheck, CheckCircle2, Share2, Calendar, User, Building, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { SectionCard } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import Avatar from '@/components/ui/Avatar';
 import { getMyPortfolios, verifyCertificate } from '@/services/portfolioService';
 import { getErrorMessage } from '@/utils/formatters';
 

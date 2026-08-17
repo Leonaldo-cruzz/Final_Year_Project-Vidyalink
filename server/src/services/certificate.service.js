@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import Certificate from '../models/certificate.model.js';
+import verificationService, { normalizeVerificationStatus } from './verification.service.js';
 import ApiError from '../utils/ApiError.js';
 import { CERTIFICATE_DIRECTORY, CERTIFICATE_PUBLIC_PATH } from '../middleware/certificateUpload.middleware.js';
 
@@ -21,7 +22,6 @@ class CertificateService {
       mimeType: file.mimetype,
     };
 
-    // Ensure verificationStatus is strictly 'Pending' upon creation by student
     const certificate = await Certificate.create({
       userId,
       title: certificateData.title,
@@ -33,10 +33,9 @@ class CertificateService {
       credentialUrl: certificateData.credentialUrl || null,
       certificateFile,
       skills: Array.isArray(certificateData.skills) ? certificateData.skills : [],
-      verificationStatus: 'Pending', // Enforce Pending status
     });
 
-    return certificate;
+    return verificationService.attachToTarget(userId, 'CERTIFICATE', certificate);
   }
 
   /**
@@ -45,9 +44,11 @@ class CertificateService {
   async getCertificates(userId, { status, search, sort } = {}) {
     const query = { userId };
 
-    // Filter by verification status
-    if (status && status !== 'All') {
-      query.verificationStatus = status;
+    const verificationStatus = normalizeVerificationStatus(status);
+    if (verificationStatus) {
+      query._id = {
+        $in: await verificationService.getTargetIdsByStatus(userId, 'CERTIFICATE', verificationStatus),
+      };
     }
 
     // Search by title, issuer, or category
@@ -65,19 +66,23 @@ class CertificateService {
     if (sort === 'Oldest') {
       sortOptions = { createdAt: 1 };
     } else if (sort === 'Verified First') {
-      // Custom sort: Verified first, then Pending, then Rejected
       const certificates = await Certificate.find(query);
-      const statusOrder = { Verified: 1, Pending: 2, Rejected: 3 };
-      return certificates.sort((a, b) => {
-        const orderA = statusOrder[a.verificationStatus] || 4;
-        const orderB = statusOrder[b.verificationStatus] || 4;
+      const certificatesWithVerification = await verificationService.attachToTargets(
+        userId,
+        'CERTIFICATE',
+        certificates
+      );
+      const statusOrder = { VERIFIED: 1, PENDING: 2, CHANGES_REQUESTED: 3, REJECTED: 4 };
+      return certificatesWithVerification.sort((a, b) => {
+        const orderA = statusOrder[a.verification?.status] || 5;
+        const orderB = statusOrder[b.verification?.status] || 5;
         if (orderA !== orderB) return orderA - orderB;
         return new Date(b.createdAt) - new Date(a.createdAt);
       });
     }
 
     const certificates = await Certificate.find(query).sort(sortOptions);
-    return certificates;
+    return verificationService.attachToTargets(userId, 'CERTIFICATE', certificates);
   }
 
   /**
@@ -88,7 +93,7 @@ class CertificateService {
     if (!certificate) {
       throw ApiError.notFound('Certificate not found');
     }
-    return certificate;
+    return verificationService.attachToTarget(userId, 'CERTIFICATE', certificate);
   }
 
   /**
@@ -133,12 +138,10 @@ class CertificateService {
       };
     }
 
-    // Editing resets status to Pending if it was previously modified
-    certificate.verificationStatus = 'Pending';
     certificate.updatedAt = new Date();
 
     await certificate.save();
-    return certificate;
+    return verificationService.attachToTarget(userId, 'CERTIFICATE', certificate);
   }
 
   /**
