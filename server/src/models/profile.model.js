@@ -173,6 +173,10 @@ const profileSchema = new mongoose.Schema(
 );
 
 profileSchema.index({ user: 1 }, { unique: true });
+profileSchema.index({ skills: 1 });
+profileSchema.index({ branch: 1, graduationYear: 1 });
+profileSchema.index({ college: 1 });
+profileSchema.index({ createdAt: -1 });
 
 const Profile = mongoose.model('Profile', profileSchema);
 

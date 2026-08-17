@@ -48,7 +48,9 @@ export const env = Object.freeze({
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN || undefined,
   TRUST_PROXY: process.env.TRUST_PROXY || 'false',
   RATE_LIMIT_WINDOW_MS: Number.parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 15 * 60 * 1000,
-  RATE_LIMIT_MAX_REQUESTS: Number.parseInt(process.env.RATE_LIMIT_MAX_REQUESTS, 10) || 100,
+  RATE_LIMIT_MAX_REQUESTS: Number.parseInt(process.env.RATE_LIMIT_MAX_REQUESTS, 10) || 1000,
+  AI_SERVICE_URL: process.env.AI_SERVICE_URL || 'http://localhost:8000',
+  AI_SERVICE_TIMEOUT_MS: Number.parseInt(process.env.AI_SERVICE_TIMEOUT_MS, 10) || 10000,
 });
 
 export default env;
