@@ -5,6 +5,8 @@ import morgan from 'morgan';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
+import mongoose from 'mongoose';
+import swaggerUi from 'swagger-ui-express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -23,6 +25,7 @@ import errorHandler from './middleware/errorHandler.js';
 import ApiError from './utils/ApiError.js';
 import ApiResponse from './utils/ApiResponse.js';
 import { env } from './config/env.js';
+import openapiDocument from './config/openapi.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -40,6 +43,19 @@ const getTrustProxySetting = () => {
   if (value === 'false') return false;
   const asNumber = Number(value);
   return Number.isInteger(asNumber) ? asNumber : value;
+};
+
+const getHealthPayload = () => {
+  const databaseStates = ['disconnected', 'connected', 'connecting', 'disconnecting'];
+  const databaseState = databaseStates[mongoose.connection.readyState] || 'unknown';
+
+  return {
+    service: 'vidyalink-api',
+    environment: env.NODE_ENV,
+    database: databaseState,
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+  };
 };
 
 export const createApp = () => {
@@ -79,9 +95,13 @@ export const createApp = () => {
     healthCheck: `${apiPrefix}/health`,
   }));
 
-  app.get(`${apiPrefix}/health`, (_req, res) => ApiResponse.ok(res, 'Service is healthy', {
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
+  const healthHandler = (_req, res) => ApiResponse.ok(res, 'Service is healthy', getHealthPayload());
+  app.get('/health', healthHandler);
+  app.get(`${apiPrefix}/health`, healthHandler);
+
+  app.get('/api-docs/openapi.json', (_req, res) => res.json(openapiDocument));
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiDocument, {
+    customSiteTitle: 'VidyaLink API Documentation',
   }));
   app.use(`${apiPrefix}/auth`, authRoutes);
   app.use(`${apiPrefix}/profile`, profileRoutes);

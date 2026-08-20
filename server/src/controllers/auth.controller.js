@@ -27,7 +27,9 @@ class AuthController {
 
     res.cookie('refreshToken', refreshToken, getRefreshTokenCookieOptions());
 
-    return ApiResponse.ok(res, 'Login successful', { accessToken, refreshToken, user });
+    // The refresh token is intentionally cookie-only. Returning it in JSON makes
+    // it available to JavaScript and defeats the protection provided by httpOnly.
+    return ApiResponse.ok(res, 'Login successful', { accessToken, user });
   });
 
   /**
@@ -59,7 +61,8 @@ class AuthController {
 
     res.cookie('refreshToken', refreshToken, getRefreshTokenCookieOptions());
 
-    return ApiResponse.ok(res, 'Token refreshed successfully', { accessToken, refreshToken });
+    // Rotate the cookie without exposing a refresh token in the response body.
+    return ApiResponse.ok(res, 'Token refreshed successfully', { accessToken });
   });
 }
 

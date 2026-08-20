@@ -8,7 +8,7 @@ const createProject = asyncHandler(async (req, res) => {
 });
 
 const getProjects = asyncHandler(async (req, res) => {
-  const projects = await projectService.getProjects(req.user._id, req.query);
+  const projects = await projectService.getProjects(req.user._id, req.validated?.query || req.query);
   return ApiResponse.ok(res, 'Projects fetched successfully', projects);
 });
 

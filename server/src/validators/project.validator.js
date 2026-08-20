@@ -86,3 +86,11 @@ const updateProjectBodySchema = createProjectBodySchema.partial().extend({
 
 export const createProjectSchema = z.object({ body: createProjectBodySchema });
 export const updateProjectSchema = z.object({ body: updateProjectBodySchema });
+
+export const projectListQuerySchema = z.object({
+  query: z.object({
+    filter: z.enum(['Verified', 'Pending', 'Completed', 'In Progress', 'Featured']).optional(),
+    search: z.string().trim().max(200).optional(),
+    sort: z.enum(['Oldest', 'A-Z', 'Recently Updated']).optional(),
+  }).strict(),
+});

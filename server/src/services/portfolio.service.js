@@ -52,8 +52,10 @@ class PortfolioService {
 
   async verifyCertificate(certificateId) {
     const portfolio = await Portfolio.findOne({ certificateId })
-      .populate('student', 'fullName email avatar college branch graduationYear')
-      .populate('verifiedBy', 'fullName email avatar college role')
+      // This is a public endpoint. Do not disclose email addresses or other
+      // account-only fields in a portfolio verification response.
+      .populate('student', 'fullName avatar college branch graduationYear')
+      .populate('verifiedBy', 'fullName avatar college role')
       .populate({
         path: 'workspace',
         populate: { path: 'project' },

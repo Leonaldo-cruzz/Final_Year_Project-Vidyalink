@@ -6,6 +6,7 @@ import projectScreenshotUpload from '../middleware/projectScreenshotUpload.middl
 import validate from '../middleware/validate.middleware.js';
 import {
   createProjectSchema,
+  projectListQuerySchema,
   updateProjectSchema,
 } from '../validators/project.validator.js';
 
@@ -20,7 +21,7 @@ router.post(
   validate(createProjectSchema),
   projectController.createProject
 );
-router.get('/', projectController.getProjects);
+router.get('/', validate(projectListQuerySchema), projectController.getProjects);
 router.get('/:id', projectController.getProjectById);
 router.put(
   '/:id',

@@ -8,7 +8,7 @@ const createCertificate = asyncHandler(async (req, res) => {
 });
 
 const getCertificates = asyncHandler(async (req, res) => {
-  const { status, search, sort } = req.query;
+  const { status, search, sort } = req.validated?.query || req.query;
   const certificates = await certificateService.getCertificates(req.user._id, { status, search, sort });
   return ApiResponse.ok(res, 'Certificates fetched successfully', certificates);
 });

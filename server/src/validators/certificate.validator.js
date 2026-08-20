@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { CERTIFICATE_CATEGORIES } from '../models/certificate.model.js';
 
-export const createCertificateSchema = z.object({
+const certificateBodySchema = z.object({
   title: z
     .string({ required_error: 'Title is required' })
     .trim()
@@ -53,4 +53,21 @@ export const createCertificateSchema = z.object({
     }),
 });
 
-export const updateCertificateSchema = createCertificateSchema.partial();
+export const createCertificateSchema = certificateBodySchema;
+export const updateCertificateSchema = certificateBodySchema.partial();
+
+export const createCertificateRequestSchema = z.object({
+  body: certificateBodySchema,
+});
+
+export const updateCertificateRequestSchema = z.object({
+  body: certificateBodySchema.partial(),
+});
+
+export const certificateListQuerySchema = z.object({
+  query: z.object({
+    status: z.enum(['All', 'Pending', 'Verified', 'Rejected']).optional(),
+    search: z.string().trim().max(200).optional(),
+    sort: z.enum(['Oldest', 'Verified First']).optional(),
+  }).strict(),
+});
