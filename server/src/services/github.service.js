@@ -1,4 +1,4 @@
-/* global AbortController, clearTimeout, fetch, setTimeout */
+/* global AbortController, clearTimeout, setTimeout */
 
 import GitHubAccount from '../models/githubAccount.model.js';
 import ApiError from '../utils/ApiError.js';

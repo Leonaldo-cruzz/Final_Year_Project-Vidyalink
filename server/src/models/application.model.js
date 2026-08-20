@@ -161,6 +161,8 @@ applicationSchema.pre('save', function (next) {
 
 // Prevent duplicate applications by same student on same project
 applicationSchema.index({ projectOpportunityId: 1, studentId: 1 }, { unique: true });
+applicationSchema.index({ status: 1, updatedAt: -1 });
+applicationSchema.index({ interviewDate: 1 });
 
 const Application = mongoose.model('Application', applicationSchema);
 

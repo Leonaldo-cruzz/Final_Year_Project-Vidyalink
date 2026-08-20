@@ -173,6 +173,7 @@ const profileSchema = new mongoose.Schema(
 );
 
 profileSchema.index({ user: 1 }, { unique: true });
+profileSchema.index({ updatedAt: -1 });
 
 const Profile = mongoose.model('Profile', profileSchema);
 

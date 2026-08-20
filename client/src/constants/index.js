@@ -39,7 +39,9 @@ export const ROUTES = {
   FACULTY_DASHBOARD:   '/dashboard/faculty',
   RECRUITER_DASHBOARD: '/dashboard/recruiter',
   ALUMNI_DASHBOARD:    '/dashboard/alumni',
-  ADMIN_DASHBOARD:     '/dashboard/admin',
+  ADMIN_DASHBOARD:     '/admin',
+  ADMIN_USERS:         '/admin/users',
+  ADMIN_ANALYTICS:     '/admin/analytics',
 
   // Shared
   PROFILE:   '/profile',
@@ -118,7 +120,8 @@ export const NAV_ITEMS = {
   ],
   [ROLES.ADMIN]: [
     { label: 'Dashboard',       icon: 'LayoutDashboard', path: ROUTES.ADMIN_DASHBOARD },
-    { label: 'Users',           icon: 'Users',           path: '/admin/users' },
+    { label: 'Users',           icon: 'Users',           path: ROUTES.ADMIN_USERS },
+    { label: 'Analytics',       icon: 'Activity',        path: ROUTES.ADMIN_ANALYTICS },
     { label: 'Projects',        icon: 'FolderKanban',    path: ROUTES.PROJECTS },
     { label: 'Workspaces',      icon: 'Briefcase',       path: ROUTES.WORKSPACES },
     { label: 'My Profile',      icon: 'UserCircle',      path: ROUTES.PROFILE },

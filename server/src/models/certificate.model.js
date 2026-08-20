@@ -88,6 +88,8 @@ const certificateSchema = new mongoose.Schema(
   }
 );
 
+certificateSchema.index({ verificationStatus: 1, createdAt: -1 });
+
 const Certificate = mongoose.models.Certificate || mongoose.model('Certificate', certificateSchema);
 
 export default Certificate;

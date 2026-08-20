@@ -129,6 +129,8 @@ const projectSchema = new mongoose.Schema(
 
 projectSchema.index({ userId: 1, createdAt: -1 });
 projectSchema.index({ userId: 1, verificationStatus: 1, projectStatus: 1 });
+projectSchema.index({ verificationStatus: 1, createdAt: -1 });
+projectSchema.index({ projectStatus: 1, createdAt: -1 });
 
 const Project = mongoose.models.Project || mongoose.model('Project', projectSchema);
 

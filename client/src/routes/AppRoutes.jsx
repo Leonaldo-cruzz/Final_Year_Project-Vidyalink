@@ -13,6 +13,8 @@ import FacultyDashboard   from '@/pages/faculty/FacultyDashboard';
 import RecruiterDashboard from '@/pages/recruiter/RecruiterDashboard';
 import AlumniDashboard    from '@/pages/alumni/AlumniDashboard';
 import AdminDashboard     from '@/pages/admin/AdminDashboard';
+import UserManagement     from '@/pages/admin/UserManagement';
+import Analytics          from '@/pages/admin/Analytics';
 
 // Shared pages
 import Profile        from '@/pages/Profile';
@@ -78,13 +80,30 @@ const AppRoutes = () => (
       }
     />
     <Route
-      path="/dashboard/admin"
+      path="/admin"
       element={
         <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
           <AdminDashboard />
         </ProtectedRoute>
       }
     />
+    <Route
+      path="/admin/users"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+          <UserManagement />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/admin/analytics"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+          <Analytics />
+        </ProtectedRoute>
+      }
+    />
+    <Route path="/dashboard/admin" element={<Navigate to="/admin" replace />} />
 
     {/* Legacy /dashboard — redirect based on role */}
     <Route
@@ -205,7 +224,7 @@ const ROLE_ROUTE_MAP = {
   faculty:   '/dashboard/faculty',
   recruiter: '/dashboard/recruiter',
   alumni:    '/dashboard/alumni',
-  admin:     '/dashboard/admin',
+  admin:     '/admin',
 };
 
 const RoleRedirect = () => {

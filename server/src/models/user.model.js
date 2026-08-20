@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
-import { env } from "../config/env.js";
 import { generateAccessToken, generateRefreshToken } from "../utils/jwt.util.js";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -108,6 +107,8 @@ const userSchema = new mongoose.Schema(
 userSchema.index({ role: 1 });
 userSchema.index({ status: 1 });
 userSchema.index({ role: 1, status: 1 });
+userSchema.index({ createdAt: -1 });
+userSchema.index({ fullName: 1 });
 
 // ─── Pre-save Middleware ───────────────────────────────────────────────────────
 
