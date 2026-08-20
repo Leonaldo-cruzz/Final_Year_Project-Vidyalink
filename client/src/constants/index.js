@@ -52,6 +52,7 @@ export const ROUTES = {
   RESUME: '/resume',
   CERTIFICATES: '/certificates',
   GITHUB: '/github',
+  NOTIFICATIONS: '/notifications',
   VERIFY_PORTFOLIO: '/portfolio/verify/:certificateId',
 
   // Fallback

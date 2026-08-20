@@ -5,6 +5,7 @@ import { Bell, Sun, Moon, ChevronDown, LogOut, UserCircle, Settings } from 'luci
 import { useAuth } from '@/context/AuthContext';
 import { ROUTES, ROLE_COLORS, ROLE_LABELS } from '@/constants';
 import { getInitials } from '@/utils/formatters';
+import NotificationBell from '@/components/notifications/NotificationBell';
 
 const Topbar = ({ theme, onThemeToggle }) => {
   const { user, logout } = useAuth();
@@ -47,13 +48,7 @@ const Topbar = ({ theme, onThemeToggle }) => {
         </button>
 
         {/* Notifications */}
-        <button
-          className="relative w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-all"
-          aria-label="Notifications"
-        >
-          <Bell className="w-4 h-4" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-blue-500 ring-2 ring-slate-950" />
-        </button>
+        <NotificationBell />
 
         {/* Separator */}
         <div className="w-px h-6 bg-slate-800 mx-1" />

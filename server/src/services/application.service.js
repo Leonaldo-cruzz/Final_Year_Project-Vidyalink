@@ -3,6 +3,7 @@ import Project from '../models/project.model.js';
 import ProjectEngagement from '../models/projectEngagement.model.js';
 import Workspace from '../models/workspace.model.js';
 import ApiError from '../utils/ApiError.js';
+import notificationEventsService from './notificationEvents.service.js';
 
 class ApplicationService {
   async applyToProject(studentId, data) {
@@ -141,6 +142,18 @@ class ApplicationService {
 
     await application.save();
 
+    const studentTargetId = application.studentId || application.student;
+    const projectTitle = project?.title || 'Project Opportunity';
+
+    if (formattedStatus === 'Shortlisted') {
+      notificationEventsService.notifyCandidateShortlisted({
+        studentId: studentTargetId,
+        recruiterId: userId,
+        projectTitle,
+        entityId: application._id,
+      });
+    }
+
     if (formattedStatus === 'Selected') {
       return this.selectCandidate(userId, applicationId, { recruiterNotes: recruiterNotes || feedback }, userRole);
     }
@@ -170,6 +183,19 @@ class ApplicationService {
     if (recruiterNotes) application.recruiterNotes = recruiterNotes;
 
     await application.save();
+
+    const studentTargetId = application.studentId || application.student;
+    const projectTitle = project?.title || 'Interview Opportunity';
+
+    notificationEventsService.notifyInterviewScheduled({
+      studentId: studentTargetId,
+      recruiterId: userId,
+      projectTitle,
+      interviewDate: application.interviewDate,
+      interviewMode,
+      entityId: application._id,
+    });
+
     return application;
   }
 
@@ -198,6 +224,14 @@ class ApplicationService {
     application.selectedAt = new Date();
     if (recruiterNotes) application.recruiterNotes = recruiterNotes;
     await application.save();
+
+    notificationEventsService.notifyInterviewCompleted({
+      studentId,
+      actorId: userId,
+      title: project?.title || 'Project Application',
+      status: 'Selected',
+      entityId: application._id,
+    });
 
     // 2. Update project status & selectedStudent
     project.status = 'in_progress';

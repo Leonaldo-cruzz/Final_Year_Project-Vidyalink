@@ -27,6 +27,7 @@ import VerifiedPortfolio from '@/pages/portfolio/VerifiedPortfolio';
 import Resume from '@/pages/student/Resume';
 import Certificates from '@/pages/student/Certificates';
 import GithubIntegration from '@/pages/student/GithubIntegration';
+import Notifications from '@/pages/notifications/Notifications';
 import NotFound       from '@/pages/NotFound';
 
 // Route guards
@@ -190,6 +191,14 @@ const AppRoutes = () => (
       element={
         <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
           <GithubIntegration />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/notifications"
+      element={
+        <ProtectedRoute>
+          <Notifications />
         </ProtectedRoute>
       }
     />
