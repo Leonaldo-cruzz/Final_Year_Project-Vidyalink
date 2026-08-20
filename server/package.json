@@ -8,6 +8,8 @@
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
+    "test": "node --test tests/security.config.test.js",
+    "test:security": "node --test tests/security.config.test.js",
     "test:api": "node src/scripts/test-api.js",
     "test:project-portfolio": "node src/scripts/test-project-portfolio.js",
     "test:github-integration": "node src/scripts/test-github-integration.js",

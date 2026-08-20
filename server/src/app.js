@@ -29,12 +29,12 @@ const __dirname = path.dirname(__filename);
 const uploadsDirectory = path.resolve(__dirname, '../uploads');
 
 const getAllowedOrigins = () => {
-  const origins = env.CORS_ORIGIN || env.CLIENT_URL;
+  const origins = env.client.corsOrigins || env.client.url;
   return origins.split(',').map((origin) => origin.trim()).filter(Boolean);
 };
 
 const getTrustProxySetting = () => {
-  const value = env.TRUST_PROXY;
+  const value = env.security.trustProxy;
   if (!value) return false;
   if (value === 'true') return true;
   if (value === 'false') return false;
@@ -44,7 +44,7 @@ const getTrustProxySetting = () => {
 
 export const createApp = () => {
   const app = express();
-  const apiPrefix = env.API_PREFIX;
+  const apiPrefix = env.api.prefix;
   const allowedOrigins = getAllowedOrigins();
 
   app.disable('x-powered-by');
@@ -62,12 +62,12 @@ export const createApp = () => {
   app.use(express.json({ limit: '10kb' }));
   app.use(express.urlencoded({ extended: true, limit: '10kb' }));
   app.use(cookieParser());
-  app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+  app.use(morgan(env.nodeEnv === 'production' ? 'combined' : 'dev'));
   app.use('/uploads', express.static(uploadsDirectory, { maxAge: '1d' }));
 
   const limiter = rateLimit({
-    windowMs: env.RATE_LIMIT_WINDOW_MS,
-    max: env.RATE_LIMIT_MAX_REQUESTS,
+    windowMs: env.security.rateLimitWindowMs,
+    max: env.security.rateLimitMaxRequests,
     standardHeaders: true,
     legacyHeaders: false,
     handler: (_req, res) => ApiResponse.error(res, 429, 'Too many requests. Please try again later.'),

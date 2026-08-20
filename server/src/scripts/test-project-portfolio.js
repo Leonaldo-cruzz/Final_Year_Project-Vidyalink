@@ -1,18 +1,21 @@
 import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
 import mongoose from 'mongoose';
-import env from '../config/env.js';
+import { env } from '../config/env.js';
 import User from '../models/user.model.js';
 import projectService from '../services/project.service.js';
+import logger from '../utils/logger.js';
 
 const run = async () => {
   let testUser;
+  const testPassword = `Test-${randomUUID()}-Aa1!`;
 
   try {
-    await mongoose.connect(env.MONGODB_URI);
+    await mongoose.connect(env.database.mongoUri);
     testUser = await User.create({
       fullName: 'Project Portfolio Test Student',
       email: `project_portfolio_${Date.now()}@vidyalink.test`,
-      password: 'Password123!',
+      password: testPassword,
       role: 'student',
       status: 'active',
     });
@@ -61,6 +64,6 @@ const run = async () => {
 };
 
 run().catch((error) => {
-  console.error('Project portfolio CRUD tests failed:', error);
+  logger.error('Project portfolio CRUD tests failed', error);
   process.exitCode = 1;
 });

@@ -41,7 +41,8 @@ export const getAccessToken = () => _accessToken;
 
 // ── Axios Instance ───────────────────────────────────────────
 const api = axios.create({
-  baseURL: '/api/v1',
+  // VITE_API_BASE_URL is intentionally limited to a public browser-safe URL.
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },

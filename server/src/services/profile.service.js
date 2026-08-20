@@ -2,6 +2,7 @@ import Profile from '../models/profile.model.js';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import ApiError from '../utils/ApiError.js';
+import logger from '../utils/logger.js';
 import {
   PROFILE_PHOTO_DIRECTORY,
   PROFILE_PHOTO_PUBLIC_PATH,
@@ -62,7 +63,7 @@ const removeFile = async (filePath) => {
     await fs.unlink(filePath);
   } catch (error) {
     if (error.code !== 'ENOENT') {
-      console.error('Unable to remove profile photo:', error.message);
+      logger.warn('Unable to remove profile photo', error);
     }
   }
 };

@@ -2,7 +2,6 @@ import User from '../models/user.model.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import { verifyAccessToken } from '../utils/jwt.util.js';
-import { env } from '../config/env.js';
 
 /**
  * JWT Authentication Middleware
@@ -37,13 +36,6 @@ const authenticate = asyncHandler(async (req, _res, next) => {
   const userId = decoded.sub || decoded._id;
   if (!userId) {
     throw ApiError.unauthorized('Invalid access token payload');
-  }
-
-  if (env.NODE_ENV === 'development') {
-    console.log('[Auth Middleware Debug] Token Decoded Payload:', decoded);
-    console.log('[Auth Middleware Debug] decoded.sub:', decoded.sub);
-    console.log('[Auth Middleware Debug] decoded._id:', decoded._id);
-    console.log('[Auth Middleware Debug] User ID for DB Lookup:', userId);
   }
 
   // Find user by ID in MongoDB

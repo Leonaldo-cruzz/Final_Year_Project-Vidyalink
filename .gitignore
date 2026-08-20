@@ -17,15 +17,10 @@ out/
 *.tsbuildinfo
 
 # ---------------- Environment ----------------
+# Keep real environment files out of source control, while retaining templates.
 .env
-.env.local
-.env.development
-.env.development.local
-.env.test
-.env.test.local
-.env.production
-.env.production.local
-.env.staging
+.env.*
+!.env.example
 
 # ---------------- Logs ----------------
 logs/

@@ -1,71 +1,66 @@
-// ─── Logger Utility ───────────────────────────────────────────────────────────
-//
-// A structured, console-based logger for VIDYALINK.
-// Designed for single-responsibility: all log output routes through this module.
-//
-// Design decision: Uses console under the hood with timestamp + level prefix.
-// To upgrade to Winston or Pino in the future, only this file needs to change —
-// all callers remain unchanged (Open/Closed Principle).
+const REDACTED = '[REDACTED]';
+const sensitiveKeyPattern = /authorization|cookie|token|secret|password|api[_-]?key|private[_-]?key|mongodb|database[_-]?url|connection[_-]?string/i;
+
+const redactString = (value) => value
+  .replace(/(mongodb(?:\+srv)?:\/\/)([^\s@/:]+)(?::[^\s@/]+)?@/gi, `$1${REDACTED}@`)
+  .replace(/(bearer\s+)[A-Za-z0-9._~+\/-]+=*/gi, `$1${REDACTED}`)
+  .replace(/("(?:authorization|cookie|[a-z0-9_-]*token|[a-z0-9_-]*secret|[a-z0-9_-]*password|[a-z0-9_-]*key)"\s*:\s*")[^"]*"/gi, `$1${REDACTED}"`)
+  .replace(/((?:api[_-]?key|token|secret|password)\s*[=:]\s*)[^\s,;]+/gi, `$1${REDACTED}`);
+
+/**
+ * Redact credentials before they reach any log transport. Exported for tests and
+ * to keep future logger integrations subject to the same safety boundary.
+ */
+export const redactSensitiveData = (value, seen = new WeakSet()) => {
+  if (typeof value === 'string') return redactString(value);
+  if (value === null || typeof value !== 'object') return value;
+
+  if (value instanceof Error) {
+    return {
+      name: value.name,
+      message: redactString(value.message),
+      ...(typeof value.statusCode === 'number' && { statusCode: value.statusCode }),
+    };
+  }
+
+  if (seen.has(value)) return '[CIRCULAR]';
+  seen.add(value);
+
+  if (Array.isArray(value)) {
+    return value.map((item) => redactSensitiveData(item, seen));
+  }
+
+  return Object.fromEntries(Object.entries(value).map(([key, item]) => [
+    key,
+    sensitiveKeyPattern.test(key) ? REDACTED : redactSensitiveData(item, seen),
+  ]));
+};
 
 const timestamp = () => new Date().toISOString();
 
-const levels = {
-  info:    { prefix: 'ℹ️  INFO ',    fn: console.info  },
-  warn:    { prefix: '⚠️  WARN ',    fn: console.warn  },
-  error:   { prefix: '❌ ERROR',    fn: console.error },
-  success: { prefix: '✅ SUCCESS',  fn: console.log   },
-  debug:   { prefix: '🐛 DEBUG',   fn: console.debug },
+const levelDefinitions = {
+  info: { prefix: 'INFO', writer: 'info' },
+  warn: { prefix: 'WARN', writer: 'warn' },
+  error: { prefix: 'ERROR', writer: 'error' },
+  success: { prefix: 'SUCCESS', writer: 'log' },
+  debug: { prefix: 'DEBUG', writer: 'debug' },
 };
 
-const createLogger = () => {
+export const createLogger = (writers = console) => {
   const log = (level, message, ...meta) => {
-    const { prefix, fn } = levels[level];
-    const base = `[${timestamp()}] ${prefix} — ${message}`;
-    if (meta.length > 0) {
-      fn(base, ...meta);
-    } else {
-      fn(base);
-    }
+    const { prefix, writer } = levelDefinitions[level];
+    const output = writers[writer] || writers.log;
+    const base = `[${timestamp()}] ${prefix} — ${redactSensitiveData(String(message))}`;
+    output(base, ...meta.map((item) => redactSensitiveData(item)));
   };
 
-  return {
-    /**
-     * Log informational messages (server start, connection events, etc.).
-     * @param {string} message
-     * @param {...any} meta - Optional additional data to log.
-     */
+  return Object.freeze({
     info: (message, ...meta) => log('info', message, ...meta),
-
-    /**
-     * Log non-critical warnings (deprecation notices, fallback values, etc.).
-     * @param {string} message
-     * @param {...any} meta
-     */
     warn: (message, ...meta) => log('warn', message, ...meta),
-
-    /**
-     * Log errors (exceptions, connection failures, etc.).
-     * @param {string} message
-     * @param {...any} meta
-     */
     error: (message, ...meta) => log('error', message, ...meta),
-
-    /**
-     * Log successful operations (DB connected, server started, etc.).
-     * @param {string} message
-     * @param {...any} meta
-     */
     success: (message, ...meta) => log('success', message, ...meta),
-
-    /**
-     * Log debug-level messages. Intended for development only.
-     * @param {string} message
-     * @param {...any} meta
-     */
     debug: (message, ...meta) => log('debug', message, ...meta),
-  };
+  });
 };
 
-const logger = createLogger();
-
-export default logger;
+export default createLogger();

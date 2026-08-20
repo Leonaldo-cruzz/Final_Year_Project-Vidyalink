@@ -1,11 +1,18 @@
 /* global AbortController, clearTimeout, fetch, setTimeout */
 
 import GitHubAccount from '../models/githubAccount.model.js';
+import { externalServices } from '../config/externalServices.js';
 import ApiError from '../utils/ApiError.js';
 import { githubUsernamePattern } from '../validators/github.validator.js';
 
-const GITHUB_API_BASE_URL = 'https://api.github.com';
-const GITHUB_REQUEST_TIMEOUT_MS = 8_000;
+const githubConfiguration = externalServices.github;
+
+export const createGithubHeaders = (token) => ({
+  Accept: 'application/vnd.github+json',
+  'User-Agent': 'VidyaLink-GitHub-Integration',
+  'X-GitHub-Api-Version': '2022-11-28',
+  ...(token && { Authorization: `Bearer ${token}` }),
+});
 
 const normalizeUsername = (username) => {
   const normalizedUsername = String(username || '').trim().replace(/^@/, '');
@@ -31,17 +38,15 @@ const mapGithubProfile = (profile) => ({
 const fetchGithubProfile = async (username) => {
   const normalizedUsername = normalizeUsername(username);
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), GITHUB_REQUEST_TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), githubConfiguration.requestTimeoutMs);
 
   try {
     const response = await fetch(
-      `${GITHUB_API_BASE_URL}/users/${encodeURIComponent(normalizedUsername)}`,
+      `${githubConfiguration.apiBaseUrl.replace(/\/+$/, '')}/users/${encodeURIComponent(normalizedUsername)}`,
       {
-        headers: {
-          Accept: 'application/vnd.github+json',
-          'User-Agent': 'VidyaLink-GitHub-Integration',
-          'X-GitHub-Api-Version': '2022-11-28',
-        },
+        // This endpoint retrieves public profile data. Do not attach an optional
+        // private token unless a future private GitHub endpoint requires it.
+        headers: createGithubHeaders(),
         signal: controller.signal,
       }
     );
@@ -50,15 +55,21 @@ const fetchGithubProfile = async (username) => {
       throw ApiError.notFound('GitHub username was not found');
     }
 
-    if (response.status === 403 || response.status === 429) {
+    const rateLimitRemaining = response.headers?.get?.('x-ratelimit-remaining');
+    if (response.status === 429 || (response.status === 403 && rateLimitRemaining === '0')) {
       throw ApiError.tooManyRequests('GitHub rate limit reached. Please try again later.');
     }
 
     if (!response.ok) {
-      throw ApiError.internal('GitHub could not return this profile right now');
+      throw ApiError.internal('GitHub API request failed');
     }
 
-    const profile = await response.json();
+    let profile;
+    try {
+      profile = await response.json();
+    } catch {
+      throw ApiError.internal('GitHub returned an invalid response');
+    }
     if (!profile.login || !profile.html_url) {
       throw ApiError.internal('GitHub returned an incomplete profile');
     }

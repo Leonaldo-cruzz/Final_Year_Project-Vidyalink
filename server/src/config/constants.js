@@ -27,16 +27,16 @@ export const BCRYPT_SALT_ROUNDS = 12;
 const refreshTokenLifetimeMs = 7 * 24 * 60 * 60 * 1000;
 
 export const getRefreshTokenCookieOptions = () => {
-  const sameSite = env.COOKIE_SAME_SITE;
-  const secure = env.NODE_ENV === 'production' || sameSite === 'none';
+  const sameSite = env.security.cookieSameSite;
+  const secure = env.nodeEnv === 'production' || sameSite === 'none';
 
   return {
     httpOnly: true,
     secure,
     sameSite,
     maxAge: refreshTokenLifetimeMs,
-    path: `${env.API_PREFIX}/auth`,
-    ...(env.COOKIE_DOMAIN && { domain: env.COOKIE_DOMAIN }),
+    path: `${env.api.prefix}/auth`,
+    ...(env.security.cookieDomain && { domain: env.security.cookieDomain }),
   };
 };
 

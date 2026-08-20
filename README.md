@@ -72,8 +72,8 @@ cd vidyalink
 # 2. Install all dependencies (root + workspaces)
 npm install
 
-# 3. Copy environment variables
-cp .env.example .env
+# 3. Configure server-only environment variables
+cp server/.env.example server/.env
 
 # 4. Start development servers
 npm run dev
@@ -150,13 +150,50 @@ All scripts can be run from the **root** directory:
 
 ## Environment Variables
 
-Copy `.env.example` to `.env` and configure:
+The API has one configuration boundary: `server/src/config/env.js`. It loads a
+single local file (repository `.env` when present, otherwise `server/.env`),
+validates it before the application is used, and exposes structured server-only
+settings to backend code. Services must read `env` rather than `process.env`
+directly.
+
+For local development, the recommended setup is:
 
 ```bash
-cp .env.example .env
+cp server/.env.example server/.env
 ```
 
-Refer to `.env.example` for all required and optional variables.
+The required server variables are `NODE_ENV`, `PORT`, `MONGODB_URI`,
+`JWT_SECRET`, `JWT_REFRESH_SECRET`, `JWT_EXPIRES_IN`, and
+`JWT_REFRESH_EXPIRES_IN`. Startup reports every missing or invalid name at once
+without printing values.
+
+GitHub, AI, Cloudinary, and email settings are optional until a corresponding
+backend client needs them. The current GitHub integration reads public profiles
+and intentionally does not attach an optional GitHub token. AI, Cloudinary, and
+email clients are not implemented yet; their templates are reserved for a
+server-side implementation only.
+
+`DEMO_USER_PASSWORD` is optional for the API itself and required only when
+running the server seed script. Use a unique non-production value; the script
+does not ship with a default account password.
+
+Browser configuration belongs in `client/.env` and may only use `VITE_` names
+that are safe to disclose, such as `VITE_API_BASE_URL` and `VITE_APP_NAME`.
+Start from `client/.env.example`. Never place database URIs, JWT secrets,
+provider tokens, Cloudinary secrets, or email passwords in a Vite environment
+file; Vite exposes these values to browser code.
+
+### Secret handling and rotation
+
+- Keep real `.env` files out of Git. The repository ignores `.env` and `.env.*`
+  while retaining `.env.example` templates.
+- Use your deployment platform's secret manager for production rather than a
+  checked-in file.
+- Do not log credentials, cookies, JWTs, or authorization headers. The server
+  logger redacts sensitive metadata before output.
+- If a credential is ever committed or shared outside approved secret storage,
+  revoke/rotate it with the provider, update the deployment secret, and restart
+  the affected service.
 
 ## Contributing
 

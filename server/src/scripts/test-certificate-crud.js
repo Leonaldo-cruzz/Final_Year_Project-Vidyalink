@@ -1,12 +1,13 @@
 import mongoose from 'mongoose';
+import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-import env from '../config/env.js';
+import { env } from '../config/env.js';
 import User from '../models/user.model.js';
-import Certificate from '../models/certificate.model.js';
 import certificateService from '../services/certificate.service.js';
+import logger from '../utils/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,6 +20,7 @@ const colors = {
   yellow: '\x1b[33m',
   cyan: '\x1b[36m',
 };
+const testPassword = `Test-${randomUUID()}-Aa1!`;
 
 function logPass(msg) {
   console.log(`${colors.green}✔ PASS:${colors.reset} ${msg}`);
@@ -26,7 +28,7 @@ function logPass(msg) {
 
 function logFail(msg, err) {
   console.error(`${colors.red}✖ FAIL:${colors.reset} ${msg}`);
-  if (err) console.error(err);
+  if (err) logger.error('Certificate CRUD test failure', err);
 }
 
 function logHeader(msg) {
@@ -39,7 +41,7 @@ async function runCertificateCrudTests() {
   try {
     // 1. Connect to MongoDB
     console.log('Connecting to MongoDB database...');
-    await mongoose.connect(env.MONGODB_URI);
+    await mongoose.connect(env.database.mongoUri);
     logPass('MongoDB Connected');
 
     // 2. Find or Create Test Student User
@@ -48,7 +50,7 @@ async function runCertificateCrudTests() {
       studentUser = await User.create({
         fullName: 'Test Student CRUD',
         email: `cert_test_${Date.now()}@vidyalink.edu`,
-        password: 'Password123!',
+        password: testPassword,
         role: 'student',
         status: 'active',
       });

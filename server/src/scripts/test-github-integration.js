@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
 import mongoose from 'mongoose';
-import env from '../config/env.js';
+import { env } from '../config/env.js';
 import User from '../models/user.model.js';
 import GitHubAccount from '../models/githubAccount.model.js';
 import githubService from '../services/github.service.js';
+import logger from '../utils/logger.js';
 
 const mockGithubResponse = (overrides = {}) => ({
   login: 'vidyalink-test-user',
@@ -22,13 +24,14 @@ const mockGithubResponse = (overrides = {}) => ({
 const run = async () => {
   let testUser;
   const previousFetch = globalThis.fetch;
+  const testPassword = `Test-${randomUUID()}-Aa1!`;
 
   try {
-    await mongoose.connect(env.MONGODB_URI);
+    await mongoose.connect(env.database.mongoUri);
     testUser = await User.create({
       fullName: 'GitHub Integration Test Student',
       email: `github_integration_${Date.now()}@vidyalink.test`,
-      password: 'Password123!',
+      password: testPassword,
       role: 'student',
       status: 'active',
     });
@@ -75,6 +78,6 @@ const run = async () => {
 };
 
 run().catch((error) => {
-  console.error('GitHub integration tests failed:', error);
+  logger.error('GitHub integration tests failed', error);
   process.exitCode = 1;
 });

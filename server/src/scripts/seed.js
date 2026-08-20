@@ -1,12 +1,13 @@
 import mongoose from 'mongoose';
 import User from '../models/user.model.js';
 import { env } from '../config/env.js';
+import logger from '../utils/logger.js';
 
 const DEMO_USERS = [
   {
     fullName: 'Alex Student',
     email: 'student@vidyalink.edu',
-    password: 'Password123!',
+    password: env.seed.demoUserPassword,
     role: 'student',
     college: 'MIT University',
     branch: 'Computer Science',
@@ -16,7 +17,7 @@ const DEMO_USERS = [
   {
     fullName: 'Dr. Sarah Jenkins',
     email: 'faculty@vidyalink.edu',
-    password: 'Password123!',
+    password: env.seed.demoUserPassword,
     role: 'faculty',
     college: 'MIT University',
     branch: 'Computer Science',
@@ -25,7 +26,7 @@ const DEMO_USERS = [
   {
     fullName: 'Marcus Vance',
     email: 'recruiter@vidyalink.edu',
-    password: 'Password123!',
+    password: env.seed.demoUserPassword,
     role: 'recruiter',
     college: 'Tech Corp',
     isEmailVerified: true,
@@ -33,7 +34,7 @@ const DEMO_USERS = [
   {
     fullName: 'Elena Rostova',
     email: 'alumni@vidyalink.edu',
-    password: 'Password123!',
+    password: env.seed.demoUserPassword,
     role: 'alumni',
     college: 'MIT University',
     branch: 'Software Engineering',
@@ -43,7 +44,7 @@ const DEMO_USERS = [
   {
     fullName: 'System Admin',
     email: 'admin@vidyalink.edu',
-    password: 'Password123!',
+    password: env.seed.demoUserPassword,
     role: 'admin',
     isEmailVerified: true,
   },
@@ -51,11 +52,14 @@ const DEMO_USERS = [
 
 async function seed() {
   try {
-    const mongoUri = env.MONGODB_URI || 'mongodb://127.0.0.1:27017/vidyalink';
-    console.log(`Connecting to MongoDB at ${mongoUri}...`);
-    await mongoose.connect(mongoUri);
+    if (!env.seed.demoUserPassword) {
+      throw new Error('DEMO_USER_PASSWORD must be configured before running the seed script');
+    }
 
-    console.log('Seeding demo accounts...');
+    logger.info('Connecting to MongoDB for seed data');
+    await mongoose.connect(env.database.mongoUri);
+
+    logger.info('Seeding demo accounts');
 
     for (const userData of DEMO_USERS) {
       const existing = await User.findOne({ email: userData.email });
@@ -68,17 +72,17 @@ async function seed() {
         existing.graduationYear = userData.graduationYear;
         existing.isEmailVerified = true;
         await existing.save();
-        console.log(`Updated demo account: ${userData.email}`);
+        logger.info('Updated demo account', { email: userData.email });
       } else {
         await User.create(userData);
-        console.log(`Created demo account: ${userData.email}`);
+        logger.info('Created demo account', { email: userData.email });
       }
     }
 
-    console.log('Seed completed successfully!');
+    logger.success('Seed completed successfully');
     process.exit(0);
   } catch (error) {
-    console.error('Seed error:', error);
+    logger.error('Seed failed', error);
     process.exit(1);
   }
 }

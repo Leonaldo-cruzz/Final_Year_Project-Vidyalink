@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
-import { env } from "../config/env.js";
 import { generateAccessToken, generateRefreshToken } from "../utils/jwt.util.js";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -143,9 +142,7 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
 /**
  * Generates a short-lived JWT access token containing the user's identity.
  *
- * Required environment variables:
- *   - ACCESS_TOKEN_SECRET  (required)
- *   - ACCESS_TOKEN_EXPIRY  (optional, defaults to "15m")
+ * JWT settings are supplied by the validated server configuration.
  *
  * @returns {string} Signed JWT access token.
  * @throws {Error} If ACCESS_TOKEN_SECRET is not defined.

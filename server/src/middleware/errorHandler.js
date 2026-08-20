@@ -1,5 +1,6 @@
 import ApiError from '../utils/ApiError.js';
 import ApiResponse from '../utils/ApiResponse.js';
+import logger from '../utils/logger.js';
 
 const errorHandler = (error, _req, res, _next) => {
   if (error instanceof ApiError) {
@@ -33,7 +34,7 @@ const errorHandler = (error, _req, res, _next) => {
     return ApiResponse.error(res, 401, 'Token has expired');
   }
 
-  console.error('Unhandled error:', error);
+  logger.error('Unhandled request error', error);
   return ApiResponse.error(res, 500, 'Internal server error');
 };
 

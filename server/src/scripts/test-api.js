@@ -1,10 +1,14 @@
-import process from 'node:process';
-import jwt from 'jsonwebtoken';
+/* global fetch */
 
-const BASE_URL = process.env.API_BASE_URL || 'http://localhost:5000/api/v1';
-const JWT_SECRET = process.env.JWT_SECRET || 'development_access_secret_key_change_me';
-const JWT_ISSUER = process.env.JWT_ISSUER || 'vidyalink-api';
-const JWT_AUDIENCE = process.env.JWT_AUDIENCE || 'vidyalink-client';
+import { randomUUID } from 'node:crypto';
+import jwt from 'jsonwebtoken';
+import { env } from '../config/env.js';
+import { redactSensitiveData } from '../utils/logger.js';
+
+const BASE_URL = env.api.baseUrl;
+const JWT_SECRET = env.jwt.secret;
+const JWT_ISSUER = env.jwt.issuer;
+const JWT_AUDIENCE = env.jwt.audience;
 
 const colors = {
   reset: '\x1b[0m',
@@ -21,7 +25,7 @@ function logPass(message) {
 
 function logFail(message, detail = '') {
   console.error(`${colors.red}✖ FAIL${colors.reset} ${message}`);
-  if (detail) console.error(`  ${colors.red}Details:${colors.reset}`, detail);
+  if (detail) console.error(`  ${colors.red}Details:${colors.reset}`, redactSensitiveData(detail));
 }
 
 function logHeader(text) {
@@ -39,7 +43,7 @@ async function runApiTests() {
   let failedCount = 0;
 
   const testEmail = `audit_user_${Date.now()}@example.com`;
-  const testPassword = 'Password123!';
+  const testPassword = `Test-${randomUUID()}-Aa1!`;
   const testFullName = 'Audit Test User';
 
   async function request(endpoint, options = {}) {
@@ -275,7 +279,7 @@ async function runApiTests() {
   }
 }
 
-runApiTests().catch((err) => {
-  console.error('Fatal error during test suite execution:', err);
+runApiTests().catch(() => {
+  console.error('Fatal error during test suite execution');
   process.exit(1);
 });

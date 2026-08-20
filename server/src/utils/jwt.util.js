@@ -5,30 +5,30 @@ import ApiError from './ApiError.js';
 import { env } from '../config/env.js';
 
 const getAccessTokenSecret = () => {
-  if (!env.JWT_SECRET) throw ApiError.internal('JWT_SECRET is not configured');
-  return env.JWT_SECRET;
+  if (!env.jwt.secret) throw ApiError.internal('JWT_SECRET is not configured');
+  return env.jwt.secret;
 };
 
 const getRefreshTokenSecret = () => {
-  if (!env.JWT_REFRESH_SECRET) throw ApiError.internal('JWT_REFRESH_SECRET is not configured');
-  return env.JWT_REFRESH_SECRET;
+  if (!env.jwt.refreshSecret) throw ApiError.internal('JWT_REFRESH_SECRET is not configured');
+  return env.jwt.refreshSecret;
 };
 
 const getJwtOptions = () => ({
-  issuer: env.JWT_ISSUER,
-  audience: env.JWT_AUDIENCE,
+  issuer: env.jwt.issuer,
+  audience: env.jwt.audience,
 });
 
 export const generateAccessToken = (payload) => jwt.sign(payload, getAccessTokenSecret(), {
   ...getJwtOptions(),
   algorithm: 'HS256',
-  expiresIn: env.JWT_EXPIRES_IN,
+  expiresIn: env.jwt.expiresIn,
 });
 
 export const generateRefreshToken = (payload) => jwt.sign(payload, getRefreshTokenSecret(), {
   ...getJwtOptions(),
   algorithm: 'HS256',
-  expiresIn: env.JWT_REFRESH_EXPIRES_IN,
+  expiresIn: env.jwt.refreshExpiresIn,
 });
 
 export const verifyAccessToken = (token) => {
@@ -38,18 +38,8 @@ export const verifyAccessToken = (token) => {
       algorithms: ['HS256'],
     });
 
-    if (env.NODE_ENV === 'development') {
-      console.log('[JWT Debug] verifyAccessToken payload:', decoded);
-      console.log('[JWT Debug] decoded.sub:', decoded.sub);
-      console.log('[JWT Debug] decoded._id:', decoded._id);
-    }
-
     return decoded;
   } catch (error) {
-    if (env.NODE_ENV === 'development') {
-      console.error('[JWT Debug] verifyAccessToken failed:', error.name, error.message);
-    }
-
     if (error.name === 'TokenExpiredError') {
       throw ApiError.unauthorized('Access token has expired');
     }
@@ -65,16 +55,8 @@ export const verifyRefreshToken = (token) => {
       algorithms: ['HS256'],
     });
 
-    if (env.NODE_ENV === 'development') {
-      console.log('[JWT Debug] verifyRefreshToken payload:', decoded);
-    }
-
     return decoded;
   } catch (error) {
-    if (env.NODE_ENV === 'development') {
-      console.error('[JWT Debug] verifyRefreshToken failed:', error.name, error.message);
-    }
-
     if (error.name === 'TokenExpiredError') throw ApiError.unauthorized('Refresh token has expired');
     throw ApiError.unauthorized('Invalid refresh token');
   }
