@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
-import { env } from "../config/env.js";
+import { env as _env } from "../config/env.js";
 import { generateAccessToken, generateRefreshToken } from "../utils/jwt.util.js";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
