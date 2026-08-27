@@ -11,6 +11,7 @@
     "test:api": "node src/scripts/test-api.js",
     "test:project-portfolio": "node src/scripts/test-project-portfolio.js",
     "test:github-integration": "node src/scripts/test-github-integration.js",
+    "test": "vitest run",
     "lint": "eslint . --ext js --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
@@ -31,7 +32,8 @@
   },
   "devDependencies": {
     "eslint": "^9.17.0",
-    "nodemon": "^3.1.9"
+    "nodemon": "^3.1.9",
+    "vitest": "^3.2.7"
   },
   "engines": {
     "node": ">=20.0.0"
