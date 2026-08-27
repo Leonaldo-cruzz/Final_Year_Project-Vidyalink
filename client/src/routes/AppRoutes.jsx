@@ -10,6 +10,8 @@ import ForgotPassword from '@/pages/auth/ForgotPassword';
 // Role dashboards
 import StudentDashboard   from '@/pages/student/StudentDashboard';
 import FacultyDashboard   from '@/pages/faculty/FacultyDashboard';
+import FacultyVerificationDashboard from '@/pages/faculty/FacultyVerificationDashboard';
+import VerificationDetail from '@/pages/faculty/VerificationDetail';
 import RecruiterDashboard from '@/pages/recruiter/RecruiterDashboard';
 import AlumniDashboard    from '@/pages/alumni/AlumniDashboard';
 import AdminDashboard     from '@/pages/admin/AdminDashboard';
@@ -58,6 +60,22 @@ const AppRoutes = () => (
       element={
         <ProtectedRoute allowedRoles={[ROLES.FACULTY, ROLES.ADMIN]}>
           <FacultyDashboard />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/faculty/verifications"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.FACULTY, ROLES.ADMIN]}>
+          <FacultyVerificationDashboard />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/faculty/verifications/:verificationId"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.FACULTY, ROLES.ADMIN]}>
+          <VerificationDetail />
         </ProtectedRoute>
       }
     />

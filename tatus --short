@@ -1,0 +1,82 @@
+warning: in the working copy of 'client/src/components/applications/ApplicationStatusTimeline.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/certificates/CertificateCard.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/certificates/CreateCertificateModal.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/certificates/EditCertificateModal.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/layout/Sidebar.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/projects/ProjectCard.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/projects/ProjectDetailModal.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/constants/index.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/Profile.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/admin/AdminDashboard.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/alumni/AlumniDashboard.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/faculty/FacultyDashboard.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/portfolio/VerifiedPortfolio.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/projects/ProjectDetails.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/projects/ProjectsList.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/recruiter/ApplicantManagement.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/recruiter/RecruiterDashboard.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/student/Certificates.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/student/GithubIntegration.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/student/Resume.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/student/StudentApplications.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/student/StudentDashboard.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/workspace/WorkspaceDetail.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/workspace/WorkspaceList.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/routes/AppRoutes.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/src/app.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/src/controllers/portfolio.controller.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/src/models/certificate.model.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/src/models/project.model.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/src/models/user.model.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/src/scripts/test-api.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/src/scripts/test-certificate-crud.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/src/services/certificate.service.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/src/services/github.service.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/src/services/portfolio.service.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/src/services/profile.service.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/src/services/project.service.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/src/services/resume.service.js', LF will be replaced by CRLF the next time Git touches it
+ .../applications/ApplicationStatusTimeline.jsx     |   2 [32m+[m[31m-[m
+ .../components/certificates/CertificateCard.jsx    | 177 [32m++++[m[31m---[m
+ .../certificates/CreateCertificateModal.jsx        |   7 [31m-[m
+ .../certificates/EditCertificateModal.jsx          |   5 [31m-[m
+ client/src/components/layout/Sidebar.jsx           |  19 [32m+[m[31m-[m
+ client/src/components/projects/ProjectCard.jsx     |  17 [32m+[m[31m-[m
+ .../src/components/projects/ProjectDetailModal.jsx |   2 [32m+[m[31m-[m
+ client/src/constants/index.js                      |  28 [32m+[m[31m-[m
+ client/src/pages/Profile.jsx                       |   9 [32m+[m
+ client/src/pages/admin/AdminDashboard.jsx          |   5 [32m+[m[31m-[m
+ client/src/pages/alumni/AlumniDashboard.jsx        |   5 [32m+[m[31m-[m
+ client/src/pages/faculty/FacultyDashboard.jsx      |   3 [32m+[m[31m-[m
+ client/src/pages/portfolio/VerifiedPortfolio.jsx   |   3 [32m+[m[31m-[m
+ client/src/pages/projects/ProjectDetails.jsx       |  12 [32m+[m[31m-[m
+ client/src/pages/projects/ProjectsList.jsx         |  10 [32m+[m[31m-[m
+ client/src/pages/recruiter/ApplicantManagement.jsx |  10 [32m+[m[31m-[m
+ client/src/pages/recruiter/RecruiterDashboard.jsx  |   4 [31m-[m
+ client/src/pages/student/Certificates.jsx          |  24 [32m+[m[31m-[m
+ client/src/pages/student/GithubIntegration.jsx     |  46 [32m+[m[31m-[m
+ client/src/pages/student/Resume.jsx                |  43 [32m+[m[31m-[m
+ client/src/pages/student/StudentApplications.jsx   |   3 [32m+[m[31m-[m
+ client/src/pages/student/StudentDashboard.jsx      |   3 [32m+[m[31m-[m
+ client/src/pages/workspace/WorkspaceDetail.jsx     |  13 [32m+[m[31m-[m
+ client/src/pages/workspace/WorkspaceList.jsx       |   2 [32m+[m[31m-[m
+ client/src/routes/AppRoutes.jsx                    |  18 [32m+[m
+ package-lock.json                                  | 555 [32m++++++++++++++++++++[m[31m-[m
+ package.json                                       |   1 [32m+[m
+ server/package.json                                |   5 [32m+[m[31m-[m
+ server/src/app.js                                  |   2 [32m+[m
+ server/src/controllers/portfolio.controller.js     |   5 [32m+[m
+ server/src/models/certificate.model.js             |  16 [31m-[m
+ server/src/models/project.model.js                 |   8 [31m-[m
+ server/src/models/user.model.js                    |   1 [31m-[m
+ server/src/scripts/test-api.js                     |   1 [32m+[m
+ server/src/scripts/test-certificate-crud.js        |   1 [31m-[m
+ server/src/services/certificate.service.js         |  35 [32m+[m[31m-[m
+ server/src/services/github.service.js              |   9 [32m+[m[31m-[m
+ server/src/services/portfolio.service.js           |  26 [32m+[m
+ server/src/services/profile.service.js             |   9 [32m+[m[31m-[m
+ server/src/services/project.service.js             |  18 [32m+[m[31m-[m
+ server/src/services/resume.service.js              |   5 [32m+[m[31m-[m
+ 41 files changed, 932 insertions(+), 235 deletions(-)

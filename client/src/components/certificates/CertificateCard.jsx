@@ -7,21 +7,15 @@ import {
   Download,
   Edit2,
   Trash2,
-  CheckCircle2,
   Clock,
-  XCircle,
-  Tag,
   Hash,
+  ShieldCheck,
 } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import VerificationBadge from '@/components/verification/VerificationBadge';
 import { formatDate } from '@/utils/formatters';
-
-const STATUS_CONFIG = {
-  Verified: { variant: 'success', icon: CheckCircle2, label: 'Verified' },
-  Pending: { variant: 'warning', icon: Clock, label: 'Pending Verification' },
-  Rejected: { variant: 'danger', icon: XCircle, label: 'Rejected' },
-};
+import { submitVerification } from '@/services/verificationService';
 
 const CATEGORY_COLORS = {
   Internship: 'blue',
@@ -34,7 +28,7 @@ const CATEGORY_COLORS = {
   Other: 'slate',
 };
 
-const CertificateCard = ({ certificate, onPreview, onEdit, onDelete }) => {
+const CertificateCard = ({ certificate, onPreview, onEdit, onDelete, onVerified }) => {
   const {
     _id,
     title,
@@ -46,26 +40,43 @@ const CertificateCard = ({ certificate, onPreview, onEdit, onDelete }) => {
     credentialUrl,
     certificateFile,
     skills = [],
-    verificationStatus = 'Pending',
-    rejectionReason,
+    verification,
   } = certificate;
 
-  const statusCfg = STATUS_CONFIG[verificationStatus] || STATUS_CONFIG.Pending;
-  const StatusIcon = statusCfg.icon;
+  const [submitting, setSubmitting] = React.useState(false);
+  const [submitError, setSubmitError] = React.useState('');
+  const [submitSuccess, setSubmitSuccess] = React.useState(false);
+
+  const handleSubmitForVerification = async () => {
+    try {
+      setSubmitting(true);
+      setSubmitError('');
+      await submitVerification({ targetType: 'CERTIFICATE', targetId: _id });
+      setSubmitSuccess(true);
+      if (onVerified) onVerified(_id);
+    } catch (err) {
+      setSubmitError(err?.response?.data?.message || 'Failed to submit for verification');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="rounded-2xl border border-slate-800/80 bg-slate-900/60 p-5 flex flex-col justify-between card-hover transition-all duration-200">
       <div>
         {/* Header Badges */}
-        <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+        <div className="flex items-start justify-between flex-wrap gap-2 mb-3">
           <Badge variant={CATEGORY_COLORS[category] || 'slate'} size="sm">
             {category}
           </Badge>
 
-          <Badge variant={statusCfg.variant} size="sm" className="flex items-center gap-1">
-            <StatusIcon className="w-3.5 h-3.5" />
-            <span>{statusCfg.label}</span>
-          </Badge>
+          <VerificationBadge
+            verification={verification}
+            targetType="CERTIFICATE"
+            targetId={_id}
+            size="sm"
+            showDetails={true}
+          />
         </div>
 
         {/* Title & Issuer */}
@@ -76,13 +87,6 @@ const CertificateCard = ({ certificate, onPreview, onEdit, onDelete }) => {
           <Award className="w-4 h-4 text-blue-400 flex-shrink-0" />
           <span>{issuer}</span>
         </p>
-
-        {/* Rejection notice if rejected */}
-        {verificationStatus === 'Rejected' && rejectionReason && (
-          <div className="mb-4 p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-400">
-            <span className="font-bold">Reason for rejection:</span> {rejectionReason}
-          </div>
-        )}
 
         {/* Metadata */}
         <div className="space-y-2 text-xs text-slate-400 mb-4 border-t border-b border-slate-800/60 py-3">
@@ -134,61 +138,78 @@ const CertificateCard = ({ certificate, onPreview, onEdit, onDelete }) => {
       </div>
 
       {/* Footer Action Buttons */}
-      <div className="pt-2 flex items-center justify-between flex-wrap gap-2 border-t border-slate-800/60">
-        <div className="flex items-center gap-1.5">
-          <Button
-            variant="secondary"
-            size="xs"
-            leftIcon={Eye}
-            onClick={() => onPreview(certificate)}
-          >
-            View
-          </Button>
-
-          {certificateFile?.fileUrl && (
-            <a
-              href={certificateFile.fileUrl}
-              download={certificateFile.originalFileName}
-              target="_blank"
-              rel="noopener noreferrer"
+      <div className="pt-2 flex flex-col gap-2 border-t border-slate-800/60">
+        {submitError && (
+          <p className="text-xs text-red-400 text-center">{submitError}</p>
+        )}
+        {submitSuccess && (
+          <p className="text-xs text-emerald-400 text-center">Submitted for verification!</p>
+        )}
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-1.5">
+            <Button
+              variant="secondary"
+              size="xs"
+              leftIcon={Eye}
+              onClick={() => onPreview(certificate)}
             >
-              <Button variant="ghost" size="xs" leftIcon={Download}>
-                Download
-              </Button>
-            </a>
-          )}
+              View
+            </Button>
 
-          {credentialUrl && (
-            <a
-              href={credentialUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-slate-400 hover:text-blue-400 p-1 transition-colors"
-              title="Open Credential Link"
+            {certificateFile?.fileUrl && (
+              <a
+                href={certificateFile.fileUrl}
+                download={certificateFile.originalFileName}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button variant="ghost" size="xs" leftIcon={Download}>
+                  Download
+                </Button>
+              </a>
+            )}
+
+            {credentialUrl && (
+              <a
+                href={credentialUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-slate-400 hover:text-blue-400 p-1 transition-colors"
+                title="Open Credential Link"
+              >
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="xs"
+              leftIcon={ShieldCheck}
+              loading={submitting}
+              onClick={handleSubmitForVerification}
             >
-              <ExternalLink className="w-4 h-4" />
-            </a>
-          )}
-        </div>
+              Submit Verify
+            </Button>
+            <Button
+              variant="ghost"
+              size="xs"
+              leftIcon={Edit2}
+              onClick={() => onEdit(certificate)}
+            >
+              Edit
+            </Button>
 
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="xs"
-            leftIcon={Edit2}
-            onClick={() => onEdit(certificate)}
-          >
-            Edit
-          </Button>
-
-          <Button
-            variant="danger"
-            size="xs"
-            leftIcon={Trash2}
-            onClick={() => onDelete(_id)}
-          >
-            Delete
-          </Button>
+            <Button
+              variant="danger"
+              size="xs"
+              leftIcon={Trash2}
+              onClick={() => onDelete(_id)}
+            >
+              Delete
+            </Button>
+          </div>
         </div>
       </div>
     </div>

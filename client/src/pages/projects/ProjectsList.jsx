@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FolderKanban, PlusCircle, Search, Filter, Loader2, Sparkles, Send, Briefcase } from 'lucide-react';
+import { FolderKanban, PlusCircle, Search, Loader2, Send } from 'lucide-react';
 
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { SectionCard } from '@/components/ui/Card';
@@ -50,7 +50,7 @@ const ProjectsList = () => {
   const isStudent = user?.role === ROLES.STUDENT;
   const isRecruiter = [ROLES.RECRUITER, ROLES.FACULTY, ROLES.ADMIN].includes(user?.role);
 
-  const fetchProjectsData = async () => {
+  const fetchProjectsData = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
@@ -74,11 +74,11 @@ const ProjectsList = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeTab, search, domainFilter, difficultyFilter, modeFilter]);
 
   useEffect(() => {
     fetchProjectsData();
-  }, [activeTab, domainFilter, difficultyFilter, modeFilter]);
+  }, [fetchProjectsData]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();

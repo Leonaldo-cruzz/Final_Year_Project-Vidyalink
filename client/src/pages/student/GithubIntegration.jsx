@@ -8,6 +8,7 @@ import Modal from '@/components/ui/Modal';
 import { FullPageSpinner } from '@/components/ui/Spinner';
 import GithubConnectModal from '@/components/github/GithubConnectModal';
 import GithubProfileCard from '@/components/github/GithubProfileCard';
+import VerificationBadge from '@/components/verification/VerificationBadge';
 import { useAuth } from '@/context/AuthContext';
 import {
   disconnectGithub,
@@ -15,6 +16,7 @@ import {
   syncGithubProfile,
 } from '@/services/githubService';
 import { getErrorMessage } from '@/utils/formatters';
+import { submitVerification } from '@/services/verificationService';
 
 const GithubIntegration = () => {
   const { user } = useAuth();
@@ -26,6 +28,7 @@ const GithubIntegration = () => {
   const [disconnectOpen, setDisconnectOpen] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [submittingVerification, setSubmittingVerification] = useState(false);
 
   const loadProfile = useCallback(async () => {
     try {
@@ -83,6 +86,20 @@ const GithubIntegration = () => {
     }
   };
 
+  const handleSubmitForVerification = async () => {
+    if (!profile) return;
+    try {
+      setSubmittingVerification(true);
+      setError('');
+      await submitVerification({ targetType: 'GITHUB', targetId: profile._id });
+      setNotice('GitHub profile submitted for faculty verification! You will be notified once reviewed.');
+    } catch (requestError) {
+      setError(getErrorMessage(requestError, 'Unable to submit for verification'));
+    } finally {
+      setSubmittingVerification(false);
+    }
+  };
+
   if (loading) return <FullPageSpinner message="Loading GitHub integration…" />;
 
   return (
@@ -93,7 +110,17 @@ const GithubIntegration = () => {
             <div className="flex items-center gap-3"><h1 className="text-2xl font-extrabold tracking-tight text-white">GitHub Integration</h1><Github className="h-6 w-6 text-slate-300" /></div>
             <p className="mt-1 text-sm text-slate-400">Connect your public GitHub profile to keep your student portfolio current.</p>
           </div>
-          {profile && profile.connectionStatus === 'Disconnected' && <Button leftIcon={Link2} onClick={() => setConnectOpen(true)}>Connect GitHub</Button>}
+          <div className="flex items-center gap-3">
+            {profile && profile.connectionStatus !== 'Disconnected' && (
+              <VerificationBadge
+                targetType="GITHUB"
+                targetId={profile._id}
+                size="md"
+                showDetails={true}
+              />
+            )}
+            {profile && profile.connectionStatus === 'Disconnected' && <Button leftIcon={Link2} onClick={() => setConnectOpen(true)}>Connect GitHub</Button>}
+          </div>
         </div>
 
         {user?.fullName && <p className="text-xs text-slate-500">Profile owner: {user.fullName}</p>}
@@ -101,7 +128,22 @@ const GithubIntegration = () => {
         {error && <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">{error}</div>}
 
         {profile ? (
-          <GithubProfileCard profile={profile} onSync={handleSync} onDisconnect={() => setDisconnectOpen(true)} syncing={syncing} disconnecting={disconnecting} />
+          <div className="space-y-4">
+            <GithubProfileCard profile={profile} onSync={handleSync} onDisconnect={() => setDisconnectOpen(true)} syncing={syncing} disconnecting={disconnecting} />
+            {profile.connectionStatus !== 'Disconnected' && (
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  leftIcon={ShieldCheck}
+                  loading={submittingVerification}
+                  onClick={handleSubmitForVerification}
+                >
+                  Submit GitHub for Verification
+                </Button>
+              </div>
+            )}
+          </div>
         ) : (
           <Card className="relative overflow-hidden p-6 sm:p-10">
             <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-blue-500/10 blur-3xl" />

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -6,8 +6,6 @@ import { z } from 'zod';
 import {
   FolderKanban,
   Plus,
-  CheckCircle2,
-  XCircle,
   Clock,
   ExternalLink,
   Award,
@@ -15,8 +13,7 @@ import {
   Loader2,
   Trash2,
   UploadCloud,
-  ShieldCheck,
-  AlertCircle
+  ShieldCheck
 } from 'lucide-react';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { SectionCard } from '@/components/ui/Card';
@@ -85,7 +82,7 @@ const WorkspaceDetail = () => {
     formState: { errors: deliverableErrors },
   } = useForm({ resolver: zodResolver(deliverableSchema) });
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const [wsRes, msRes] = await Promise.all([
@@ -99,11 +96,11 @@ const WorkspaceDetail = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [workspaceId]);
 
   useEffect(() => {
     if (workspaceId) fetchData();
-  }, [workspaceId]);
+  }, [workspaceId, fetchData]);
 
   const onAddMilestone = async (data) => {
     try {

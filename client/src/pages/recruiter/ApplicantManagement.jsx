@@ -1,10 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  CheckCircle2,
   XCircle,
   Star,
-  ExternalLink,
   Code2 as Github,
   FileText,
   ArrowLeft,
@@ -57,7 +55,7 @@ const ApplicantManagement = () => {
   const [recruiterNotes, setRecruiterNotes] = useState('');
   const [submittingStatus, setSubmittingStatus] = useState(false);
 
-  const fetchApplications = async () => {
+  const fetchApplications = useCallback(async () => {
     try {
       setLoading(true);
       const res = await getProjectApplications(projectId);
@@ -67,11 +65,11 @@ const ApplicantManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId]);
 
   useEffect(() => {
     if (projectId) fetchApplications();
-  }, [projectId]);
+  }, [projectId, fetchApplications]);
 
   const handleOpenAction = (app, status) => {
     setSelectedApp(app);

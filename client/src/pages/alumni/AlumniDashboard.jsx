@@ -1,13 +1,11 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Users, CalendarCheck, Share2, MessageSquare, ArrowRight, Lightbulb } from 'lucide-react';
+import { Users, CalendarCheck, Share2, ArrowRight, Lightbulb } from 'lucide-react';
 
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { StatCard, SectionCard, ActionCard } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Avatar from '@/components/ui/Avatar';
 import { useAuth } from '@/context/AuthContext';
-import { ROUTES } from '@/constants';
 
 const MENTORSHIP_REQUESTS = [
   { id: 1, name: 'Arjun Nair',     college: 'NIT Calicut',  skill: 'System Design',   time: '2 hours ago' },
@@ -17,7 +15,6 @@ const MENTORSHIP_REQUESTS = [
 
 const AlumniDashboard = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
 
   return (
     <DashboardLayout>

@@ -14,7 +14,6 @@ export const PROJECT_CATEGORIES = [
 ];
 
 export const PROJECT_STATUSES = ['Completed', 'In Progress', 'Prototype', 'Archived'];
-export const VERIFICATION_STATUSES = ['Pending', 'Verified', 'Rejected'];
 
 const projectSchema = new mongoose.Schema(
   {
@@ -110,12 +109,6 @@ const projectSchema = new mongoose.Schema(
       default: 'In Progress',
       index: true,
     },
-    verificationStatus: {
-      type: String,
-      enum: VERIFICATION_STATUSES,
-      default: 'Pending',
-      index: true,
-    },
     featured: {
       type: Boolean,
       default: false,
@@ -128,7 +121,6 @@ const projectSchema = new mongoose.Schema(
 );
 
 projectSchema.index({ userId: 1, createdAt: -1 });
-projectSchema.index({ userId: 1, verificationStatus: 1, projectStatus: 1 });
 
 const Project = mongoose.models.Project || mongoose.model('Project', projectSchema);
 

@@ -3,6 +3,11 @@ import ApiResponse from '../utils/ApiResponse.js';
 import asyncHandler from '../utils/asyncHandler.js';
 
 class PortfolioController {
+  getStudentPortfolioOverview = asyncHandler(async (req, res) => {
+    const portfolio = await portfolioService.getStudentPortfolioOverview(req.user._id);
+    return ApiResponse.ok(res, 'Student portfolio fetched successfully', portfolio);
+  });
+
   getStudentPortfolios = asyncHandler(async (req, res) => {
     const studentId = req.user._id;
     const portfolios = await portfolioService.getStudentPortfolios(studentId);

@@ -37,9 +37,13 @@ export const ROUTES = {
   // Role dashboards
   STUDENT_DASHBOARD:   '/dashboard/student',
   FACULTY_DASHBOARD:   '/dashboard/faculty',
+  FACULTY_VERIFICATIONS: '/faculty/verifications',
   RECRUITER_DASHBOARD: '/dashboard/recruiter',
   ALUMNI_DASHBOARD:    '/dashboard/alumni',
   ADMIN_DASHBOARD:     '/dashboard/admin',
+  ADMIN_USERS:         '/admin/users',
+  ADMIN_VERIFICATIONS: '/admin/verifications',
+  ALUMNI_MENTORSHIP:   '/alumni/mentorship',
 
   // Shared
   PROFILE:   '/profile',
@@ -52,6 +56,7 @@ export const ROUTES = {
   RESUME: '/resume',
   CERTIFICATES: '/certificates',
   GITHUB: '/github',
+  APPLICATIONS: '/applications',
   VERIFY_PORTFOLIO: '/portfolio/verify/:certificateId',
 
   // Fallback
@@ -88,17 +93,19 @@ export const API = {
 // ── Sidebar Nav (role-specific) ───────────────────────────────
 export const NAV_ITEMS = {
   [ROLES.STUDENT]: [
-    { label: 'Dashboard',    icon: 'LayoutDashboard', path: ROUTES.STUDENT_DASHBOARD },
-    { label: 'Projects',     icon: 'FolderKanban',    path: ROUTES.PROJECTS },
-    { label: 'Workspaces',   icon: 'Briefcase',       path: ROUTES.WORKSPACES },
-    { label: 'Certificates', icon: 'Award',           path: ROUTES.CERTIFICATES },
-    { label: 'GitHub',       icon: 'Code2',           path: ROUTES.GITHUB },
-    { label: 'Portfolio',    icon: 'Award',           path: ROUTES.PORTFOLIO },
-    { label: 'Resume',       icon: 'FileText',        path: ROUTES.RESUME },
-    { label: 'My Profile',   icon: 'UserCircle',      path: ROUTES.PROFILE },
+    { label: 'Dashboard',      icon: 'LayoutDashboard', path: ROUTES.STUDENT_DASHBOARD },
+    { label: 'Projects',       icon: 'FolderKanban',    path: ROUTES.PROJECTS },
+    { label: 'Applications',   icon: 'Send',            path: ROUTES.APPLICATIONS },
+    { label: 'Workspaces',     icon: 'Briefcase',       path: ROUTES.WORKSPACES },
+    { label: 'Certificates',   icon: 'Award',           path: ROUTES.CERTIFICATES },
+    { label: 'GitHub',         icon: 'Code2',           path: ROUTES.GITHUB },
+    { label: 'Portfolio',      icon: 'BadgeCheck',      path: ROUTES.PORTFOLIO },
+    { label: 'Resume',         icon: 'FileText',        path: ROUTES.RESUME },
+    { label: 'My Profile',     icon: 'UserCircle',      path: ROUTES.PROFILE },
   ],
   [ROLES.FACULTY]: [
     { label: 'Dashboard',       icon: 'LayoutDashboard', path: ROUTES.FACULTY_DASHBOARD },
+    { label: 'Verifications',   icon: 'ClipboardCheck',  path: ROUTES.FACULTY_VERIFICATIONS },
     { label: 'Projects',        icon: 'FolderKanban',    path: ROUTES.PROJECTS },
     { label: 'Workspaces',      icon: 'Briefcase',       path: ROUTES.WORKSPACES },
     { label: 'Post Project',    icon: 'PlusSquare',      path: ROUTES.CREATE_PROJECT },
@@ -108,17 +115,20 @@ export const NAV_ITEMS = {
     { label: 'Dashboard',       icon: 'LayoutDashboard', path: ROUTES.RECRUITER_DASHBOARD },
     { label: 'Projects',        icon: 'FolderKanban',    path: ROUTES.PROJECTS },
     { label: 'Workspaces',      icon: 'Briefcase',       path: ROUTES.WORKSPACES },
+    { label: 'Post Project',    icon: 'PlusSquare',      path: ROUTES.CREATE_PROJECT },
     { label: 'My Profile',      icon: 'UserCircle',      path: ROUTES.PROFILE },
   ],
   [ROLES.ALUMNI]: [
     { label: 'Dashboard',       icon: 'LayoutDashboard', path: ROUTES.ALUMNI_DASHBOARD },
+    { label: 'Mentorship',      icon: 'MessageSquare',   path: ROUTES.ALUMNI_MENTORSHIP },
     { label: 'Projects',        icon: 'FolderKanban',    path: ROUTES.PROJECTS },
     { label: 'Workspaces',      icon: 'Briefcase',       path: ROUTES.WORKSPACES },
     { label: 'My Profile',      icon: 'UserCircle',      path: ROUTES.PROFILE },
   ],
   [ROLES.ADMIN]: [
     { label: 'Dashboard',       icon: 'LayoutDashboard', path: ROUTES.ADMIN_DASHBOARD },
-    { label: 'Users',           icon: 'Users',           path: '/admin/users' },
+    { label: 'Users',           icon: 'Users',           path: ROUTES.ADMIN_USERS },
+    { label: 'Verifications',   icon: 'ClipboardCheck',  path: ROUTES.ADMIN_VERIFICATIONS },
     { label: 'Projects',        icon: 'FolderKanban',    path: ROUTES.PROJECTS },
     { label: 'Workspaces',      icon: 'Briefcase',       path: ROUTES.WORKSPACES },
     { label: 'My Profile',      icon: 'UserCircle',      path: ROUTES.PROFILE },

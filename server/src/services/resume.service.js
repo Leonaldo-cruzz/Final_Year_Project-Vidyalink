@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import Resume from '../models/resume.model.js';
+import verificationService from './verification.service.js';
 import ApiError from '../utils/ApiError.js';
 import { RESUME_DIRECTORY, RESUME_PUBLIC_PATH } from '../middleware/resumeUpload.middleware.js';
 
@@ -52,7 +53,7 @@ class ResumeService {
       });
     }
 
-    return resume;
+    return verificationService.attachToTarget(userId, 'RESUME', resume);
   }
 
   /**
@@ -60,7 +61,7 @@ class ResumeService {
    */
   async getResume(userId) {
     const resume = await Resume.findOne({ userId });
-    return resume;
+    return verificationService.attachToTarget(userId, 'RESUME', resume);
   }
 
   /**

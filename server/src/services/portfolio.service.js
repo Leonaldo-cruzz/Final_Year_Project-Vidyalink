@@ -2,9 +2,35 @@ import crypto from 'crypto';
 import Portfolio, { generateCertificateId } from '../models/portfolio.model.js';
 import Workspace from '../models/workspace.model.js';
 import Milestone from '../models/milestone.model.js';
+import Profile from '../models/profile.model.js';
+import Project from '../models/project.model.js';
+import Certificate from '../models/certificate.model.js';
+import Resume from '../models/resume.model.js';
+import GitHubAccount from '../models/githubAccount.model.js';
+import verificationService from './verification.service.js';
 import ApiError from '../utils/ApiError.js';
 
 class PortfolioService {
+  async getStudentPortfolioOverview(studentId) {
+    const [profile, projects, certificates, resume, github, verification] = await Promise.all([
+      Profile.findOne({ user: studentId }).populate('user', 'email fullName role avatar status'),
+      Project.find({ userId: studentId }).sort({ createdAt: -1 }),
+      Certificate.find({ userId: studentId }).sort({ createdAt: -1 }),
+      Resume.findOne({ userId: studentId }),
+      GitHubAccount.findOne({ userId: studentId }),
+      verificationService.getLatestVerificationRecords(studentId),
+    ]);
+
+    return {
+      profile,
+      projects,
+      certificates,
+      resume,
+      github,
+      verification,
+    };
+  }
+
   async generatePortfolioForWorkspace(workspaceId) {
     const existing = await Portfolio.findOne({ workspace: workspaceId })
       .populate('student', 'fullName email avatar college branch')
