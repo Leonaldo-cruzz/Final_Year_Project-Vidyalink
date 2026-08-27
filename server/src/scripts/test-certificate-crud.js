@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 import env from '../config/env.js';
 import User from '../models/user.model.js';
-import Certificate from '../models/certificate.model.js';
+import _Certificate from '../models/certificate.model.js';
 import certificateService from '../services/certificate.service.js';
 
 const __filename = fileURLToPath(import.meta.url);
