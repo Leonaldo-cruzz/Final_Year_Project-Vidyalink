@@ -77,8 +77,11 @@ server/uploads/*
 
 # ---------------- AI Service ----------------
 ai-service/__pycache__/
+ai-service/**/__pycache__/
 ai-service/.venv/
+ai-service/venv/
 ai-service/*.pyc
+ai-service/**/*.pyc
 ai-service/models/*.bin
 ai-service/models/*.pt
 ai-service/models/*.onnx

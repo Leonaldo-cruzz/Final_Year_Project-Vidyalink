@@ -49,6 +49,9 @@ export const env = Object.freeze({
   TRUST_PROXY: process.env.TRUST_PROXY || 'false',
   RATE_LIMIT_WINDOW_MS: Number.parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 15 * 60 * 1000,
   RATE_LIMIT_MAX_REQUESTS: Number.parseInt(process.env.RATE_LIMIT_MAX_REQUESTS, 10) || 100,
+  AI_SERVICE_URL: (process.env.AI_SERVICE_URL || 'http://localhost:8000').replace(/\/$/, ''),
+  AI_SERVICE_API_KEY: process.env.AI_SERVICE_API_KEY || undefined,
+  RECOMMENDATION_CACHE_TTL_MS: Number.parseInt(process.env.RECOMMENDATION_CACHE_TTL_MS, 10) || 24 * 60 * 60 * 1000,
 });
 
 export default env;

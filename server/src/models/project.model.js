@@ -121,6 +121,15 @@ const projectSchema = new mongoose.Schema(
       default: false,
       index: true,
     },
+    // A recruiter must explicitly mark a project as a public opportunity.
+    // Existing student portfolio projects remain private to this matcher.
+    opportunity: {
+      isOpen: { type: Boolean, default: false },
+      visibility: { type: String, enum: ['public', 'private'], default: 'private' },
+      requiredSkills: { type: [{ type: String, trim: true, maxlength: 50 }], default: [] },
+      preferredSkills: { type: [{ type: String, trim: true, maxlength: 50 }], default: [] },
+      minimumExperienceYears: { type: Number, min: 0, max: 50, default: 0 },
+    },
   },
   {
     timestamps: true,
@@ -129,6 +138,7 @@ const projectSchema = new mongoose.Schema(
 
 projectSchema.index({ userId: 1, createdAt: -1 });
 projectSchema.index({ userId: 1, verificationStatus: 1, projectStatus: 1 });
+projectSchema.index({ userId: 1, 'opportunity.isOpen': 1, 'opportunity.visibility': 1 });
 
 const Project = mongoose.models.Project || mongoose.model('Project', projectSchema);
 

@@ -10,6 +10,7 @@
 | `api/`                    | API reference documentation          |
 | `guides/`                 | Developer & user guides              |
 | `assets/`                 | Images, diagrams, and media          |
+| `recommendation-engine.md` | Deterministic recommendation engine guide |
 
 ## Contributing
 

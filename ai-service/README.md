@@ -1,26 +1,23 @@
 # VidyaLink — AI Service
 
-> AI/ML microservice for VidyaLink.
+The internal FastAPI service currently provides the deterministic Recommendation
+Engine. It uses no LLM, embedding model, or trained model. Express builds a
+trusted MongoDB snapshot and calls this service; browsers must never call it.
 
-## Status
+## Run locally
 
-🚧 **Under Development** — This workspace is reserved for future AI-powered features.
-
-## Planned Architecture
-
-```
-ai-service/
-├── src/
-│   ├── models/          # ML model definitions
-│   ├── routes/          # API endpoints
-│   ├── services/        # Business logic
-│   └── utils/           # Helper utilities
-├── models/              # Trained model artifacts
-├── requirements.txt
-├── Dockerfile
-└── README.md
+```bash
+py -m venv venv
+venv\Scripts\pip install -r requirements.txt
+venv\Scripts\uvicorn app.main:app --reload --port 8000
 ```
 
-## Getting Started
+Set the same optional `AI_SERVICE_API_KEY` in the Express and AI-service
+environments when the service runs outside a private network. The service checks
+the `X-AI-Service-Key` header when that variable is configured.
 
-Setup instructions will be added once the service is implemented.
+Run the engine tests with:
+
+```bash
+py -m pytest tests/test_recommendation_engine.py -q
+```

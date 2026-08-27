@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
-import { env } from "../config/env.js";
 import { generateAccessToken, generateRefreshToken } from "../utils/jwt.util.js";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -81,6 +80,19 @@ const userSchema = new mongoose.Schema(
       default: false,
     },
 
+    // Alumni must explicitly opt in before their expertise participates in
+    // recommendations.  No email, phone, or private profile data is sent to
+    // the matching service.
+    mentorProfile: {
+      available: { type: Boolean, default: false },
+      visibility: { type: String, enum: ['public', 'private'], default: 'private' },
+      expertise: { type: [{ type: String, trim: true, maxlength: 50 }], default: [] },
+      domains: { type: [{ type: String, trim: true, maxlength: 100 }], default: [] },
+      interests: { type: [{ type: String, trim: true, maxlength: 100 }], default: [] },
+      industries: { type: [{ type: String, trim: true, maxlength: 100 }], default: [] },
+      experienceYears: { type: Number, min: 0, max: 80, default: 0 },
+    },
+
     refreshToken: {
       type: String,
       select: false,
@@ -108,6 +120,7 @@ const userSchema = new mongoose.Schema(
 userSchema.index({ role: 1 });
 userSchema.index({ status: 1 });
 userSchema.index({ role: 1, status: 1 });
+userSchema.index({ role: 1, status: 1, isEmailVerified: 1, 'mentorProfile.visibility': 1 });
 
 // ─── Pre-save Middleware ───────────────────────────────────────────────────────
 
