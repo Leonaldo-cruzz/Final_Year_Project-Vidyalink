@@ -1,0 +1,2 @@
+"""VidyaLink AI service package."""
+

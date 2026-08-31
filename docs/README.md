@@ -9,6 +9,7 @@
 | `architecture/`           | System architecture diagrams & ADRs  |
 | `api/`                    | API reference documentation          |
 | `guides/`                 | Developer & user guides              |
+| `student-ai-dashboard.md` | Student AI Career Dashboard contract |
 | `assets/`                 | Images, diagrams, and media          |
 
 ## Contributing

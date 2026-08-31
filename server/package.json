@@ -11,6 +11,7 @@
     "test:api": "node src/scripts/test-api.js",
     "test:project-portfolio": "node src/scripts/test-project-portfolio.js",
     "test:github-integration": "node src/scripts/test-github-integration.js",
+    "test:ai-results": "node --test src/tests/ai-results.service.test.js src/tests/student-ai-overview.test.js src/tests/industry-readiness.ai-service.test.js",
     "lint": "eslint . --ext js --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {

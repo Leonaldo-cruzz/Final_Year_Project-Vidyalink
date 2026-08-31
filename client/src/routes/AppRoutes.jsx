@@ -9,6 +9,7 @@ import ForgotPassword from '@/pages/auth/ForgotPassword';
 
 // Role dashboards
 import StudentDashboard   from '@/pages/student/StudentDashboard';
+import AICareerDashboard  from '@/pages/student/AICareerDashboard';
 import FacultyDashboard   from '@/pages/faculty/FacultyDashboard';
 import RecruiterDashboard from '@/pages/recruiter/RecruiterDashboard';
 import AlumniDashboard    from '@/pages/alumni/AlumniDashboard';
@@ -50,6 +51,14 @@ const AppRoutes = () => (
       element={
         <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.ADMIN]}>
           <StudentDashboard />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/student/ai"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
+          <AICareerDashboard />
         </ProtectedRoute>
       }
     />

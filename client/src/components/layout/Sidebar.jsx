@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, FolderKanban, UserCircle, Users, Code2,
   PlusSquare, Briefcase, Award, ChevronLeft, ChevronRight, Zap, LogOut, FileText,
+  Sparkles,
 } from 'lucide-react';
 
 import { useAuth } from '@/context/AuthContext';
@@ -11,7 +12,7 @@ import { getInitials } from '@/utils/formatters';
 
 // Icon map from string name to Lucide component
 const ICON_MAP = {
-  LayoutDashboard, FolderKanban, UserCircle, Users, Code2, PlusSquare, Briefcase, Award, FileText,
+  LayoutDashboard, FolderKanban, UserCircle, Users, Code2, PlusSquare, Briefcase, Award, FileText, Sparkles,
 };
 
 const Sidebar = ({ collapsed, onToggle }) => {

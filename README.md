@@ -27,7 +27,7 @@ VIDYALINK is built as a **monorepo** containing four primary workspaces:
 | -------------- | ---------------------------------------- | ----- |
 | `client`       | React 19 SPA — user-facing frontend      | 5173  |
 | `server`       | Express REST API — core backend services | 5000  |
-| `ai-service`   | AI/ML microservice (future)              | 8000  |
+| `ai-service`   | FastAPI Industry Readiness engine       | 8000  |
 | `docs`         | Project documentation & ADRs             | —     |
 
 ## Tech Stack
@@ -123,8 +123,10 @@ VIDYALINK/
 │   ├── uploads/             # File upload directory
 │   └── package.json
 │
-├── ai-service/              # AI/ML microservice (future)
-│   └── README.md
+├── ai-service/              # FastAPI Industry Readiness engine
+│   ├── app/
+│   ├── tests/
+│   └── requirements.txt
 │
 ├── docs/                    # Documentation & ADRs
 │   └── README.md
