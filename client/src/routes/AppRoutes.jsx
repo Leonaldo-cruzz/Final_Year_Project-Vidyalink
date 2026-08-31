@@ -11,6 +11,11 @@ import ForgotPassword from '@/pages/auth/ForgotPassword';
 import StudentDashboard   from '@/pages/student/StudentDashboard';
 import FacultyDashboard   from '@/pages/faculty/FacultyDashboard';
 import RecruiterDashboard from '@/pages/recruiter/RecruiterDashboard';
+import CandidateSearch from '@/pages/recruiter/CandidateSearch';
+import CandidateDetails from '@/pages/recruiter/CandidateDetails';
+import Shortlists from '@/pages/recruiter/Shortlists';
+import Interviews from '@/pages/recruiter/Interviews';
+import RecruiterProfile from '@/pages/recruiter/RecruiterProfile';
 import AlumniDashboard    from '@/pages/alumni/AlumniDashboard';
 import AdminDashboard     from '@/pages/admin/AdminDashboard';
 
@@ -66,6 +71,54 @@ const AppRoutes = () => (
       element={
         <ProtectedRoute allowedRoles={[ROLES.RECRUITER, ROLES.ADMIN]}>
           <RecruiterDashboard />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/recruiter"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.RECRUITER, ROLES.ADMIN]}>
+          <RecruiterDashboard />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/recruiter/candidates"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.RECRUITER, ROLES.ADMIN]}>
+          <CandidateSearch />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/recruiter/candidates/:studentId"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.RECRUITER, ROLES.ADMIN]}>
+          <CandidateDetails />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/recruiter/shortlists"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.RECRUITER, ROLES.ADMIN]}>
+          <Shortlists />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/recruiter/interviews"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.RECRUITER, ROLES.ADMIN]}>
+          <Interviews />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/recruiter/profile"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.RECRUITER, ROLES.ADMIN]}>
+          <RecruiterProfile />
         </ProtectedRoute>
       }
     />

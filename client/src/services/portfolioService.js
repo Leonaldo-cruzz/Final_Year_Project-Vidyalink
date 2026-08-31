@@ -9,3 +9,8 @@ export const verifyCertificate = async (certificateId) => {
   const response = await api.get(`/portfolios/verify/${certificateId}`);
   return response.data;
 };
+
+export const updatePortfolioVisibility = async (portfolioId, isPublic) => {
+  const response = await api.patch(`/portfolios/${portfolioId}/visibility`, { isPublic });
+  return response.data;
+};

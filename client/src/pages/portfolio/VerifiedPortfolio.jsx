@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Award, ShieldCheck, CheckCircle2, Share2, ExternalLink, Calendar, User, Building, Code2, Loader2, Sparkles } from 'lucide-react';
+import { Award, ShieldCheck, CheckCircle2, Share2, Calendar, User, Building, Loader2, Globe2, LockKeyhole } from 'lucide-react';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { SectionCard } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import Avatar from '@/components/ui/Avatar';
-import { getMyPortfolios, verifyCertificate } from '@/services/portfolioService';
+import { getMyPortfolios, updatePortfolioVisibility, verifyCertificate } from '@/services/portfolioService';
 import { getErrorMessage } from '@/utils/formatters';
 
 const VerifiedPortfolio = () => {
@@ -18,6 +17,8 @@ const VerifiedPortfolio = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
+  const [visibilityUpdating, setVisibilityUpdating] = useState('');
+  const [visibilityError, setVisibilityError] = useState('');
 
   useEffect(() => {
     const fetchPortfolioData = async () => {
@@ -46,6 +47,20 @@ const VerifiedPortfolio = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleVisibilityToggle = async (portfolio) => {
+    const portfolioId = String(portfolio._id || portfolio.certificateId);
+    try {
+      setVisibilityUpdating(portfolioId);
+      setVisibilityError('');
+      const response = await updatePortfolioVisibility(portfolio._id, !portfolio.isPublic);
+      setPortfolios((current) => current.map((item) => (item._id === portfolio._id ? { ...item, ...response.data } : item)));
+    } catch (err) {
+      setVisibilityError(getErrorMessage(err));
+    } finally {
+      setVisibilityUpdating('');
+    }
+  };
+
   const renderPortfolioCard = (p) => (
     <SectionCard key={p._id || p.certificateId} className="border-emerald-500/30 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 p-6 md:p-8 space-y-6">
       {/* Top Banner */}
@@ -63,14 +78,10 @@ const VerifiedPortfolio = () => {
           </div>
         </div>
 
-        <Button
-          size="sm"
-          variant="secondary"
-          leftIcon={Share2}
-          onClick={() => handleShare(p.certificateId)}
-        >
-          {copied ? 'Copied Public Link!' : 'Share Certificate'}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {!certificateId && <Button size="sm" variant={p.isPublic ? 'ghost' : 'success'} leftIcon={p.isPublic ? LockKeyhole : Globe2} loading={visibilityUpdating === String(p._id || p.certificateId)} onClick={() => handleVisibilityToggle(p)}>{p.isPublic ? 'Keep AI private' : 'Make AI public'}</Button>}
+          <Button size="sm" variant="secondary" leftIcon={Share2} onClick={() => handleShare(p.certificateId)}>{copied ? 'Copied Public Link!' : 'Share Certificate'}</Button>
+        </div>
       </div>
 
       {/* Project & Student Info */}
@@ -140,6 +151,8 @@ const VerifiedPortfolio = () => {
         <span className="truncate">Crypto Hash: {p.verificationHash}</span>
         <span className="text-emerald-400/90 font-semibold shrink-0">VIDYALINK Trust Engine</span>
       </div>
+      {!certificateId && <p className="flex items-center gap-2 text-xs text-slate-500"><LockKeyhole className="h-3.5 w-3.5" />AI and recruiter visibility require explicit public opt-in.</p>}
+      {visibilityError && !certificateId && <p className="text-xs text-rose-300">{visibilityError}</p>}
     </SectionCard>
   );
 
