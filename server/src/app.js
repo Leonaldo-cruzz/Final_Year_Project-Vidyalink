@@ -19,6 +19,8 @@ import projectEngagementRoutes from './routes/projectEngagement.routes.js';
 import resumeRoutes from './routes/resume.routes.js';
 import certificateRoutes from './routes/certificate.routes.js';
 import githubRoutes from './routes/github.routes.js';
+import alumniRoutes from './routes/alumni.routes.js';
+import notificationRoutes from './routes/notification.routes.js';
 import errorHandler from './middleware/errorHandler.js';
 import ApiError from './utils/ApiError.js';
 import ApiResponse from './utils/ApiResponse.js';
@@ -94,6 +96,8 @@ export const createApp = () => {
   app.use(`${apiPrefix}/resume`, resumeRoutes);
   app.use(`${apiPrefix}/certificates`, certificateRoutes);
   app.use(`${apiPrefix}/github`, githubRoutes);
+  app.use(`${apiPrefix}/alumni`, alumniRoutes);
+  app.use(`${apiPrefix}/notifications`, notificationRoutes);
 
   app.use((_req, res) => ApiResponse.error(res, 404, 'Route not found'));
   app.use(errorHandler);

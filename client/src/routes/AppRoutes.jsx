@@ -14,6 +14,15 @@ import RecruiterDashboard from '@/pages/recruiter/RecruiterDashboard';
 import AlumniDashboard    from '@/pages/alumni/AlumniDashboard';
 import AdminDashboard     from '@/pages/admin/AdminDashboard';
 
+// Alumni Ecosystem pages
+import AlumniProfile        from '@/pages/alumni/AlumniProfile';
+import StudentDiscovery    from '@/pages/alumni/StudentDiscovery';
+import StudentPortfolioView from '@/pages/alumni/StudentPortfolioView';
+import MentorshipRequests   from '@/pages/alumni/MentorshipRequests';
+import EndorsementList      from '@/pages/alumni/EndorsementList';
+import MockInterviewRequests from '@/pages/alumni/MockInterviewRequests';
+import Referrals            from '@/pages/alumni/Referrals';
+
 // Shared pages
 import Profile        from '@/pages/Profile';
 import Projects        from '@/pages/projects/Projects';
@@ -33,7 +42,7 @@ import NotFound       from '@/pages/NotFound';
 import ProtectedRoute from '@/components/common/ProtectedRoute';
 
 // Constants
-import { ROLES } from '@/constants';
+import { ROLES, ROUTES } from '@/constants';
 
 const AppRoutes = () => (
   <Routes>
@@ -78,10 +87,72 @@ const AppRoutes = () => (
       }
     />
     <Route
+      path="/alumni"
+      element={<Navigate to="/dashboard/alumni" replace />}
+    />
+    <Route
       path="/dashboard/admin"
       element={
         <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
           <AdminDashboard />
+        </ProtectedRoute>
+      }
+    />
+
+    {/* Alumni Ecosystem Routes */}
+    <Route
+      path="/alumni/profile"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.ALUMNI, ROLES.ADMIN]}>
+          <AlumniProfile />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/alumni/students"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.ALUMNI, ROLES.ADMIN, ROLES.RECRUITER]}>
+          <StudentDiscovery />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/alumni/students/:studentId"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.ALUMNI, ROLES.ADMIN, ROLES.RECRUITER, ROLES.FACULTY]}>
+          <StudentPortfolioView />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/alumni/mentorship"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.ALUMNI, ROLES.ADMIN]}>
+          <MentorshipRequests />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/alumni/endorsements"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.ALUMNI, ROLES.ADMIN]}>
+          <EndorsementList />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/alumni/mock-interviews"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.ALUMNI, ROLES.ADMIN]}>
+          <MockInterviewRequests />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/alumni/referrals"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.ALUMNI, ROLES.ADMIN]}>
+          <Referrals />
         </ProtectedRoute>
       }
     />

@@ -54,6 +54,15 @@ export const ROUTES = {
   GITHUB: '/github',
   VERIFY_PORTFOLIO: '/portfolio/verify/:certificateId',
 
+  // Alumni Ecosystem
+  ALUMNI_PROFILE:           '/alumni/profile',
+  ALUMNI_STUDENTS:          '/alumni/students',
+  ALUMNI_STUDENT_PORTFOLIO: '/alumni/students/:studentId',
+  ALUMNI_MENTORSHIP:        '/alumni/mentorship',
+  ALUMNI_ENDORSEMENTS:      '/alumni/endorsements',
+  ALUMNI_MOCK_INTERVIEWS:   '/alumni/mock-interviews',
+  ALUMNI_REFERRALS:         '/alumni/referrals',
+
   // Fallback
   NOT_FOUND: '*',
 };
@@ -111,10 +120,13 @@ export const NAV_ITEMS = {
     { label: 'My Profile',      icon: 'UserCircle',      path: ROUTES.PROFILE },
   ],
   [ROLES.ALUMNI]: [
-    { label: 'Dashboard',       icon: 'LayoutDashboard', path: ROUTES.ALUMNI_DASHBOARD },
-    { label: 'Projects',        icon: 'FolderKanban',    path: ROUTES.PROJECTS },
-    { label: 'Workspaces',      icon: 'Briefcase',       path: ROUTES.WORKSPACES },
-    { label: 'My Profile',      icon: 'UserCircle',      path: ROUTES.PROFILE },
+    { label: 'Dashboard',         icon: 'LayoutDashboard', path: ROUTES.ALUMNI_DASHBOARD },
+    { label: 'Discover Students', icon: 'Users',           path: ROUTES.ALUMNI_STUDENTS },
+    { label: 'Mentorship',        icon: 'MessageSquare',   path: ROUTES.ALUMNI_MENTORSHIP },
+    { label: 'Endorsements',      icon: 'Award',           path: ROUTES.ALUMNI_ENDORSEMENTS },
+    { label: 'Mock Interviews',   icon: 'CalendarCheck',   path: ROUTES.ALUMNI_MOCK_INTERVIEWS },
+    { label: 'Referrals',         icon: 'Share2',          path: ROUTES.ALUMNI_REFERRALS },
+    { label: 'Alumni Profile',    icon: 'UserCircle',      path: ROUTES.ALUMNI_PROFILE },
   ],
   [ROLES.ADMIN]: [
     { label: 'Dashboard',       icon: 'LayoutDashboard', path: ROUTES.ADMIN_DASHBOARD },
