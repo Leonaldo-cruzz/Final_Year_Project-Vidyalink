@@ -2,6 +2,8 @@
 
 > Project documentation, architecture decision records (ADRs), and guides.
 
+See [`ai-results-integration.md`](./ai-results-integration.md) for the persisted AI results API, stale-result lifecycle, frontend behavior, and privacy rules.
+
 ## Contents
 
 | Document                  | Description                          |

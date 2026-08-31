@@ -44,6 +44,13 @@ const portfolioSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    // AI results are private by default. Recruiter/public projections require
+    // an explicit opt-in from the student.
+    isPublic: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
     issuedAt: {
       type: Date,
       default: Date.now,

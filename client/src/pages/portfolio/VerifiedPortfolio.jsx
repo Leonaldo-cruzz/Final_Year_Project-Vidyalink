@@ -1,12 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Award, ShieldCheck, CheckCircle2, Share2, ExternalLink, Calendar, User, Building, Code2, Loader2, Sparkles } from 'lucide-react';
+import { Award, ShieldCheck, CheckCircle2, Share2, Calendar, User, Building, Loader2, Globe2, LockKeyhole } from 'lucide-react';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { SectionCard } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import Avatar from '@/components/ui/Avatar';
 import { getMyPortfolios, verifyCertificate } from '@/services/portfolioService';
+import { getPortfolioAISummary, getPublicPortfolioAISummary, updatePortfolioVisibility } from '@/services/aiService';
+import AIOverviewCard from '@/components/ai/AIOverviewCard';
+import GitHubActivityCard from '@/components/ai/GitHubActivityCard';
+import IndustryReadinessCard from '@/components/ai/IndustryReadinessCard';
+import RecommendationList from '@/components/ai/RecommendationList';
+import SkillEvidence from '@/components/ai/SkillEvidence';
+import SkillGapList from '@/components/ai/SkillGapList';
 import { getErrorMessage } from '@/utils/formatters';
 
 const VerifiedPortfolio = () => {
@@ -18,25 +24,83 @@ const VerifiedPortfolio = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
+  const [aiSummaries, setAiSummaries] = useState({});
+  const [aiErrors, setAiErrors] = useState({});
+  const [aiLoading, setAiLoading] = useState(false);
+  const [publicAISummary, setPublicAISummary] = useState(null);
+  const [publicAIError, setPublicAIError] = useState('');
+  const [publicAILoaded, setPublicAILoaded] = useState(false);
+  const [visibilityUpdating, setVisibilityUpdating] = useState('');
+  const [visibilityError, setVisibilityError] = useState('');
 
   useEffect(() => {
+    let cancelled = false;
+
+    const fetchPrivateAISummaries = async (items) => {
+      if (items.length === 0) return;
+      setAiLoading(true);
+      const entries = await Promise.all(items.map(async (portfolio) => {
+        const portfolioKey = String(portfolio._id || portfolio.certificateId);
+        try {
+          const response = await getPortfolioAISummary(portfolio._id);
+          return { portfolioKey, summary: response.data || null };
+        } catch (err) {
+          return { portfolioKey, error: getErrorMessage(err) };
+        }
+      }));
+
+      if (!cancelled) {
+        setAiSummaries(Object.fromEntries(entries.map(({ portfolioKey, summary }) => [portfolioKey, summary])));
+        setAiErrors(Object.fromEntries(entries.filter(({ error }) => error).map(({ portfolioKey, error }) => [portfolioKey, error])));
+        setAiLoading(false);
+      }
+    };
+
     const fetchPortfolioData = async () => {
       try {
         setLoading(true);
+        setError('');
+        setPublicAISummary(null);
+        setPublicAIError('');
+        setPublicAILoaded(false);
         if (certificateId) {
           const res = await verifyCertificate(certificateId);
-          setSinglePortfolio(res.data);
+          if (cancelled) return;
+          const portfolio = res.data;
+          setSinglePortfolio(portfolio);
+          setLoading(false);
+
+          if (portfolio?.isPublic && portfolio?._id) {
+            try {
+              const aiResponse = await getPublicPortfolioAISummary(portfolio._id);
+              if (!cancelled) {
+                setPublicAISummary(aiResponse.data || null);
+                setPublicAILoaded(true);
+              }
+            } catch (err) {
+              if (!cancelled) {
+                setPublicAIError(getErrorMessage(err));
+                setPublicAILoaded(true);
+              }
+            }
+          }
         } else {
           const res = await getMyPortfolios();
-          setPortfolios(res.data || []);
+          const items = res.data || [];
+          if (cancelled) return;
+          setPortfolios(items);
+          setLoading(false);
+          fetchPrivateAISummaries(items);
         }
       } catch (err) {
-        setError(getErrorMessage(err));
+        if (!cancelled) setError(getErrorMessage(err));
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
     fetchPortfolioData();
+
+    return () => { cancelled = true; };
   }, [certificateId]);
 
   const handleShare = (certId) => {
@@ -44,6 +108,57 @@ const VerifiedPortfolio = () => {
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleVisibilityToggle = async (portfolio) => {
+    const portfolioKey = String(portfolio._id || portfolio.certificateId);
+    setVisibilityUpdating(portfolioKey);
+    setVisibilityError('');
+    try {
+      const response = await updatePortfolioVisibility(portfolio._id, !portfolio.isPublic);
+      const updated = response.data;
+      setPortfolios((current) => current.map((item) => (item._id === portfolio._id ? { ...item, ...updated } : item)));
+    } catch (err) {
+      setVisibilityError(getErrorMessage(err));
+    } finally {
+      setVisibilityUpdating('');
+    }
+  };
+
+  const renderAISections = (p) => {
+    const portfolioKey = String(p._id || p.certificateId);
+    const summary = aiSummaries[portfolioKey];
+
+    return (
+      <div className="space-y-4 pt-2">
+        <AIOverviewCard summary={summary} loading={aiLoading && !summary} error={aiErrors[portfolioKey] || ''} />
+        <IndustryReadinessCard result={summary?.industryReadiness} />
+        <div className="grid gap-4 lg:grid-cols-2">
+          <GitHubActivityCard analytics={summary?.githubAnalytics} />
+          <SkillEvidence profile={summary?.skillProfile} skills={summary?.skills} />
+        </div>
+        <SkillGapList gaps={summary?.skillGaps} />
+        <RecommendationList recommendations={summary?.recommendations || []} />
+      </div>
+    );
+  };
+
+  const renderPublicAISections = () => {
+    if (!singlePortfolio?.isPublic) return null;
+
+    const verifiedSkillItems = (publicAISummary?.verifiedSkills || []).map((name) => ({ name }));
+    const publicSummary = publicAISummary ? {
+      portfolioScore: publicAISummary.portfolioScore,
+      industryReadiness: publicAISummary.industryReadiness,
+    } : null;
+
+    return (
+      <div className="space-y-4 pt-2">
+        <AIOverviewCard summary={publicSummary} loading={!publicAILoaded && !publicAIError} error={publicAIError} publicView />
+        {publicAISummary && <IndustryReadinessCard result={publicAISummary.industryReadiness} />}
+        {publicAISummary && <SkillEvidence skills={verifiedSkillItems} verifiedOnly />}
+      </div>
+    );
   };
 
   const renderPortfolioCard = (p) => (
@@ -63,14 +178,22 @@ const VerifiedPortfolio = () => {
           </div>
         </div>
 
-        <Button
-          size="sm"
-          variant="secondary"
-          leftIcon={Share2}
-          onClick={() => handleShare(p.certificateId)}
-        >
-          {copied ? 'Copied Public Link!' : 'Share Certificate'}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {!certificateId && (
+            <Button
+              size="sm"
+              variant={p.isPublic ? 'ghost' : 'success'}
+              leftIcon={p.isPublic ? LockKeyhole : Globe2}
+              loading={visibilityUpdating === String(p._id || p.certificateId)}
+              onClick={() => handleVisibilityToggle(p)}
+            >
+              {p.isPublic ? 'Keep AI private' : 'Make AI public'}
+            </Button>
+          )}
+          <Button size="sm" variant="secondary" leftIcon={Share2} onClick={() => handleShare(p.certificateId)}>
+            {copied ? 'Copied Public Link!' : 'Share Certificate'}
+          </Button>
+        </div>
       </div>
 
       {/* Project & Student Info */}
@@ -140,6 +263,13 @@ const VerifiedPortfolio = () => {
         <span className="truncate">Crypto Hash: {p.verificationHash}</span>
         <span className="text-emerald-400/90 font-semibold shrink-0">VIDYALINK Trust Engine</span>
       </div>
+
+      {!certificateId && (
+        <p className="flex items-center gap-2 text-xs text-slate-500"><LockKeyhole className="h-3.5 w-3.5" /> AI results are private until you explicitly make them public.</p>
+      )}
+      {visibilityError && !certificateId && <p className="text-xs text-rose-300">{visibilityError}</p>}
+
+      {certificateId ? renderPublicAISections() : renderAISections(p)}
     </SectionCard>
   );
 

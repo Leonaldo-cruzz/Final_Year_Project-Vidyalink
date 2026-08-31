@@ -65,6 +65,15 @@ class PortfolioService {
 
     return portfolio;
   }
+
+  async updateVisibility(studentId, portfolioId, isPublic) {
+    const portfolio = await Portfolio.findOne({ _id: portfolioId, student: studentId });
+    if (!portfolio) throw ApiError.notFound('Portfolio not found');
+
+    portfolio.isPublic = isPublic;
+    await portfolio.save();
+    return portfolio;
+  }
 }
 
 export default new PortfolioService();
