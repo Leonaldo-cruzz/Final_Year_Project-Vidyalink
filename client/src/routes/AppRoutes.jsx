@@ -25,6 +25,8 @@ import WorkspaceList   from '@/pages/workspace/WorkspaceList';
 import WorkspaceDetail from '@/pages/workspace/WorkspaceDetail';
 import VerifiedPortfolio from '@/pages/portfolio/VerifiedPortfolio';
 import Resume from '@/pages/student/Resume';
+import ResumeBuilder from '@/pages/student/ResumeBuilder';
+import GeneratedResumes from '@/pages/student/GeneratedResumes';
 import Certificates from '@/pages/student/Certificates';
 import GithubIntegration from '@/pages/student/GithubIntegration';
 import NotFound       from '@/pages/NotFound';
@@ -176,6 +178,14 @@ const AppRoutes = () => (
           <Resume />
         </ProtectedRoute>
       }
+    />
+    <Route
+      path="/student/resume-builder"
+      element={<ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.ADMIN]}><ResumeBuilder /></ProtectedRoute>}
+    />
+    <Route
+      path="/student/resumes"
+      element={<ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.ADMIN]}><GeneratedResumes /></ProtectedRoute>}
     />
     <Route
       path="/certificates"

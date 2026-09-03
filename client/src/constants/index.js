@@ -50,6 +50,8 @@ export const ROUTES = {
   WORKSPACE_DETAIL: '/workspace/:workspaceId',
   PORTFOLIO: '/portfolio/me',
   RESUME: '/resume',
+  RESUME_BUILDER: '/student/resume-builder',
+  GENERATED_RESUMES: '/student/resumes',
   CERTIFICATES: '/certificates',
   GITHUB: '/github',
   VERIFY_PORTFOLIO: '/portfolio/verify/:certificateId',
@@ -94,7 +96,7 @@ export const NAV_ITEMS = {
     { label: 'Certificates', icon: 'Award',           path: ROUTES.CERTIFICATES },
     { label: 'GitHub',       icon: 'Code2',           path: ROUTES.GITHUB },
     { label: 'Portfolio',    icon: 'Award',           path: ROUTES.PORTFOLIO },
-    { label: 'Resume',       icon: 'FileText',        path: ROUTES.RESUME },
+    { label: 'Resume Builder', icon: 'FileText',      path: ROUTES.RESUME_BUILDER },
     { label: 'My Profile',   icon: 'UserCircle',      path: ROUTES.PROFILE },
   ],
   [ROLES.FACULTY]: [

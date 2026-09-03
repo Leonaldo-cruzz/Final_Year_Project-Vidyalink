@@ -49,6 +49,7 @@ export const env = Object.freeze({
   TRUST_PROXY: process.env.TRUST_PROXY || 'false',
   RATE_LIMIT_WINDOW_MS: Number.parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 15 * 60 * 1000,
   RATE_LIMIT_MAX_REQUESTS: Number.parseInt(process.env.RATE_LIMIT_MAX_REQUESTS, 10) || 100,
+  ATS_ANALYSIS_URL: process.env.ATS_ANALYSIS_URL || null,
 });
 
 export default env;

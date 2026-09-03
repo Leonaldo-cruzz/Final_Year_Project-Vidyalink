@@ -19,6 +19,7 @@ import projectEngagementRoutes from './routes/projectEngagement.routes.js';
 import resumeRoutes from './routes/resume.routes.js';
 import certificateRoutes from './routes/certificate.routes.js';
 import githubRoutes from './routes/github.routes.js';
+import generatedResumeRoutes from './routes/generatedResume.routes.js';
 import errorHandler from './middleware/errorHandler.js';
 import ApiError from './utils/ApiError.js';
 import ApiResponse from './utils/ApiResponse.js';
@@ -92,6 +93,7 @@ export const createApp = () => {
   app.use(`${apiPrefix}/portfolios`, portfolioRoutes);
   app.use(`${apiPrefix}/engagements`, projectEngagementRoutes);
   app.use(`${apiPrefix}/resume`, resumeRoutes);
+  app.use(`${apiPrefix}/resumes`, generatedResumeRoutes);
   app.use(`${apiPrefix}/certificates`, certificateRoutes);
   app.use(`${apiPrefix}/github`, githubRoutes);
 
