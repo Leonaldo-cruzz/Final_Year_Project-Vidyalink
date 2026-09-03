@@ -1,5 +1,5 @@
 import React from 'react';
-import { Building, MapPin, Clock, DollarSign, Users, Award, Calendar, Send, ShieldCheck } from 'lucide-react';
+import { Building, MapPin, Clock, DollarSign, Users, Calendar, Send } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';

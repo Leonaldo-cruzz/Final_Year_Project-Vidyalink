@@ -15,7 +15,6 @@ import {
   FileCheck,
   Calendar,
   HardDrive,
-  Info,
 } from 'lucide-react';
 
 import DashboardLayout from '@/layouts/DashboardLayout';
@@ -64,7 +63,6 @@ const Resume = () => {
   const fileInputRef = useRef(null);
 
   const {
-    register,
     handleSubmit,
     setValue,
     reset,

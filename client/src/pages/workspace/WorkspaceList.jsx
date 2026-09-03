@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FolderKanban, CheckCircle2, Clock, ChevronRight, Loader2, ArrowUpRight } from 'lucide-react';
+import { FolderKanban, ChevronRight, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { SectionCard } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';

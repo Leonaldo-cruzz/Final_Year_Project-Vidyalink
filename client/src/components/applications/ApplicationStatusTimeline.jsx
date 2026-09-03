@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, Clock, Calendar, Check, XCircle, Ban } from 'lucide-react';
+import { Calendar, Check, XCircle, Ban } from 'lucide-react';
 
 const TIMELINE_STEPS = [
   'Applied',

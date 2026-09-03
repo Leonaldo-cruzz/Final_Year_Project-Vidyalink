@@ -33,7 +33,8 @@ const upload = multer({
   fileFilter: (_req, file, callback) => {
     const ext = path.extname(file.originalname).toLowerCase();
     const isValidMime = Boolean(ALLOWED_MIME_TYPES[file.mimetype]);
-    const isValidExt = ['.pdf', '.jpg', '.jpeg', '.png'].includes(ext);
+    const expectedExtension = ALLOWED_MIME_TYPES[file.mimetype];
+    const isValidExt = expectedExtension === '.jpg' ? ['.jpg', '.jpeg'].includes(ext) : ext === expectedExtension;
 
     if (!isValidMime && !isValidExt) {
       return callback(ApiError.badRequest('Only PDF, JPG, and PNG files are allowed for certificates'));

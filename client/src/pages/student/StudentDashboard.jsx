@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FolderKanban, Star, Send, UserCircle,
-  ArrowRight, Briefcase, TrendingUp, Award,
+  ArrowRight, Briefcase, Award,
 } from 'lucide-react';
 
 import DashboardLayout from '@/layouts/DashboardLayout';
@@ -10,7 +10,6 @@ import { StatCard, SectionCard, ActionCard } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import { useAuth } from '@/context/AuthContext';
 import { ROUTES } from '@/constants';
-import { formatDate } from '@/utils/formatters';
 
 const RECENT_ACTIVITY = [
   { id: 1, type: 'project',   text: 'Applied to "AI Crop Prediction System"', time: '2 hours ago',   status: 'pending' },

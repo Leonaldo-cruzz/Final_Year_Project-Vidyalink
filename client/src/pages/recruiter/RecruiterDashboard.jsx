@@ -1,13 +1,10 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Users, Bookmark, Briefcase, Search, Star, ArrowRight } from 'lucide-react';
 
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { StatCard, SectionCard, ActionCard } from '@/components/ui/Card';
-import Badge from '@/components/ui/Badge';
 import Avatar from '@/components/ui/Avatar';
 import { useAuth } from '@/context/AuthContext';
-import { ROUTES } from '@/constants';
 
 const TALENT_POOL = [
   { id: 1, name: 'Priya Sharma',    role: 'student', skills: ['React', 'TypeScript', 'Node.js'],  score: 92, college: 'IIT Bombay' },
@@ -18,7 +15,6 @@ const TALENT_POOL = [
 
 const RecruiterDashboard = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
 
   return (
     <DashboardLayout>

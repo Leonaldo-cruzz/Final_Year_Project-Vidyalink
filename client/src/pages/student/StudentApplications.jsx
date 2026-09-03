@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Send, FileText, Code2 as Github, Ban, Calendar, ExternalLink, Loader2, Sparkles } from 'lucide-react';
+import { Send, FileText, Code2 as Github, Ban, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { SectionCard } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -85,8 +85,6 @@ const StudentApplications = () => {
           <div className="space-y-4">
             {applications.map((app) => {
               const projectData = app.projectOpportunityId || app.project || {};
-              const recruiterData = app.recruiterId || {};
-
               return (
                 <SectionCard key={app._id} className="space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">

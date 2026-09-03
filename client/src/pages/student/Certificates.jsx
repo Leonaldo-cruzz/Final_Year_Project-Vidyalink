@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import {
   Plus,
   Search,
@@ -6,12 +6,7 @@ import {
   ArrowUpDown,
   Award,
   CheckCircle2,
-  Clock,
-  XCircle,
   AlertCircle,
-  FileText,
-  Sparkles,
-  ExternalLink,
 } from 'lucide-react';
 
 import DashboardLayout from '@/layouts/DashboardLayout';
@@ -19,7 +14,7 @@ import { SectionCard } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Modal from '@/components/ui/Modal';
-import Spinner, { FullPageSpinner } from '@/components/ui/Spinner';
+import { FullPageSpinner } from '@/components/ui/Spinner';
 import CertificateCard from '@/components/certificates/CertificateCard';
 import CreateCertificateModal from '@/components/certificates/CreateCertificateModal';
 import EditCertificateModal from '@/components/certificates/EditCertificateModal';
@@ -49,11 +44,7 @@ const Certificates = () => {
   const [certificateToDelete, setCertificateToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
-    fetchCertificates();
-  }, [activeFilter, sortBy]);
-
-  const fetchCertificates = async () => {
+  const fetchCertificates = useCallback(async () => {
     try {
       setLoading(true);
       setErrorMsg('');
@@ -68,7 +59,11 @@ const Certificates = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeFilter, searchQuery, sortBy]);
+
+  useEffect(() => {
+    fetchCertificates();
+  }, [fetchCertificates]);
 
   // Client-side search filtering if user types rapidly
   const filteredCertificates = useMemo(() => {

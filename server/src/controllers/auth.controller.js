@@ -27,7 +27,8 @@ class AuthController {
 
     res.cookie('refreshToken', refreshToken, getRefreshTokenCookieOptions());
 
-    return ApiResponse.ok(res, 'Login successful', { accessToken, refreshToken, user });
+    // The refresh token is HTTP-only and must never be exposed to JavaScript.
+    return ApiResponse.ok(res, 'Login successful', { accessToken, user });
   });
 
   /**

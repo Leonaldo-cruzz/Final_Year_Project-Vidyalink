@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FolderKanban, PlusCircle, Search, Filter, Loader2, Sparkles, Send, Briefcase } from 'lucide-react';
+import { FolderKanban, PlusCircle, Search, Loader2, Send } from 'lucide-react';
 
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { SectionCard } from '@/components/ui/Card';
@@ -9,7 +9,7 @@ import ProjectCard from '@/components/projects/ProjectCard';
 import ProjectDetailModal from '@/components/projects/ProjectDetailModal';
 import ApplyProjectModal from '@/components/applications/ApplyProjectModal';
 import { useAuth } from '@/context/AuthContext';
-import { getProjects, getMyProjects, deleteProject } from '@/services/projectService';
+import { getProjects, deleteProject } from '@/services/projectService';
 import { getStudentApplications } from '@/services/applicationService';
 import { ROLES, ROUTES } from '@/constants';
 import { getErrorMessage } from '@/utils/formatters';
@@ -50,12 +50,12 @@ const ProjectsList = () => {
   const isStudent = user?.role === ROLES.STUDENT;
   const isRecruiter = [ROLES.RECRUITER, ROLES.FACULTY, ROLES.ADMIN].includes(user?.role);
 
-  const fetchProjectsData = async () => {
+  const fetchProjectsData = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
       if (activeTab === 'my-projects') {
-        const res = await getMyProjects();
+        const res = await getProjects();
         setProjects(res.data || []);
       } else if (activeTab === 'my-applications') {
         const res = await getStudentApplications();
@@ -74,11 +74,11 @@ const ProjectsList = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeTab, search, domainFilter, difficultyFilter, modeFilter]);
 
   useEffect(() => {
     fetchProjectsData();
-  }, [activeTab, domainFilter, difficultyFilter, modeFilter]);
+  }, [fetchProjectsData]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();

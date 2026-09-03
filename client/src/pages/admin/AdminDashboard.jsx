@@ -1,13 +1,11 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Users, FolderKanban, ShieldCheck, Activity, UserCheck, AlertCircle } from 'lucide-react';
+import { Users, FolderKanban, ShieldCheck, Activity, UserCheck } from 'lucide-react';
 
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { StatCard, SectionCard } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Avatar from '@/components/ui/Avatar';
 import { useAuth } from '@/context/AuthContext';
-import { ROUTES } from '@/constants';
 import { formatDate } from '@/utils/formatters';
 
 const RECENT_USERS = [
@@ -26,7 +24,6 @@ const STATUS_CONFIG = {
 
 const AdminDashboard = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
 
   return (
     <DashboardLayout>

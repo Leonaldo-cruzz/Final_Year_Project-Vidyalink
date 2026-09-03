@@ -59,7 +59,7 @@ async function runApiTests() {
       config.body = JSON.stringify(options.body);
     }
 
-    const res = await fetch(url, config);
+    const res = await globalThis.fetch(url, config);
     let data;
     try {
       data = await res.json();

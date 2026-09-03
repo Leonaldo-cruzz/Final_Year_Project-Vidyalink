@@ -48,7 +48,7 @@ const AppRoutes = () => (
     <Route
       path="/dashboard/student"
       element={
-        <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.ADMIN]}>
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
           <StudentDashboard />
         </ProtectedRoute>
       }
@@ -164,7 +164,7 @@ const AppRoutes = () => (
     <Route
       path="/portfolio/me"
       element={
-        <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.ADMIN]}>
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
           <VerifiedPortfolio />
         </ProtectedRoute>
       }
@@ -172,7 +172,7 @@ const AppRoutes = () => (
     <Route
       path="/resume"
       element={
-        <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.ADMIN]}>
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
           <Resume />
         </ProtectedRoute>
       }
@@ -180,7 +180,7 @@ const AppRoutes = () => (
     <Route
       path="/certificates"
       element={
-        <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.ADMIN]}>
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
           <Certificates />
         </ProtectedRoute>
       }

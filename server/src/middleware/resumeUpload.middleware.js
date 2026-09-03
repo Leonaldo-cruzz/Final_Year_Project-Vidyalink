@@ -28,7 +28,7 @@ const upload = multer({
     const isPdfMime = file.mimetype === 'application/pdf';
     const isPdfExt = path.extname(file.originalname).toLowerCase() === '.pdf';
 
-    if (!isPdfMime && !isPdfExt) {
+    if (!isPdfMime || !isPdfExt) {
       return callback(ApiError.badRequest('Only PDF files are allowed for resume upload'));
     }
 
