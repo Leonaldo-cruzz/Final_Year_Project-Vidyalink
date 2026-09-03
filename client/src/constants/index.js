@@ -54,6 +54,13 @@ export const ROUTES = {
   GITHUB: '/github',
   VERIFY_PORTFOLIO: '/portfolio/verify/:certificateId',
 
+  // Recruiter workspace
+  RECRUITER_CANDIDATES: '/recruiter/candidates',
+  RECRUITER_COMPARISON: '/recruiter/candidates/compare',
+  RECRUITER_SHORTLISTS: '/recruiter/shortlists',
+  RECRUITER_INTERVIEWS: '/recruiter/interviews',
+  RECRUITER_PROFILE: '/recruiter/profile',
+
   // Fallback
   NOT_FOUND: '*',
 };
@@ -106,9 +113,10 @@ export const NAV_ITEMS = {
   ],
   [ROLES.RECRUITER]: [
     { label: 'Dashboard',       icon: 'LayoutDashboard', path: ROUTES.RECRUITER_DASHBOARD },
-    { label: 'Projects',        icon: 'FolderKanban',    path: ROUTES.PROJECTS },
-    { label: 'Workspaces',      icon: 'Briefcase',       path: ROUTES.WORKSPACES },
-    { label: 'My Profile',      icon: 'UserCircle',      path: ROUTES.PROFILE },
+    { label: 'Find Candidates', icon: 'Search',          path: ROUTES.RECRUITER_CANDIDATES },
+    { label: 'Shortlists',      icon: 'Bookmark',        path: ROUTES.RECRUITER_SHORTLISTS },
+    { label: 'Interviews',      icon: 'CalendarDays',    path: ROUTES.RECRUITER_INTERVIEWS },
+    { label: 'Recruiter Profile', icon: 'UserCircle',    path: ROUTES.RECRUITER_PROFILE },
   ],
   [ROLES.ALUMNI]: [
     { label: 'Dashboard',       icon: 'LayoutDashboard', path: ROUTES.ALUMNI_DASHBOARD },

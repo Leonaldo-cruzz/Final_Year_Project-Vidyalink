@@ -11,6 +11,10 @@
     "test:api": "node src/scripts/test-api.js",
     "test:project-portfolio": "node src/scripts/test-project-portfolio.js",
     "test:github-integration": "node src/scripts/test-github-integration.js",
+    "test:ai-results": "node --test src/tests/ai-results.service.test.js",
+    "test:recruiter-contract": "node --test src/tests/recruiter.contract.test.js",
+    "test:recruiter-ai": "node --test src/tests/recruiter-ai.contract.test.js",
+    "test:recruiter": "npm run test:recruiter-contract && npm run test:recruiter-ai",
     "lint": "eslint . --ext js --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {

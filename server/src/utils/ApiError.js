@@ -40,6 +40,14 @@ class ApiError extends Error {
   static internal(message = 'Internal server error') {
     return new ApiError(500, message);
   }
+
+  static serviceUnavailable(message = 'Service unavailable') {
+    return new ApiError(503, message);
+  }
+
+  static gatewayTimeout(message = 'Gateway timeout') {
+    return new ApiError(504, message);
+  }
 }
 
 export default ApiError;

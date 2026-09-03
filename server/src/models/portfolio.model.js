@@ -44,6 +44,12 @@ const portfolioSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    // Recruiter and public AI projections require explicit student opt-in.
+    isPublic: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
     issuedAt: {
       type: Date,
       default: Date.now,

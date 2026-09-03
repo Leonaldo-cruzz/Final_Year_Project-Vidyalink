@@ -19,6 +19,9 @@ import projectEngagementRoutes from './routes/projectEngagement.routes.js';
 import resumeRoutes from './routes/resume.routes.js';
 import certificateRoutes from './routes/certificate.routes.js';
 import githubRoutes from './routes/github.routes.js';
+import aiRoutes from './routes/ai.routes.js';
+import recruiterRoutes from './routes/recruiter.routes.js';
+import { recruiterInterviewRouter } from './routes/interview.routes.js';
 import errorHandler from './middleware/errorHandler.js';
 import ApiError from './utils/ApiError.js';
 import ApiResponse from './utils/ApiResponse.js';
@@ -32,7 +35,6 @@ const getAllowedOrigins = () => {
   const origins = env.CORS_ORIGIN || env.CLIENT_URL;
   return origins.split(',').map((origin) => origin.trim()).filter(Boolean);
 };
-
 const getTrustProxySetting = () => {
   const value = env.TRUST_PROXY;
   if (!value) return false;
@@ -94,6 +96,9 @@ export const createApp = () => {
   app.use(`${apiPrefix}/resume`, resumeRoutes);
   app.use(`${apiPrefix}/certificates`, certificateRoutes);
   app.use(`${apiPrefix}/github`, githubRoutes);
+  app.use(`${apiPrefix}/ai`, aiRoutes);
+  app.use(`${apiPrefix}/recruiter`, recruiterRoutes);
+  app.use(`${apiPrefix}/recruiter/interviews`, recruiterInterviewRouter);
 
   app.use((_req, res) => ApiResponse.error(res, 404, 'Route not found'));
   app.use(errorHandler);

@@ -10,6 +10,8 @@
 | `api/`                    | API reference documentation          |
 | `guides/`                 | Developer & user guides              |
 | `assets/`                 | Images, diagrams, and media          |
+| `recruiter-platform.md`   | Recruiter workflow and API surface   |
+| `recruiter-ai-intelligence.md` | Recruiter-safe AI signals, filtering, comparison, and privacy |
 
 ## Contributing
 
