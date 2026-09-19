@@ -5,7 +5,7 @@
 <h1 align="center">VIDYALINK</h1>
 
 <p align="center">
-  <strong>Next-Generation SaaS Platform</strong>
+  <strong>AI-Powered Student Portfolio Verification and Recruitment Platform</strong>
 </p>
 
 <p align="center">
@@ -21,14 +21,14 @@
 
 ## Architecture
 
-VIDYALINK is built as a **monorepo** containing four primary workspaces:
+VIDYALINK is built as a **monorepo** containing three primary application services and comprehensive documentation:
 
-| Workspace      | Description                              | Port  |
-| -------------- | ---------------------------------------- | ----- |
-| `client`       | React 19 SPA — user-facing frontend      | 5173  |
-| `server`       | Express REST API — core backend services | 5000  |
-| `ai-service`   | AI/ML microservice (future)              | 8000  |
-| `docs`         | Project documentation & ADRs             | —     |
+| Service        | Description                                                          | Port  |
+| -------------- | -------------------------------------------------------------------- | ----- |
+| `client`       | React 19 SPA — role-based student, faculty, recruiter, alumni, admin | 5173  |
+| `server`       | Express REST API — authentication, verification, notifications       | 5000  |
+| `ai-service`   | FastAPI AI microservice — ATS scoring, portfolio evaluation, readiness| 8000  |
+| `docs`         | Architecture specifications, test matrices, and API contracts       | —     |
 
 ## Tech Stack
 

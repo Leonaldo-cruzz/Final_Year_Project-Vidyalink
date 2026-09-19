@@ -1,7 +1,5 @@
 import Application from '../models/application.model.js';
 import Project from '../models/project.model.js';
-import ProjectEngagement from '../models/projectEngagement.model.js';
-import Workspace from '../models/workspace.model.js';
 import Portfolio from '../models/portfolio.model.js';
 import AIEvaluation from '../models/aiEvaluation.model.js';
 import notificationService from './notification.service.js';
@@ -224,6 +222,13 @@ class ApplicationService {
     if (status === 'selected') formattedStatus = 'Selected';
     if (status === 'rejected') formattedStatus = 'Rejected';
 
+    if (application.status === 'Withdrawn') {
+      throw ApiError.badRequest('Cannot update a withdrawn application');
+    }
+    if (application.status === 'Selected' && formattedStatus !== 'Selected') {
+      throw ApiError.badRequest('Cannot change status of an already selected candidate');
+    }
+
     application.status = formattedStatus;
     if (recruiterNotes || feedback) {
       application.recruiterNotes = recruiterNotes || feedback;
@@ -260,6 +265,10 @@ class ApplicationService {
     const application = await Application.findById(applicationId).populate('projectOpportunityId');
     if (!application) {
       throw ApiError.notFound('Application not found');
+    }
+
+    if (application.status === 'Withdrawn' || application.status === 'Rejected') {
+      throw ApiError.badRequest('Cannot schedule interview for a withdrawn or rejected application');
     }
 
     const project = application.projectOpportunityId || application.project;
@@ -301,6 +310,10 @@ class ApplicationService {
       throw ApiError.notFound('Application not found');
     }
 
+    if (application.status === 'Withdrawn') {
+      throw ApiError.badRequest('Cannot select a withdrawn application');
+    }
+
     const projectObj = application.projectOpportunityId || application.project;
     const project = await Project.findById(projectObj._id || projectObj);
 
@@ -313,7 +326,7 @@ class ApplicationService {
       throw ApiError.forbidden('Not authorized to select candidates for this project');
     }
 
-    const studentId = application.studentId || application.student;
+    const studentId = application.studentId?._id || application.studentId || application.student?._id || application.student;
 
     // 1. Update application status & selectedAt
     application.status = 'Selected';
@@ -321,57 +334,20 @@ class ApplicationService {
     if (recruiterNotes) application.recruiterNotes = recruiterNotes;
     await application.save();
 
-    // 2. Update project status & selectedStudent
-    project.status = 'in_progress';
-    project.selectedStudent = studentId;
-    await project.save();
-
-    // 3. Create ProjectEngagement record
-    let engagement = await ProjectEngagement.findOne({
-      project: project._id,
-      student: studentId,
-    });
-
-    if (!engagement) {
-      engagement = await ProjectEngagement.create({
-        project: project._id,
-        student: studentId,
-        recruiter: project.createdBy || project.user,
-        application: application._id,
-        status: 'active',
-        startDate: new Date(),
+    // 2. Notify student
+    if (studentId) {
+      await notificationService.createNotification({
+        recipient: studentId,
+        sender: userId,
+        type: 'application',
+        title: 'Congratulations! Selected for Position',
+        message: `Congratulations! You have been selected for the position "${project?.title || 'Project Opportunity'}".`,
+        link: '/applications',
+        metadata: { applicationId: application._id, projectId: project?._id },
       });
     }
 
-    // 4. Create Workspace record for live collaboration
-    let workspace = await Workspace.findOne({
-      project: project._id,
-      student: studentId,
-    });
-
-    if (!workspace) {
-      workspace = await Workspace.create({
-        project: project._id,
-        student: studentId,
-        owner: project.createdBy || project.user,
-        application: application._id,
-        status: 'active',
-        progressPercentage: 0,
-      });
-    }
-
-    // 5. Notify student
-    await notificationService.createNotification({
-      recipient: studentId,
-      sender: userId,
-      type: 'application',
-      title: 'Congratulations! Selected for Project',
-      message: `You have been selected for "${project.title}". Your live collaboration workspace is active.`,
-      link: '/workspaces',
-      metadata: { applicationId: application._id, workspaceId: workspace._id },
-    });
-
-    return { application, project, engagement, workspace };
+    return { application, project };
   }
 }
 

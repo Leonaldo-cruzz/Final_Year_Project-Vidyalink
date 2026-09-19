@@ -51,7 +51,7 @@ class ApplicationController {
     const userRole = req.user.role;
     const { id } = req.params;
     const result = await applicationService.selectCandidate(userId, id, req.body, userRole);
-    return ApiResponse.ok(res, 'Candidate selected and ProjectEngagement created', result);
+    return ApiResponse.ok(res, 'Candidate selected successfully', result);
   });
 
   getRecruiterCandidates = asyncHandler(async (req, res) => {

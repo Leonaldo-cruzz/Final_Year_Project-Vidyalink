@@ -28,6 +28,7 @@ import WorkspaceDetail from '@/pages/workspace/WorkspaceDetail';
 import VerifiedPortfolio from '@/pages/portfolio/VerifiedPortfolio';
 import FacultyVerificationDashboard from '@/pages/faculty/FacultyVerificationDashboard';
 import VerificationDetail from '@/pages/faculty/VerificationDetail';
+import AdminVerifications from '@/pages/admin/AdminVerifications';
 import Resume from '@/pages/student/Resume';
 import Certificates from '@/pages/student/Certificates';
 import GithubIntegration from '@/pages/student/GithubIntegration';
@@ -207,6 +208,14 @@ const AppRoutes = () => (
       element={
         <ProtectedRoute allowedRoles={[ROLES.FACULTY, ROLES.ADMIN]}>
           <VerificationDetail />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/admin/verifications"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+          <AdminVerifications />
         </ProtectedRoute>
       }
     />

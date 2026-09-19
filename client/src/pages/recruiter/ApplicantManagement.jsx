@@ -402,7 +402,7 @@ const ApplicantManagement = () => {
 
             {targetStatus === 'Selected' && (
               <div className="p-3 rounded-xl bg-orange-300/10 border border-orange-300/20 text-xs text-orange-200">
-                Selecting this candidate records their selection in the hiring pipeline and confirms their project engagement.
+                Selecting this candidate confirms your hiring decision, marks their application as Selected, and notifies the student.
               </div>
             )}
 

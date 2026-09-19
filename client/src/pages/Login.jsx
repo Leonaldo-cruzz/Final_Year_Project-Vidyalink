@@ -50,7 +50,7 @@ const Login = () => {
   };
 
   return (
-    <AuthLayout title="Welcome back" subtitle="Sign in to your university or industry partner workspace.">
+    <AuthLayout title="Welcome back" subtitle="Sign in to your university or industry partner account.">
       {sessionExpired && (
         <div className="mb-5 flex items-start gap-3 rounded-md border border-amber-600/30 bg-amber-50 px-3.5 py-3 text-sm text-amber-800">
           <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
@@ -118,7 +118,7 @@ const Login = () => {
           className="primary-action w-full rounded-md disabled:cursor-not-allowed disabled:opacity-50"
         >
           <LogIn className="mr-2 h-4 w-4" />
-          {isSubmitting ? 'Authenticating…' : 'Sign in to Workspace'}
+          {isSubmitting ? 'Authenticating…' : 'Sign in to VidyaLink'}
         </button>
       </form>
 

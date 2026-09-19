@@ -102,24 +102,24 @@ export const NAV_ITEMS = {
     { label: 'My Profile',   icon: 'UserCircle',      path: ROUTES.PROFILE },
   ],
   [ROLES.FACULTY]: [
-    { label: 'Dashboard',       icon: 'LayoutDashboard', path: ROUTES.FACULTY_DASHBOARD },
-    { label: 'Live Workspaces', icon: 'Briefcase',       path: ROUTES.WORKSPACES },
-    { label: 'My Profile',      icon: 'UserCircle',      path: ROUTES.PROFILE },
+    { label: 'Dashboard',     icon: 'LayoutDashboard', path: ROUTES.FACULTY_DASHBOARD },
+    { label: 'Verifications', icon: 'Award',           path: '/faculty/verifications' },
+    { label: 'My Profile',    icon: 'UserCircle',      path: ROUTES.PROFILE },
   ],
   [ROLES.RECRUITER]: [
-    { label: 'Talent Hub',      icon: 'LayoutDashboard', path: ROUTES.RECRUITER_DASHBOARD },
-    { label: 'Applicants',      icon: 'Users',           path: '/recruiter/applicants' },
-    { label: 'Workspaces',      icon: 'Briefcase',       path: ROUTES.WORKSPACES },
-    { label: 'My Profile',      icon: 'UserCircle',      path: ROUTES.PROFILE },
+    { label: 'Talent Hub',    icon: 'LayoutDashboard', path: ROUTES.RECRUITER_DASHBOARD },
+    { label: 'Applicants',    icon: 'Users',           path: '/recruiter/applicants' },
+    { label: 'Postings',      icon: 'FolderKanban',    path: ROUTES.PROJECTS },
+    { label: 'My Profile',    icon: 'UserCircle',      path: ROUTES.PROFILE },
   ],
   [ROLES.ALUMNI]: [
-    { label: 'Mentorship Hub',  icon: 'LayoutDashboard', path: ROUTES.ALUMNI_DASHBOARD },
-    { label: 'My Profile',      icon: 'UserCircle',      path: ROUTES.PROFILE },
+    { label: 'Mentorship Hub', icon: 'LayoutDashboard', path: ROUTES.ALUMNI_DASHBOARD },
+    { label: 'My Profile',     icon: 'UserCircle',      path: ROUTES.PROFILE },
   ],
   [ROLES.ADMIN]: [
-    { label: 'Admin Console',   icon: 'LayoutDashboard', path: ROUTES.ADMIN_DASHBOARD },
-    { label: 'Workspaces',      icon: 'Briefcase',       path: ROUTES.WORKSPACES },
-    { label: 'My Profile',      icon: 'UserCircle',      path: ROUTES.PROFILE },
+    { label: 'Admin Console', icon: 'LayoutDashboard', path: ROUTES.ADMIN_DASHBOARD },
+    { label: 'Verifications', icon: 'Award',           path: '/admin/verifications' },
+    { label: 'My Profile',    icon: 'UserCircle',      path: ROUTES.PROFILE },
   ],
 };
 
