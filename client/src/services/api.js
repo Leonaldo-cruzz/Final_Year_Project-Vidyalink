@@ -70,12 +70,21 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // If not a 401, or already retried, or is the refresh endpoint itself — reject
-    if (
-      error.response?.status !== 401 ||
-      originalRequest._retry ||
-      originalRequest.url?.includes('/auth/refresh-token')
-    ) {
+    // Guard 1: only act on 401 errors
+    if (error.response?.status !== 401) {
+      return Promise.reject(error);
+    }
+
+    // Guard 2: do NOT retry if already retried (prevents infinite loop)
+    if (originalRequest._retry) {
+      return Promise.reject(error);
+    }
+
+    // Guard 3: CRITICAL — the refresh-token endpoint itself must NEVER
+    // trigger a recursive refresh attempt through this interceptor.
+    // Checking config.url (the relative path passed to axios) for the
+    // refresh endpoint path to bail out immediately.
+    if (originalRequest.url?.includes('/auth/refresh-token')) {
       return Promise.reject(error);
     }
 
@@ -91,7 +100,7 @@ api.interceptors.response.use(
         .catch((err) => Promise.reject(err));
     }
 
-    // Attempt silent token refresh
+    // Attempt silent token refresh — mark retry to prevent looping
     originalRequest._retry = true;
     _isRefreshing = true;
 

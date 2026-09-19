@@ -18,8 +18,14 @@ const portfolioSchema = new mongoose.Schema(
     workspace: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Workspace',
-      required: true,
-      unique: true,
+      default: null,
+      sparse: true,
+    },
+    project: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Project',
+      default: null,
+      sparse: true,
     },
     projectTitle: {
       type: String,

@@ -23,12 +23,21 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading]               = useState(true); // true while restoring session
   const [error, setError]                   = useState(null);
+  // mountedRef guards stale state updates on unmounted components,
+  // but MUST NOT gate setLoading(false) — loading must always terminate.
   const mountedRef                          = useRef(true);
 
   // ── Session Restore (on mount) ───────────────────────────────
   // Attempt silent token refresh via HTTP-Only cookie.
   // If successful, fetch current user and restore session.
+  // If 401 / any failure, cleanly mark unauthenticated.
+  // CRITICAL: setLoading(false) runs UNCONDITIONALLY in finally —
+  // never gated by mountedRef. React 18 StrictMode mounts/unmounts
+  // effects twice; mountedRef.current is false on the second run,
+  // which would deadlock the loading state if we guarded setLoading.
   useEffect(() => {
+    mountedRef.current = true;
+
     const restoreSession = async () => {
       try {
         await authService.refreshToken();
@@ -38,14 +47,17 @@ export const AuthProvider = ({ children }) => {
           setIsAuthenticated(true);
         }
       } catch {
-        // No valid session — user must log in
+        // No valid session — user must log in.
+        // Clear any stale access token in memory.
         if (mountedRef.current) {
           setUser(null);
           setIsAuthenticated(false);
-          clearAccessToken();
         }
+        clearAccessToken();
       } finally {
-        if (mountedRef.current) setLoading(false);
+        // ⚠️ UNCONDITIONAL — must never be gated by mountedRef.
+        // A 401 from /refresh-token means "no session", not "keep loading".
+        setLoading(false);
       }
     };
 
@@ -61,13 +73,20 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     try {
       const { user: loggedInUser } = await authService.login(credentials);
-      setUser(loggedInUser);
-      setIsAuthenticated(true);
+      if (mountedRef.current) {
+        setUser(loggedInUser);
+        setIsAuthenticated(true);
+        // Explicitly terminate loading in case restoreSession had not yet
+        // resolved (e.g., network was slow on first load).
+        setLoading(false);
+      }
       return loggedInUser;
     } catch (err) {
       const message =
         err?.response?.data?.message || err?.message || 'Login failed';
-      setError(message);
+      if (mountedRef.current) {
+        setError(message);
+      }
       throw new Error(message);
     }
   }, []);

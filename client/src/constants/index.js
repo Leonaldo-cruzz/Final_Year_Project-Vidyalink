@@ -20,11 +20,11 @@ export const ROLE_LABELS = {
 };
 
 export const ROLE_COLORS = {
-  [ROLES.STUDENT]:   { bg: 'bg-blue-500/10',   text: 'text-blue-400',   border: 'border-blue-500/25' },
-  [ROLES.FACULTY]:   { bg: 'bg-purple-500/10',  text: 'text-purple-400', border: 'border-purple-500/25' },
-  [ROLES.RECRUITER]: { bg: 'bg-emerald-500/10', text: 'text-emerald-400',border: 'border-emerald-500/25' },
-  [ROLES.ALUMNI]:    { bg: 'bg-amber-500/10',   text: 'text-amber-400',  border: 'border-amber-500/25' },
-  [ROLES.ADMIN]:     { bg: 'bg-rose-500/10',    text: 'text-rose-400',   border: 'border-rose-500/25' },
+  [ROLES.STUDENT]:   { bg: 'bg-orange-300/10', text: 'text-orange-200', border: 'border-orange-300/25' },
+  [ROLES.FACULTY]:   { bg: 'bg-orange-300/10', text: 'text-orange-200', border: 'border-orange-300/25' },
+  [ROLES.RECRUITER]: { bg: 'bg-orange-300/10', text: 'text-orange-200', border: 'border-orange-300/25' },
+  [ROLES.ALUMNI]:    { bg: 'bg-orange-300/10', text: 'text-orange-200', border: 'border-orange-300/25' },
+  [ROLES.ADMIN]:     { bg: 'bg-orange-300/10', text: 'text-orange-200', border: 'border-orange-300/25' },
 };
 
 // ── Routes ───────────────────────────────────────────────────
@@ -33,6 +33,7 @@ export const ROUTES = {
   LOGIN:     '/login',
   REGISTER:  '/register',
   FORGOT:    '/forgot-password',
+  RESET_PASSWORD: '/reset-password',
 
   // Role dashboards
   STUDENT_DASHBOARD:   '/dashboard/student',
@@ -44,6 +45,7 @@ export const ROUTES = {
   // Shared
   PROFILE:   '/profile',
   PROJECTS:  '/projects',
+  APPLICATIONS: '/applications',
   PROJECT_DETAIL: '/projects/:id',
   CREATE_PROJECT: '/projects/new',
   WORKSPACES: '/workspaces',
@@ -52,6 +54,7 @@ export const ROUTES = {
   RESUME: '/resume',
   CERTIFICATES: '/certificates',
   GITHUB: '/github',
+  AI_INSIGHTS: '/ai-insights',
   VERIFY_PORTFOLIO: '/portfolio/verify/:certificateId',
 
   // Fallback
@@ -90,36 +93,31 @@ export const NAV_ITEMS = {
   [ROLES.STUDENT]: [
     { label: 'Dashboard',    icon: 'LayoutDashboard', path: ROUTES.STUDENT_DASHBOARD },
     { label: 'Projects',     icon: 'FolderKanban',    path: ROUTES.PROJECTS },
-    { label: 'Workspaces',   icon: 'Briefcase',       path: ROUTES.WORKSPACES },
+    { label: 'Applications', icon: 'Send',            path: ROUTES.APPLICATIONS },
     { label: 'Certificates', icon: 'Award',           path: ROUTES.CERTIFICATES },
     { label: 'GitHub',       icon: 'Code2',           path: ROUTES.GITHUB },
     { label: 'Portfolio',    icon: 'Award',           path: ROUTES.PORTFOLIO },
+    { label: 'AI Insights',  icon: 'Brain',           path: ROUTES.AI_INSIGHTS },
     { label: 'Resume',       icon: 'FileText',        path: ROUTES.RESUME },
     { label: 'My Profile',   icon: 'UserCircle',      path: ROUTES.PROFILE },
   ],
   [ROLES.FACULTY]: [
     { label: 'Dashboard',       icon: 'LayoutDashboard', path: ROUTES.FACULTY_DASHBOARD },
-    { label: 'Projects',        icon: 'FolderKanban',    path: ROUTES.PROJECTS },
-    { label: 'Workspaces',      icon: 'Briefcase',       path: ROUTES.WORKSPACES },
-    { label: 'Post Project',    icon: 'PlusSquare',      path: ROUTES.CREATE_PROJECT },
+    { label: 'Live Workspaces', icon: 'Briefcase',       path: ROUTES.WORKSPACES },
     { label: 'My Profile',      icon: 'UserCircle',      path: ROUTES.PROFILE },
   ],
   [ROLES.RECRUITER]: [
-    { label: 'Dashboard',       icon: 'LayoutDashboard', path: ROUTES.RECRUITER_DASHBOARD },
-    { label: 'Projects',        icon: 'FolderKanban',    path: ROUTES.PROJECTS },
+    { label: 'Talent Hub',      icon: 'LayoutDashboard', path: ROUTES.RECRUITER_DASHBOARD },
+    { label: 'Applicants',      icon: 'Users',           path: '/recruiter/applicants' },
     { label: 'Workspaces',      icon: 'Briefcase',       path: ROUTES.WORKSPACES },
     { label: 'My Profile',      icon: 'UserCircle',      path: ROUTES.PROFILE },
   ],
   [ROLES.ALUMNI]: [
-    { label: 'Dashboard',       icon: 'LayoutDashboard', path: ROUTES.ALUMNI_DASHBOARD },
-    { label: 'Projects',        icon: 'FolderKanban',    path: ROUTES.PROJECTS },
-    { label: 'Workspaces',      icon: 'Briefcase',       path: ROUTES.WORKSPACES },
+    { label: 'Mentorship Hub',  icon: 'LayoutDashboard', path: ROUTES.ALUMNI_DASHBOARD },
     { label: 'My Profile',      icon: 'UserCircle',      path: ROUTES.PROFILE },
   ],
   [ROLES.ADMIN]: [
-    { label: 'Dashboard',       icon: 'LayoutDashboard', path: ROUTES.ADMIN_DASHBOARD },
-    { label: 'Users',           icon: 'Users',           path: '/admin/users' },
-    { label: 'Projects',        icon: 'FolderKanban',    path: ROUTES.PROJECTS },
+    { label: 'Admin Console',   icon: 'LayoutDashboard', path: ROUTES.ADMIN_DASHBOARD },
     { label: 'Workspaces',      icon: 'Briefcase',       path: ROUTES.WORKSPACES },
     { label: 'My Profile',      icon: 'UserCircle',      path: ROUTES.PROFILE },
   ],

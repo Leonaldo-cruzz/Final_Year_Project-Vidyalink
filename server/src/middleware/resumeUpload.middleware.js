@@ -13,10 +13,19 @@ export const RESUME_PUBLIC_PATH = '/uploads/resumes/';
 
 fs.mkdirSync(RESUME_DIRECTORY, { recursive: true });
 
+const ALLOWED_EXTENSIONS = new Set(['.pdf', '.docx']);
+const ALLOWED_MIME_TYPES = new Set([
+  'application/pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/msword',
+  'application/octet-stream',
+]);
+
 const storage = multer.diskStorage({
   destination: (_req, _file, callback) => callback(null, RESUME_DIRECTORY),
   filename: (_req, file, callback) => {
-    const ext = path.extname(file.originalname).toLowerCase() || '.pdf';
+    const rawExt = path.extname(file.originalname).toLowerCase();
+    const ext = ALLOWED_EXTENSIONS.has(rawExt) ? rawExt : '.pdf';
     callback(null, `resume-${crypto.randomUUID()}${ext}`);
   },
 });
@@ -25,11 +34,14 @@ const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024, files: 1 }, // 5 MB limit
   fileFilter: (_req, file, callback) => {
-    const isPdfMime = file.mimetype === 'application/pdf';
-    const isPdfExt = path.extname(file.originalname).toLowerCase() === '.pdf';
+    const ext = path.extname(file.originalname || '').toLowerCase();
+    const mime = (file.mimetype || '').toLowerCase();
 
-    if (!isPdfMime && !isPdfExt) {
-      return callback(ApiError.badRequest('Only PDF files are allowed for resume upload'));
+    const isAllowedExt = ALLOWED_EXTENSIONS.has(ext);
+    const isAllowedMime = ALLOWED_MIME_TYPES.has(mime);
+
+    if (!isAllowedExt || !isAllowedMime) {
+      return callback(ApiError.badRequest('Unsupported file format. Only PDF and DOCX files are allowed for resume upload'));
     }
 
     return callback(null, true);

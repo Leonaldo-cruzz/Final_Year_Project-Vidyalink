@@ -1,5 +1,7 @@
+import crypto from 'node:crypto';
 import User from '../models/user.model.js';
 import { AccountStatus } from '../config/constants.js';
+import { env } from '../config/env.js';
 import ApiError from '../utils/ApiError.js';
 import {
   generateTokenPair,
@@ -141,6 +143,75 @@ class AuthService {
     }
 
     return { accessToken, refreshToken };
+  }
+
+  /**
+   * Request password reset token for given email
+   */
+  async forgotPassword(email) {
+    if (!email) {
+      throw ApiError.badRequest('Email is required');
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    if (!user) {
+      // Do not leak email existence; return consistent message
+      return {
+        message: 'If an account exists with this email, password recovery instructions have been sent.',
+      };
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+    user.passwordResetToken = hashedToken;
+    user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    await user.save({ validateBeforeSave: false });
+
+    const clientUrl = env.CLIENT_URL || 'http://localhost:5173';
+    const resetUrl = `${clientUrl}/reset-password?token=${resetToken}`;
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[AUTH] Password recovery generated for ${email}: ${resetUrl}`);
+    }
+
+    return {
+      message: 'If an account exists with this email, password recovery instructions have been sent.',
+      ...(process.env.NODE_ENV !== 'production' ? { resetToken, resetUrl } : {}),
+    };
+  }
+
+  /**
+   * Reset user password using verified reset token
+   */
+  async resetPassword(token, newPassword) {
+    if (!token || !newPassword) {
+      throw ApiError.badRequest('Reset token and new password are required');
+    }
+
+    if (newPassword.length < 8) {
+      throw ApiError.badRequest('Password must be at least 8 characters long');
+    }
+
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    const user = await User.findOne({
+      passwordResetToken: hashedToken,
+      passwordResetExpires: { $gt: new Date() },
+    }).select('+passwordResetToken +passwordResetExpires');
+
+    if (!user) {
+      throw ApiError.badRequest('Password reset token is invalid or has expired');
+    }
+
+    user.password = newPassword;
+    user.passwordResetToken = null;
+    user.passwordResetExpires = null;
+    await user.save();
+
+    return {
+      message: 'Password reset successful. You can now log in with your new password.',
+    };
   }
 }
 

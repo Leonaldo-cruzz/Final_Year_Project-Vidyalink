@@ -19,6 +19,12 @@ import projectEngagementRoutes from './routes/projectEngagement.routes.js';
 import resumeRoutes from './routes/resume.routes.js';
 import certificateRoutes from './routes/certificate.routes.js';
 import githubRoutes from './routes/github.routes.js';
+import adminRoutes from './routes/admin.routes.js';
+import aiRoutes from './routes/ai.routes.js';
+import notificationRoutes from './routes/notification.routes.js';
+import mentorshipRoutes from './routes/mentorship.routes.js';
+import referralRoutes from './routes/referral.routes.js';
+import verificationRoutes from './routes/verification.routes.js';
 import errorHandler from './middleware/errorHandler.js';
 import ApiError from './utils/ApiError.js';
 import ApiResponse from './utils/ApiResponse.js';
@@ -62,6 +68,7 @@ export const createApp = () => {
   app.use(express.json({ limit: '10kb' }));
   app.use(express.urlencoded({ extended: true, limit: '10kb' }));
   app.use(cookieParser());
+  app.morgan = morgan;
   app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
   app.use('/uploads', express.static(uploadsDirectory, { maxAge: '1d' }));
 
@@ -94,6 +101,12 @@ export const createApp = () => {
   app.use(`${apiPrefix}/resume`, resumeRoutes);
   app.use(`${apiPrefix}/certificates`, certificateRoutes);
   app.use(`${apiPrefix}/github`, githubRoutes);
+  app.use(`${apiPrefix}/admin`, adminRoutes);
+  app.use(`${apiPrefix}/ai`, aiRoutes);
+  app.use(`${apiPrefix}/notifications`, notificationRoutes);
+  app.use(`${apiPrefix}/mentorship`, mentorshipRoutes);
+  app.use(`${apiPrefix}/referrals`, referralRoutes);
+  app.use(`${apiPrefix}/verification`, verificationRoutes);
 
   app.use((_req, res) => ApiResponse.error(res, 404, 'Route not found'));
   app.use(errorHandler);

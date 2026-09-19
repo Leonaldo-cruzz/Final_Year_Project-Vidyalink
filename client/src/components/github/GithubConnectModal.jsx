@@ -82,7 +82,7 @@ const GithubConnectModal = ({ open, onClose, onSuccess }) => {
           {errors.githubUsername && <p className="mt-1 text-xs text-red-400">{errors.githubUsername.message}</p>}
         </div>
 
-        <a href="https://github.com/settings/profile" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-blue-400">
+        <a href="https://github.com/settings/profile" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-orange-300">
           Where do I find my username? <ExternalLink className="h-3.5 w-3.5" />
         </a>
         {submitError && <p className="rounded-xl border border-red-500/25 bg-red-500/10 p-3 text-sm text-red-400">{submitError}</p>}

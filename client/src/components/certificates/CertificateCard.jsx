@@ -10,7 +10,6 @@ import {
   CheckCircle2,
   Clock,
   XCircle,
-  Tag,
   Hash,
 } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
@@ -73,7 +72,7 @@ const CertificateCard = ({ certificate, onPreview, onEdit, onDelete }) => {
           {title}
         </h3>
         <p className="text-sm font-medium text-slate-400 flex items-center gap-1.5 mb-4">
-          <Award className="w-4 h-4 text-blue-400 flex-shrink-0" />
+          <Award className="w-4 h-4 text-orange-300 flex-shrink-0" />
           <span>{issuer}</span>
         </p>
 
@@ -163,7 +162,7 @@ const CertificateCard = ({ certificate, onPreview, onEdit, onDelete }) => {
               href={credentialUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-slate-400 hover:text-blue-400 p-1 transition-colors"
+              className="text-slate-400 hover:text-orange-300 p-1 transition-colors"
               title="Open Credential Link"
             >
               <ExternalLink className="w-4 h-4" />

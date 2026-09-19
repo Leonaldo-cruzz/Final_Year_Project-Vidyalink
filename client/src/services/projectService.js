@@ -5,6 +5,8 @@ export const getProjects = async (params = {}) => {
   return response.data;
 };
 
+export const getMyProjects = getProjects;
+
 export const getProjectById = async (id) => {
   const response = await api.get(`/projects/${id}`);
   return response.data;
@@ -50,10 +52,21 @@ export const deleteProject = async (id) => {
   return response.data;
 };
 
+/**
+ * Triggers a real HTTP HEAD check on the project's liveDeployment URL.
+ * The server updates deploymentStatus to: reachable | unreachable | failed | not_provided
+ */
+export const verifyDeployment = async (id) => {
+  const response = await api.post(`/projects/${id}/verify-deployment`);
+  return response.data;
+};
+
 export default {
   getProjects,
+  getMyProjects,
   getProjectById,
   createProject,
   updateProject,
   deleteProject,
+  verifyDeployment,
 };

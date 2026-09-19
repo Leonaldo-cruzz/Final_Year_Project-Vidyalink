@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, Clock, Calendar, Check, XCircle, Ban } from 'lucide-react';
+import { Calendar, Check, XCircle, Ban } from 'lucide-react';
 
 const TIMELINE_STEPS = [
   'Applied',
@@ -12,7 +12,7 @@ const TIMELINE_STEPS = [
 const ApplicationStatusTimeline = ({ status, interviewDate, interviewMode }) => {
   if (status === 'Rejected') {
     return (
-      <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-semibold">
+      <div className="flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-xs font-semibold text-red-400">
         <XCircle className="w-4 h-4 shrink-0" />
         <span>Application Status: Rejected by Recruiter</span>
       </div>
@@ -21,7 +21,7 @@ const ApplicationStatusTimeline = ({ status, interviewDate, interviewMode }) => 
 
   if (status === 'Withdrawn') {
     return (
-      <div className="flex items-center gap-2 p-3 rounded-xl bg-slate-800 border border-slate-700 text-slate-400 text-xs font-semibold">
+      <div className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-800 text-xs font-semibold text-slate-400 p-3">
         <Ban className="w-4 h-4 shrink-0" />
         <span>Application Withdrawn by Candidate</span>
       </div>
@@ -45,7 +45,7 @@ const ApplicationStatusTimeline = ({ status, interviewDate, interviewMode }) => 
               <div
                 className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                   isCurrent
-                    ? 'bg-blue-600 text-white ring-4 ring-blue-500/20 shadow-lg'
+                    ? 'bg-orange-400 text-slate-950 ring-4 ring-orange-300/15'
                     : isDone
                     ? 'bg-emerald-500 text-white'
                     : 'bg-slate-900 text-slate-500 border border-slate-800'
@@ -56,7 +56,7 @@ const ApplicationStatusTimeline = ({ status, interviewDate, interviewMode }) => 
               <span
                 className={`text-[10px] font-semibold mt-1.5 text-center max-w-[70px] leading-tight ${
                   isCurrent
-                    ? 'text-blue-400 font-bold'
+                    ? 'text-orange-300 font-bold'
                     : isDone
                     ? 'text-emerald-400'
                     : 'text-slate-500'
@@ -70,14 +70,14 @@ const ApplicationStatusTimeline = ({ status, interviewDate, interviewMode }) => 
       </div>
 
       {status === 'Interview Scheduled' && interviewDate && (
-        <div className="mt-3 p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs text-purple-300 flex items-center justify-between">
+        <div className="mt-3 flex items-center justify-between rounded-lg border border-orange-300/20 bg-orange-300/10 p-3 text-xs text-orange-200">
           <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-purple-400" />
+            <Calendar className="w-4 h-4 text-orange-300" />
             <span>
               Scheduled: <strong>{new Date(interviewDate).toLocaleString()}</strong>
             </span>
           </div>
-          <span className="px-2 py-0.5 rounded bg-purple-500/20 font-semibold">
+          <span className="rounded-md bg-orange-300/10 px-2 py-0.5 font-semibold">
             Mode: {interviewMode || 'Online'}
           </span>
         </div>

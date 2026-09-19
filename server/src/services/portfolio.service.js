@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import Portfolio, { generateCertificateId } from '../models/portfolio.model.js';
 import Workspace from '../models/workspace.model.js';
 import Milestone from '../models/milestone.model.js';
+import Project from '../models/project.model.js';
 import ApiError from '../utils/ApiError.js';
 
 class PortfolioService {
@@ -42,10 +43,45 @@ class PortfolioService {
     });
   }
 
+  async generatePortfolioForProject(studentId, projectId, verifiedById) {
+    const existing = await Portfolio.findOne({ project: projectId })
+      .populate('student', 'fullName email avatar college branch')
+      .populate('verifiedBy', 'fullName email avatar college');
+
+    if (existing) return existing;
+
+    const project = await Project.findById(projectId);
+    if (!project) {
+      throw ApiError.notFound('Project not found');
+    }
+
+    const certificateId = generateCertificateId();
+    const rawData = `${certificateId}:${studentId}:${projectId}:${Date.now()}`;
+    const verificationHash = crypto.createHash('sha256').update(rawData).digest('hex');
+
+    return Portfolio.create({
+      certificateId,
+      student: studentId,
+      project: projectId,
+      workspace: null,
+      projectTitle: project.title,
+      verifiedBy: verifiedById,
+      skillsVerified: project.technologies || [],
+      milestonesSummary: [
+        {
+          title: 'Project Evidence Verified by Faculty',
+          completedAt: new Date(),
+        },
+      ],
+      verificationHash,
+    });
+  }
+
   async getStudentPortfolios(studentId) {
     return Portfolio.find({ student: studentId })
       .populate('student', 'fullName email avatar college branch graduationYear')
       .populate('verifiedBy', 'fullName email avatar college role')
+      .populate('project')
       .populate('workspace')
       .sort({ createdAt: -1 });
   }
@@ -54,6 +90,7 @@ class PortfolioService {
     const portfolio = await Portfolio.findOne({ certificateId })
       .populate('student', 'fullName email avatar college branch graduationYear')
       .populate('verifiedBy', 'fullName email avatar college role')
+      .populate('project')
       .populate({
         path: 'workspace',
         populate: { path: 'project' },

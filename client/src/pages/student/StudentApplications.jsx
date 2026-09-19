@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Send, FileText, Code2 as Github, Ban, Calendar, ExternalLink, Loader2, Sparkles } from 'lucide-react';
+import { Send, FileText, Code2 as Github, Ban, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { SectionCard } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
+import Modal from '@/components/ui/Modal';
 import ApplicationStatusTimeline from '@/components/applications/ApplicationStatusTimeline';
 import { getStudentApplications, withdrawApplication } from '@/services/applicationService';
 import { getErrorMessage } from '@/utils/formatters';
@@ -25,6 +26,7 @@ const StudentApplications = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [withdrawingId, setWithdrawingId] = useState(null);
+  const [applicationToWithdraw, setApplicationToWithdraw] = useState(null);
 
   const fetchApplications = async () => {
     try {
@@ -43,13 +45,13 @@ const StudentApplications = () => {
   }, []);
 
   const handleWithdraw = async (appId) => {
-    if (!window.confirm('Are you sure you want to withdraw this application?')) return;
     try {
       setWithdrawingId(appId);
       await withdrawApplication(appId);
+      setApplicationToWithdraw(null);
       await fetchApplications();
     } catch (err) {
-      alert(getErrorMessage(err));
+      setError(getErrorMessage(err));
     } finally {
       setWithdrawingId(null);
     }
@@ -59,17 +61,17 @@ const StudentApplications = () => {
     <DashboardLayout>
       <div className="max-w-5xl mx-auto space-y-6">
         <div>
-          <h1 className="text-2xl font-extrabold text-white">My Project Applications</h1>
-          <p className="text-sm text-slate-400">Track your application pipeline, scheduled interviews, and selection status in real-time.</p>
+          <h1 className="page-title text-white">My Project Applications</h1>
+          <p className="text-sm text-slate-400">Track your application pipeline, scheduled interviews, and selection status in one place.</p>
         </div>
 
         {loading ? (
           <div className="py-20 text-center">
-            <Loader2 className="w-8 h-8 text-blue-500 animate-spin mx-auto mb-3" />
+            <Loader2 className="w-8 h-8 text-orange-300 animate-spin mx-auto mb-3" />
             <p className="text-sm text-slate-400">Loading your applications...</p>
           </div>
         ) : error ? (
-          <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+          <div role="alert" className="rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400">
             {error}
           </div>
         ) : applications.length === 0 ? (
@@ -77,7 +79,7 @@ const StudentApplications = () => {
             <Send className="w-12 h-12 text-slate-600 mx-auto mb-3" />
             <h3 className="text-base font-bold text-white mb-1">No Applications Yet</h3>
             <p className="text-sm text-slate-400 max-w-md mx-auto mb-6">
-              Browse the live project marketplace and apply for opportunities that match your skills.
+              Browse available project opportunities and apply for roles that match your skills.
             </p>
             <Button onClick={() => navigate('/projects')}>Explore Projects</Button>
           </SectionCard>
@@ -85,7 +87,6 @@ const StudentApplications = () => {
           <div className="space-y-4">
             {applications.map((app) => {
               const projectData = app.projectOpportunityId || app.project || {};
-              const recruiterData = app.recruiterId || {};
 
               return (
                 <SectionCard key={app._id} className="space-y-4">
@@ -115,7 +116,7 @@ const StudentApplications = () => {
                           variant="danger"
                           leftIcon={Ban}
                           loading={withdrawingId === app._id}
-                          onClick={() => handleWithdraw(app._id)}
+                          onClick={() => setApplicationToWithdraw(app)}
                         >
                           Withdraw
                         </Button>
@@ -152,7 +153,7 @@ const StudentApplications = () => {
                           href={app.resumeSnapshot || app.resumeUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-blue-400 hover:text-blue-300"
+                          className="inline-flex items-center gap-1 text-orange-300 hover:text-orange-200"
                         >
                           <FileText className="w-3.5 h-3.5" /> Resume Link
                         </a>
@@ -173,6 +174,29 @@ const StudentApplications = () => {
             })}
           </div>
         )}
+
+        <Modal
+          open={Boolean(applicationToWithdraw)}
+          onClose={() => setApplicationToWithdraw(null)}
+          title="Withdraw application?"
+          size="sm"
+        >
+          <div className="space-y-4">
+            <p className="text-sm leading-relaxed text-slate-300">
+              Withdraw your application for <strong className="text-white">{applicationToWithdraw?.projectOpportunityId?.title || applicationToWithdraw?.project?.title || 'this project'}</strong>? You may not be able to reapply for the same opportunity.
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button variant="ghost" onClick={() => setApplicationToWithdraw(null)}>Cancel</Button>
+              <Button
+                variant="danger"
+                loading={withdrawingId === applicationToWithdraw?._id}
+                onClick={() => handleWithdraw(applicationToWithdraw?._id)}
+              >
+                Withdraw Application
+              </Button>
+            </div>
+          </div>
+        </Modal>
       </div>
     </DashboardLayout>
   );

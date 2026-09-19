@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import {
   Plus,
   Search,
@@ -6,12 +6,7 @@ import {
   ArrowUpDown,
   Award,
   CheckCircle2,
-  Clock,
-  XCircle,
   AlertCircle,
-  FileText,
-  Sparkles,
-  ExternalLink,
 } from 'lucide-react';
 
 import DashboardLayout from '@/layouts/DashboardLayout';
@@ -19,7 +14,7 @@ import { SectionCard } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Modal from '@/components/ui/Modal';
-import Spinner, { FullPageSpinner } from '@/components/ui/Spinner';
+import { FullPageSpinner } from '@/components/ui/Spinner';
 import CertificateCard from '@/components/certificates/CertificateCard';
 import CreateCertificateModal from '@/components/certificates/CreateCertificateModal';
 import EditCertificateModal from '@/components/certificates/EditCertificateModal';
@@ -49,11 +44,7 @@ const Certificates = () => {
   const [certificateToDelete, setCertificateToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
-    fetchCertificates();
-  }, [activeFilter, sortBy]);
-
-  const fetchCertificates = async () => {
+  const fetchCertificates = useCallback(async () => {
     try {
       setLoading(true);
       setErrorMsg('');
@@ -68,7 +59,11 @@ const Certificates = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeFilter, searchQuery, sortBy]);
+
+  useEffect(() => {
+    fetchCertificates();
+  }, [fetchCertificates]);
 
   // Client-side search filtering if user types rapidly
   const filteredCertificates = useMemo(() => {
@@ -135,7 +130,7 @@ const Certificates = () => {
       <div className="mb-8">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
+            <h1 className="page-title text-white flex items-center gap-2">
               Verified Certificates Portfolio
               <Badge variant="blue" size="sm">
                 {counts.verified}/{counts.total} Verified
@@ -166,7 +161,7 @@ const Certificates = () => {
       )}
 
       {errorMsg && (
-        <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/25 text-red-400 text-sm flex items-center gap-3 fade-in">
+        <div role="alert" className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/25 text-red-400 text-sm flex items-center gap-3 fade-in">
           <AlertCircle className="w-5 h-5 flex-shrink-0" />
           <span>{errorMsg}</span>
         </div>
@@ -197,7 +192,7 @@ const Certificates = () => {
                 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap
                 ${
                   activeFilter === status
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
+                    ? 'bg-orange-300 text-slate-950 shadow-md shadow-orange-300/20'
                     : 'bg-slate-800/60 text-slate-400 hover:text-white hover:bg-slate-800'
                 }
               `}

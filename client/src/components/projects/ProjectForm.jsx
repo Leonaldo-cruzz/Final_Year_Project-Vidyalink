@@ -69,7 +69,7 @@ const TagEditor = ({ label, tags, setTags, placeholder, error, required = false 
       <label className={labelClass}>{label} {required && '*'}</label>
       <div className={`${inputClass} min-h-11 flex flex-wrap items-center gap-2 py-2`}>
         {tags.map((tag) => (
-          <span key={tag} className="inline-flex items-center gap-1 rounded-lg bg-blue-500/15 border border-blue-500/25 px-2 py-1 text-xs text-blue-300">
+          <span key={tag} className="inline-flex items-center gap-1 rounded-lg bg-orange-300/10 border border-orange-300/25 px-2 py-1 text-xs text-orange-200">
             {tag}
             <button type="button" onClick={() => setTags(tags.filter((item) => item !== tag))} aria-label={`Remove ${tag}`}>
               <X className="w-3 h-3" />
@@ -84,7 +84,7 @@ const TagEditor = ({ label, tags, setTags, placeholder, error, required = false 
           placeholder={tags.length ? 'Add another...' : placeholder}
           className="min-w-[140px] flex-1 bg-transparent outline-none text-sm text-white placeholder:text-slate-600"
         />
-        <button type="button" onClick={addTag} className="text-slate-500 hover:text-blue-400" aria-label="Add tag">
+        <button type="button" onClick={addTag} className="text-slate-500 hover:text-orange-300" aria-label="Add tag">
           <Plus className="w-4 h-4" />
         </button>
       </div>
@@ -231,7 +231,7 @@ const ProjectForm = ({
 
           <div className="md:col-span-2">
             <label className={labelClass}>Screenshots</label>
-            <label className="flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-slate-700 bg-slate-950/50 text-center hover:border-blue-500/50">
+              <label className="flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-slate-700 bg-slate-950/50 text-center hover:border-orange-300/50">
               <ImagePlus className="w-6 h-6 text-slate-500 mb-2" />
               <span className="text-xs text-slate-400">Upload up to 6 JPG, PNG, or WEBP images (5 MB each)</span>
               <input type="file" accept="image/jpeg,image/png,image/webp" multiple className="sr-only" onChange={(event) => setNewScreenshots(Array.from(event.target.files || []))} />

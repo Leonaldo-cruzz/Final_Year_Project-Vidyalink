@@ -3,127 +3,133 @@ import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Mail, ArrowLeft, AlertCircle, Zap, CheckCircle2 } from 'lucide-react';
-
+import { ArrowLeft, Mail, AlertCircle, CheckCircle2, KeyRound } from 'lucide-react';
+import AuthLayout from '@/layouts/AuthLayout';
 import { ROUTES } from '@/constants';
+import authService from '@/services/authService';
 
-const schema = z.object({
+const forgotPasswordSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Enter a valid email address'),
 });
 
 const ForgotPassword = () => {
-  const [sent, setSent] = useState(false);
+  const [serverMessage, setServerMessage] = useState('');
+  const [resetToken, setResetToken] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors, isSubmitting },
-  } = useForm({ resolver: zodResolver(schema) });
-
-  const email = watch('email', '');
+  } = useForm({
+    resolver: zodResolver(forgotPasswordSchema),
+  });
 
   const onSubmit = async (data) => {
-    // TODO: wire to POST /api/v1/auth/forgot-password when backend adds it
-    await new Promise((r) => setTimeout(r, 1000));
-    setSent(true);
-    void data;
+    setErrorMessage('');
+    setServerMessage('');
+    setResetToken('');
+
+    try {
+      const response = await authService.forgotPassword(data.email);
+      setServerMessage(
+        response.message || 'If an account exists with this email, password reset instructions have been generated.'
+      );
+      if (response.resetToken) {
+        setResetToken(response.resetToken);
+      }
+    } catch (err) {
+      setErrorMessage(
+        err.response?.data?.message || err.message || 'Failed to submit password reset request. Please try again.'
+      );
+    }
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center relative overflow-hidden"
-      style={{ background: 'linear-gradient(135deg, #020617 0%, #0a0f2e 50%, #020617 100%)' }}
+    <AuthLayout
+      title="Reset your password"
+      subtitle="Enter your institutional or corporate email address to receive password recovery instructions."
     >
-      <div className="absolute top-0 left-1/3 w-[400px] h-[400px] rounded-full bg-blue-600/8 blur-3xl pointer-events-none" />
-
-      <div className="w-full max-w-md mx-auto px-4 py-12 relative z-10 fade-in-up">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 shadow-lg shadow-blue-500/30 mb-4">
-            <Zap className="w-7 h-7 text-white" />
+      {serverMessage ? (
+        <div className="rounded-md border border-emerald-600/30 bg-emerald-50 p-5 text-emerald-800">
+          <div className="mb-3 flex items-center gap-2 font-bold text-emerald-900">
+            <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+            Request Submitted
           </div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight mb-1">
-            Reset password
-          </h1>
-          <p className="text-slate-400 text-sm">
-            We'll send you a reset link if your email is registered.
-          </p>
-        </div>
+          <p className="text-sm leading-relaxed text-emerald-800">{serverMessage}</p>
 
-        <div className="glass-card p-8">
-          {sent ? (
-            <div className="text-center py-4">
-              <div className="w-14 h-14 rounded-full bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center mx-auto mb-4">
-                <CheckCircle2 className="w-7 h-7 text-emerald-400" />
-              </div>
-              <h2 className="text-lg font-bold text-white mb-2">Check your inbox</h2>
-              <p className="text-slate-400 text-sm mb-6">
-                If <span className="text-blue-400 font-medium">{email}</span> is registered, you'll receive a reset link shortly.
+          {resetToken && (
+            <div className="mt-4 rounded border border-emerald-300 bg-white p-3 text-xs">
+              <p className="font-semibold text-gray-700">Development Reset Link:</p>
+              <p className="mt-1 font-mono text-[11px] text-gray-600 break-all">
+                Token: {resetToken}
               </p>
               <Link
-                to={ROUTES.LOGIN}
-                className="inline-flex items-center gap-2 text-sm font-semibold text-blue-400 hover:text-blue-300 transition-colors"
+                to={`/reset-password?token=${resetToken}`}
+                className="mt-2.5 inline-flex items-center gap-1.5 font-bold text-[#a9603b] hover:text-[#7f452b]"
               >
-                <ArrowLeft className="w-4 h-4" /> Back to Sign In
+                <KeyRound className="h-4 w-4" /> Click here to set new password →
               </Link>
             </div>
-          ) : (
-            <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-widest mb-2">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
-                  <input
-                    {...register('email')}
-                    type="email"
-                    id="forgot-email"
-                    placeholder="you@university.edu"
-                    autoComplete="email"
-                    className={`form-input pl-10 ${errors.email ? 'error' : ''}`}
-                  />
-                </div>
-                {errors.email && (
-                  <p className="mt-1.5 text-xs text-red-400 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />{errors.email.message}
-                  </p>
-                )}
-              </div>
-
-              <button
-                type="submit"
-                id="forgot-submit"
-                disabled={isSubmitting}
-                className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl font-bold text-sm text-white
-                           bg-gradient-to-r from-blue-600 to-blue-500
-                           hover:from-blue-500 hover:to-blue-400
-                           shadow-lg shadow-blue-500/25
-                           transition-all duration-200
-                           disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSubmitting ? (
-                  <>
-                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Sending…</span>
-                  </>
-                ) : (
-                  <span>Send Reset Link</span>
-                )}
-              </button>
-
-              <Link
-                to={ROUTES.LOGIN}
-                className="flex items-center justify-center gap-2 text-sm text-slate-400 hover:text-slate-200 transition-colors"
-              >
-                <ArrowLeft className="w-4 h-4" /> Back to Sign In
-              </Link>
-            </form>
           )}
         </div>
+      ) : (
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
+          {errorMessage && (
+            <div
+              role="alert"
+              className="flex items-start gap-3 rounded-md border border-red-600/25 bg-red-50 px-3.5 py-3 text-sm text-red-700"
+            >
+              <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+              {errorMessage}
+            </div>
+          )}
+
+          <div>
+            <label
+              htmlFor="forgot-email"
+              className="mb-2 block text-xs font-extrabold uppercase tracking-[0.12em] text-[#53606b]"
+            >
+              Registered Email Address
+            </label>
+            <div className="relative">
+              <input
+                {...register('email')}
+                id="forgot-email"
+                type="email"
+                autoComplete="email"
+                placeholder="you@university.edu"
+                className={`form-input !bg-[#fffdf8] !text-[#111820] pl-10 ${errors.email ? 'error' : ''}`}
+              />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6d767c]" />
+            </div>
+            {errors.email && (
+              <p className="mt-1.5 flex items-center gap-1 text-xs text-red-600">
+                <AlertCircle className="h-3 w-3 flex-shrink-0" />
+                {errors.email.message}
+              </p>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="primary-action w-full rounded-md disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isSubmitting ? 'Sending Request…' : 'Send Recovery Instructions'}
+          </button>
+        </form>
+      )}
+
+      <div className="mt-6 border-t border-[#ddd8ce] pt-5 text-center">
+        <Link
+          to={ROUTES.LOGIN}
+          className="inline-flex items-center gap-2 text-sm font-extrabold text-[#a9603b] hover:text-[#7f452b]"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back to sign in
+        </Link>
       </div>
-    </div>
+    </AuthLayout>
   );
 };
 

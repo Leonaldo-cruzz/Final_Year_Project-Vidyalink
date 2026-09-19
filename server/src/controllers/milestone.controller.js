@@ -37,10 +37,18 @@ class MilestoneController {
     return ApiResponse.ok(res, 'Deliverable submitted successfully', milestone);
   });
 
+  getPendingVerifications = asyncHandler(async (req, res) => {
+    const userId = req.user._id;
+    const userRole = req.user.role;
+    const pending = await milestoneService.getPendingVerifications(userId, userRole);
+    return ApiResponse.ok(res, 'Pending verification requests retrieved', pending);
+  });
+
   verifyMilestone = asyncHandler(async (req, res) => {
     const userId = req.user._id;
+    const userRole = req.user.role;
     const { id } = req.params;
-    const result = await milestoneService.verifyMilestone(userId, id, req.body);
+    const result = await milestoneService.verifyMilestone(userId, id, req.body, userRole);
     return ApiResponse.ok(res, 'Milestone verification complete', result);
   });
 }

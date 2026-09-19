@@ -1,5 +1,5 @@
 import React from 'react';
-import { Building, MapPin, Clock, DollarSign, Users, Award, Calendar, Send, ShieldCheck } from 'lucide-react';
+import { Building, MapPin, Clock, DollarSign, Users, Calendar, Send } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -32,7 +32,7 @@ const ProjectDetailModal = ({ open, onClose, project, isStudent, onApply }) => {
       <div className="space-y-6">
         {/* Company & Badges */}
         <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
-          <div className="flex items-center gap-2 text-sm text-blue-400 font-bold">
+          <div className="flex items-center gap-2 text-sm text-orange-300 font-bold">
             <Building className="w-4 h-4" /> {company}
             <span className="text-slate-600">•</span>
             <span className="text-xs text-slate-300 font-semibold">{domain}</span>
@@ -68,7 +68,7 @@ const ProjectDetailModal = ({ open, onClose, project, isStudent, onApply }) => {
           </div>
           <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-center">
             <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">Applicants</span>
-            <span className="text-xs font-bold text-blue-400 flex items-center justify-center gap-1 mt-1">
+            <span className="text-xs font-bold text-orange-300 flex items-center justify-center gap-1 mt-1">
               <Users className="w-3.5 h-3.5" /> {applicantsCount}
             </span>
           </div>

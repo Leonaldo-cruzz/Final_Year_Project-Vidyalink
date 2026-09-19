@@ -21,7 +21,7 @@ const Landing = () => {
         {/* Hero Headline */}
         <h1 className="text-4xl sm:text-6xl font-extrabold text-white tracking-tight max-w-4xl mx-auto leading-tight">
           Unified Academic Network for{' '}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-300">
+          <span className="text-orange-300">
             Higher Education
           </span>
         </h1>

@@ -37,6 +37,18 @@ class ApiError extends Error {
     return new ApiError(429, message);
   }
 
+  static serviceUnavailable(message = 'Service temporarily unavailable') {
+    return new ApiError(503, message);
+  }
+
+  static gatewayTimeout(message = 'Upstream service timed out') {
+    return new ApiError(504, message);
+  }
+
+  static badGateway(message = 'Upstream service returned an invalid response', errors = []) {
+    return new ApiError(502, message, errors);
+  }
+
   static internal(message = 'Internal server error') {
     return new ApiError(500, message);
   }

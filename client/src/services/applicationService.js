@@ -38,3 +38,9 @@ export const selectCandidate = async (applicationId, { recruiterNotes } = {}) =>
   const response = await api.patch(`/applications/${applicationId}/select`, { recruiterNotes });
   return response.data;
 };
+
+// Single-call fetch for all applications across recruiter's projects (avoids N+1 per project)
+export const getRecruiterApplications = async () => {
+  const response = await api.get('/applications/recruiter');
+  return response.data;
+};

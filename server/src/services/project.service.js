@@ -1,3 +1,5 @@
+/* global AbortController, clearTimeout, fetch, setTimeout, URL */
+
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import Project from '../models/project.model.js';
@@ -132,6 +134,70 @@ class ProjectService {
 
     await removeStoredScreenshots(project.screenshots);
     await Project.deleteOne({ _id: id });
+  }
+
+  /**
+   * Performs a real HTTP HEAD request to the project's liveDeployment URL
+   * and updates deploymentStatus based on the actual result.
+   *
+   * States:
+   *  not_provided — no URL was set on the project
+   *  pending      — check in progress (transient)
+   *  reachable    — URL returned 2xx or 3xx
+   *  unreachable  — URL returned 4xx or 5xx
+   *  failed       — network error, timeout, or invalid URL
+   */
+  async verifyDeployment(userId, id) {
+    const project = await Project.findOne({ _id: id, userId });
+    if (!project) throw ApiError.notFound('Project not found');
+
+    const url = project.liveDeployment?.trim();
+    if (!url) {
+      project.deploymentStatus = 'not_provided';
+      await project.save();
+      return project;
+    }
+
+    // Validate URL format before attempting network request
+    let parsedUrl;
+    try {
+      parsedUrl = new URL(url);
+      if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+        throw new Error('Only http/https URLs are supported');
+      }
+    } catch {
+      project.deploymentStatus = 'failed';
+      await project.save();
+      return project;
+    }
+
+    // Mark as pending while the check runs (save to DB)
+    project.deploymentStatus = 'pending';
+    await project.save();
+
+    const TIMEOUT_MS = 8_000;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+    try {
+      const response = await fetch(parsedUrl.href, {
+        method: 'HEAD',
+        redirect: 'follow',
+        signal: controller.signal,
+        headers: { 'User-Agent': 'VidyaLink-DeploymentVerifier/1.0' },
+      });
+
+      project.deploymentStatus = response.ok || (response.status >= 300 && response.status < 400)
+        ? 'reachable'
+        : 'unreachable';
+    } catch (err) {
+      project.deploymentStatus = err.name === 'AbortError' ? 'unreachable' : 'failed';
+    } finally {
+      clearTimeout(timer);
+    }
+
+    await project.save();
+    return project;
   }
 }
 

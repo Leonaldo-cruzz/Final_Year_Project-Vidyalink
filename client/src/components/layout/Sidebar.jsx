@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard, FolderKanban, UserCircle, Users, Code2,
-  PlusSquare, Briefcase, Award, ChevronLeft, ChevronRight, Zap, LogOut, FileText,
+  LayoutDashboard, FolderKanban, UserCircle, Users, Code2, Brain,
+  PlusSquare, Briefcase, Award, ChevronLeft, ChevronRight, LogOut, FileText, Send, X,
 } from 'lucide-react';
 
 import { useAuth } from '@/context/AuthContext';
@@ -11,10 +11,10 @@ import { getInitials } from '@/utils/formatters';
 
 // Icon map from string name to Lucide component
 const ICON_MAP = {
-  LayoutDashboard, FolderKanban, UserCircle, Users, Code2, PlusSquare, Briefcase, Award, FileText,
+  LayoutDashboard, FolderKanban, UserCircle, Users, Code2, Brain, PlusSquare, Briefcase, Award, FileText, Send,
 };
 
-const Sidebar = ({ collapsed, onToggle }) => {
+const Sidebar = ({ collapsed, onToggle, mobileOpen = false, onClose }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [loggingOut, setLoggingOut] = useState(false);
@@ -36,36 +36,49 @@ const Sidebar = ({ collapsed, onToggle }) => {
     <aside
       className={`
         fixed top-0 left-0 h-full z-40 flex flex-col
-        bg-slate-950 border-r border-slate-800/70
+        app-sidebar bg-slate-950 border-r border-slate-800/70
         sidebar-transition
-        ${collapsed ? 'w-[72px]' : 'w-[260px]'}
+        ${collapsed ? 'lg:w-[72px]' : 'lg:w-[252px]'}
+        w-[252px]
+        ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}
+      aria-label="Primary navigation"
     >
       {/* Logo */}
-      <div className={`flex items-center h-16 border-b border-slate-800/70 px-4 flex-shrink-0 ${collapsed ? 'justify-center' : 'gap-3'}`}>
-        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/30">
-          <Zap className="w-4 h-4 text-white" />
+      <div className={`flex items-center h-[68px] border-b border-slate-800/70 px-4 flex-shrink-0 ${collapsed ? 'lg:justify-center' : 'gap-3'}`}>
+        <div className="brand-mark flex-shrink-0" aria-hidden="true">
+          <span className="text-sm font-extrabold">V</span>
         </div>
         {!collapsed && (
-          <span className="text-white font-extrabold text-lg tracking-tight slide-in-left">
+          <span className="brand-wordmark slide-in-left">
             VidyaLink
           </span>
         )}
+        <button
+          type="button"
+          onClick={onClose}
+          className="ml-auto flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-800 hover:text-white lg:hidden"
+          aria-label="Close navigation"
+        >
+          <X className="h-4 w-4" />
+        </button>
       </div>
 
       {/* Nav Items */}
-      <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
+      <nav className="flex-1 overflow-y-auto py-5 px-3 space-y-1" aria-label="Workspace">
+        {!collapsed && <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600">Workspace</p>}
         {navItems.map(({ label, icon, path }) => {
           const IconComponent = ICON_MAP[icon] || LayoutDashboard;
           return (
             <NavLink
               key={path}
               to={path}
+              onClick={onClose}
               className={({ isActive }) => `
-                flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
                 transition-all duration-150 group relative
                 ${isActive
-                  ? 'bg-blue-600/15 text-blue-400 border border-blue-500/25'
+                  ? 'bg-orange-400/10 text-orange-300 border border-orange-300/25'
                   : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200 border border-transparent'}
               `}
             >
@@ -94,7 +107,7 @@ const Sidebar = ({ collapsed, onToggle }) => {
         {/* User card */}
         <div className={`flex items-center gap-3 px-2 py-2 rounded-xl ${collapsed ? 'justify-center' : ''}`}>
           <div className={`
-            flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold
+            flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center text-xs font-bold
             ${roleColor.bg} ${roleColor.text} border ${roleColor.border}
           `}>
             {getInitials(user?.fullName)}
@@ -112,7 +125,7 @@ const Sidebar = ({ collapsed, onToggle }) => {
           onClick={handleLogout}
           disabled={loggingOut}
           className={`
-            w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+            w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
             text-slate-400 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20
             border border-transparent transition-all duration-150
             disabled:opacity-50

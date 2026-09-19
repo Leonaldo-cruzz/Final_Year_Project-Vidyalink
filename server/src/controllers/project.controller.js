@@ -27,10 +27,16 @@ const deleteProject = asyncHandler(async (req, res) => {
   return ApiResponse.ok(res, 'Project deleted successfully', null);
 });
 
+const verifyDeployment = asyncHandler(async (req, res) => {
+  const project = await projectService.verifyDeployment(req.user._id, req.params.id);
+  return ApiResponse.ok(res, 'Deployment verification completed', project);
+});
+
 export default {
   createProject,
   getProjects,
   getProjectById,
   updateProject,
   deleteProject,
+  verifyDeployment,
 };

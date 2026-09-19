@@ -90,36 +90,87 @@ const GithubIntegration = () => {
       <div className="mx-auto max-w-5xl space-y-6">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>
-            <div className="flex items-center gap-3"><h1 className="text-2xl font-extrabold tracking-tight text-white">GitHub Integration</h1><Github className="h-6 w-6 text-slate-300" /></div>
+            <div className="flex items-center gap-3">
+              <h1 className="page-title text-white">GitHub Integration</h1>
+              <Github className="h-6 w-6 text-slate-300" />
+            </div>
             <p className="mt-1 text-sm text-slate-400">Connect your public GitHub profile to keep your student portfolio current.</p>
           </div>
-          {profile && profile.connectionStatus === 'Disconnected' && <Button leftIcon={Link2} onClick={() => setConnectOpen(true)}>Connect GitHub</Button>}
+          {profile && profile.connectionStatus === 'Disconnected' && (
+            <Button leftIcon={Link2} onClick={() => setConnectOpen(true)}>Connect GitHub</Button>
+          )}
         </div>
 
         {user?.fullName && <p className="text-xs text-slate-500">Profile owner: {user.fullName}</p>}
-        {notice && <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">{notice}</div>}
-        {error && <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">{error}</div>}
+
+        {notice && (
+          <div role="status" aria-live="polite" className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
+            {notice}
+          </div>
+        )}
+        {error && (
+          <div role="alert" className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+            {error}
+          </div>
+        )}
 
         {profile ? (
-          <GithubProfileCard profile={profile} onSync={handleSync} onDisconnect={() => setDisconnectOpen(true)} syncing={syncing} disconnecting={disconnecting} />
+          <GithubProfileCard
+            profile={profile}
+            onSync={handleSync}
+            onDisconnect={() => setDisconnectOpen(true)}
+            syncing={syncing}
+            disconnecting={disconnecting}
+          />
         ) : (
           <Card className="relative overflow-hidden p-6 sm:p-10">
-            <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-blue-500/10 blur-3xl" />
+            <div className="absolute right-0 top-0 h-24 w-24 border-l border-b border-orange-300/20" aria-hidden="true" />
             <div className="relative max-w-2xl">
-              <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-slate-700 bg-slate-800/80"><Github className="h-7 w-7 text-white" /></div>
+              <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-slate-700 bg-slate-800/80">
+                <Github className="h-7 w-7 text-white" />
+              </div>
               <h2 className="text-xl font-bold text-white">Showcase your GitHub presence</h2>
-              <p className="mt-2 text-sm leading-relaxed text-slate-400">Connect your username to import your public avatar, bio, follower counts, repository count, and join date. You can manually sync the snapshot whenever you want.</p>
-              <div className="mt-5 flex flex-wrap gap-3 text-xs text-slate-400"><span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-emerald-400" /> Public profile only</span><span className="inline-flex items-center gap-1.5"><RefreshCw className="h-4 w-4 text-blue-400" /> Manual sync</span></div>
+              <p className="mt-2 text-sm leading-relaxed text-slate-400">
+                Connect your username to import your public avatar, bio, follower counts, repository count, and join date. You can manually sync the snapshot whenever you want.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-3 text-xs text-slate-400">
+                <span className="inline-flex items-center gap-1.5">
+                  <ShieldCheck className="h-4 w-4 text-emerald-400" /> Public profile only
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <RefreshCw className="h-4 w-4 text-orange-300" /> Manual sync
+                </span>
+              </div>
               <Button className="mt-7" leftIcon={Link2} onClick={() => setConnectOpen(true)}>Connect GitHub</Button>
             </div>
           </Card>
         )}
       </div>
 
-      <GithubConnectModal open={connectOpen} onClose={() => setConnectOpen(false)} onSuccess={(account) => { setProfile(account); setNotice('GitHub account connected successfully.'); }} />
+      <GithubConnectModal
+        open={connectOpen}
+        onClose={() => setConnectOpen(false)}
+        onSuccess={(account) => {
+          setProfile(account);
+          setNotice('GitHub account connected successfully.');
+        }}
+      />
 
-      <Modal open={disconnectOpen} onClose={() => setDisconnectOpen(false)} title="Disconnect GitHub" size="sm" footer={<><Button variant="ghost" onClick={() => setDisconnectOpen(false)} disabled={disconnecting}>Cancel</Button><Button variant="danger" leftIcon={Unplug} loading={disconnecting} onClick={handleDisconnect}>Disconnect</Button></>}>
-        <p className="text-sm leading-relaxed text-slate-300">Disconnect your GitHub profile? Your saved snapshot will remain available, but it will no longer be marked as connected or syncable.</p>
+      <Modal
+        open={disconnectOpen}
+        onClose={() => setDisconnectOpen(false)}
+        title="Disconnect GitHub"
+        size="sm"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setDisconnectOpen(false)} disabled={disconnecting}>Cancel</Button>
+            <Button variant="danger" leftIcon={Unplug} loading={disconnecting} onClick={handleDisconnect}>Disconnect</Button>
+          </>
+        }
+      >
+        <p className="text-sm leading-relaxed text-slate-300">
+          Disconnect your GitHub profile? Your saved snapshot will remain available, but it will no longer be marked as connected or syncable.
+        </p>
       </Modal>
     </DashboardLayout>
   );

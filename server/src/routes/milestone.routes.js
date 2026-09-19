@@ -14,6 +14,11 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/workspace/:workspaceId', milestoneController.getWorkspaceMilestones);
+router.get(
+  '/pending-verification',
+  authorize('recruiter', 'faculty', 'admin'),
+  milestoneController.getPendingVerifications
+);
 
 router.post(
   '/',

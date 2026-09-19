@@ -33,9 +33,12 @@ export const verifyMilestoneSchema = z.object({
     id: z.string(),
   }),
   body: z.object({
-    status: z.enum(['verified', 'rejected'], {
-      required_error: 'Verification status must be verified or rejected',
-    }),
+    status: z.enum(['verified', 'rejected']).optional(),
+    verificationStatus: z.enum(['verified', 'rejected']).optional(),
     feedback: z.string().trim().max(1000).optional(),
+  }).refine((data) => Boolean(data.status || data.verificationStatus), {
+    message: 'Verification status must be verified or rejected',
+    path: ['status'],
   }),
 });
+

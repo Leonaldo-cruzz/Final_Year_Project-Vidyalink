@@ -51,7 +51,7 @@ const EditProject = () => {
       <div className="mx-auto max-w-4xl space-y-6">
         <div>
           <button type="button" onClick={() => navigate(`/projects/${projectId}`)} className="mb-2 inline-flex items-center gap-1 text-xs font-semibold text-slate-400 hover:text-white"><ArrowLeft className="h-3.5 w-3.5" /> Back to project</button>
-          <h1 className="flex items-center gap-2 text-2xl font-extrabold tracking-tight text-white"><FilePenLine className="h-6 w-6 text-blue-400" /> Edit Project</h1>
+          <h1 className="page-title flex items-center gap-2 text-white"><FilePenLine className="h-6 w-6 text-orange-300" /> Edit Project</h1>
           <p className="mt-1 text-sm text-slate-400">Keep your project story and links up to date.</p>
         </div>
         <ProjectForm initialValues={project} initialScreenshots={project.screenshots || []} onSubmit={handleSubmit} onCancel={() => navigate(`/projects/${projectId}`)} submitLabel="Save Changes" submitting={submitting} serverError={error} />

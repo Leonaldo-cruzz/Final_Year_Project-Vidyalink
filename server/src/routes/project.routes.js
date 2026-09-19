@@ -22,6 +22,7 @@ router.post(
 );
 router.get('/', projectController.getProjects);
 router.get('/:id', projectController.getProjectById);
+router.post('/:id/verify-deployment', projectController.verifyDeployment);
 router.put(
   '/:id',
   projectScreenshotUpload,

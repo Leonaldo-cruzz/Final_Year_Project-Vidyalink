@@ -53,6 +53,12 @@ class ApplicationController {
     const result = await applicationService.selectCandidate(userId, id, req.body, userRole);
     return ApiResponse.ok(res, 'Candidate selected and ProjectEngagement created', result);
   });
+
+  getRecruiterCandidates = asyncHandler(async (req, res) => {
+    const recruiterId = req.user._id;
+    const candidates = await applicationService.getRecruiterCandidates(recruiterId);
+    return ApiResponse.ok(res, 'Recruiter candidates retrieved successfully', candidates);
+  });
 }
 
 export default new ApplicationController();

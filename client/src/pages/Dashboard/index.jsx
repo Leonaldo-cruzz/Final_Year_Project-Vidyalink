@@ -10,10 +10,10 @@ const Dashboard = () => {
     <MainLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Header Banner */}
-        <div className="bg-gradient-to-r from-indigo-900/40 via-slate-900 to-slate-900 border border-slate-800 rounded-2xl p-6 mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 rounded-xl bg-indigo-600/20 border border-indigo-500/30 text-indigo-400 flex items-center justify-center font-bold text-xl">
-              {user?.fullName?.charAt(0) || 'U'}
+              {user?.fullName?.charAt(0) || ''}
             </div>
             <div>
               <h1 className="text-xl font-bold text-white flex items-center space-x-2">
@@ -35,25 +35,25 @@ const Dashboard = () => {
           <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 md:col-span-2">
             <h2 className="text-base font-bold text-white mb-4 flex items-center space-x-2">
               <User className="w-4 h-4 text-indigo-400" />
-              <span>User Profile Placeholder</span>
+              <span>User Profile Details</span>
             </h2>
 
             <div className="space-y-3 text-xs">
               <div className="flex justify-between py-2 border-b border-slate-800">
                 <span className="text-slate-400">Full Name</span>
-                <span className="font-semibold text-slate-200">{user?.fullName}</span>
+                <span className="font-semibold text-slate-200">{user?.fullName || '—'}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-slate-800">
                 <span className="text-slate-400">Email Address</span>
-                <span className="font-semibold text-slate-200">{user?.email}</span>
+                <span className="font-semibold text-slate-200">{user?.email || '—'}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-slate-800">
                 <span className="text-slate-400">Assigned Role</span>
-                <span className="font-semibold text-indigo-400 uppercase">{user?.role}</span>
+                <span className="font-semibold text-indigo-400 uppercase">{user?.role || '—'}</span>
               </div>
               <div className="flex justify-between py-2">
                 <span className="text-slate-400">Account Status</span>
-                <span className="font-semibold text-emerald-400">Active</span>
+                <span className="font-semibold text-emerald-400">{user?.status || 'Active'}</span>
               </div>
             </div>
           </div>

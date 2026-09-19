@@ -47,6 +47,7 @@ coverage/
 *.lcov
 .nyc_output/
 test-results/
+*test_results*.json
 playwright-report/
 blob-report/
 

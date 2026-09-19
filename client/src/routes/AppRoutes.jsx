@@ -6,6 +6,8 @@ import { useAuth } from '@/context/AuthContext';
 import Login         from '@/pages/Login';
 import Register      from '@/pages/Register';
 import ForgotPassword from '@/pages/auth/ForgotPassword';
+import ResetPassword from '@/pages/auth/ResetPassword';
+import Landing       from '@/pages/Landing';
 
 // Role dashboards
 import StudentDashboard   from '@/pages/student/StudentDashboard';
@@ -24,9 +26,13 @@ import ApplicantManagement from '@/pages/recruiter/ApplicantManagement';
 import WorkspaceList   from '@/pages/workspace/WorkspaceList';
 import WorkspaceDetail from '@/pages/workspace/WorkspaceDetail';
 import VerifiedPortfolio from '@/pages/portfolio/VerifiedPortfolio';
+import FacultyVerificationDashboard from '@/pages/faculty/FacultyVerificationDashboard';
+import VerificationDetail from '@/pages/faculty/VerificationDetail';
 import Resume from '@/pages/student/Resume';
 import Certificates from '@/pages/student/Certificates';
 import GithubIntegration from '@/pages/student/GithubIntegration';
+import StudentApplications from '@/pages/student/StudentApplications';
+import AIInsights from '@/pages/student/AIInsights';
 import NotFound       from '@/pages/NotFound';
 
 // Route guards
@@ -38,10 +44,11 @@ import { ROLES } from '@/constants';
 const AppRoutes = () => (
   <Routes>
     {/* Public routes */}
-    <Route path="/"               element={<Navigate to="/login" replace />} />
+    <Route path="/"               element={<Landing />} />
     <Route path="/login"          element={<Login />} />
     <Route path="/register"       element={<Register />} />
     <Route path="/forgot-password" element={<ForgotPassword />} />
+    <Route path="/reset-password"  element={<ResetPassword />} />
     <Route path="/portfolio/verify/:certificateId" element={<VerifiedPortfolio />} />
 
     {/* Role dashboards — each protected by role */}
@@ -114,9 +121,17 @@ const AppRoutes = () => (
       }
     />
     <Route
+      path="/applications"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.ADMIN]}>
+          <StudentApplications />
+        </ProtectedRoute>
+      }
+    />
+    <Route
       path="/projects/new"
       element={
-        <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.FACULTY, ROLES.RECRUITER, ROLES.ADMIN]}>
           <CreateProject />
         </ProtectedRoute>
       }
@@ -124,7 +139,7 @@ const AppRoutes = () => (
     <Route
       path="/projects/:projectId/edit"
       element={
-        <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.FACULTY, ROLES.RECRUITER, ROLES.ADMIN]}>
           <EditProject />
         </ProtectedRoute>
       }
@@ -132,7 +147,7 @@ const AppRoutes = () => (
     <Route
       path="/projects/:projectId"
       element={
-        <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.FACULTY, ROLES.RECRUITER, ROLES.ADMIN]}>
           <ProjectDetails />
         </ProtectedRoute>
       }
@@ -141,6 +156,14 @@ const AppRoutes = () => (
       path="/projects/:projectId/applicants"
       element={
         <ProtectedRoute allowedRoles={[ROLES.FACULTY, ROLES.RECRUITER, ROLES.ADMIN]}>
+          <ApplicantManagement />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/recruiter/applicants"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.RECRUITER, ROLES.ADMIN]}>
           <ApplicantManagement />
         </ProtectedRoute>
       }
@@ -161,11 +184,29 @@ const AppRoutes = () => (
         </ProtectedRoute>
       }
     />
+    <Route path="/portfolio" element={<Navigate to="/portfolio/me" replace />} />
+    <Route path="/portfolio/verified" element={<Navigate to="/portfolio/me" replace />} />
     <Route
       path="/portfolio/me"
       element={
         <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.ADMIN]}>
           <VerifiedPortfolio />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/faculty/verifications"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.FACULTY, ROLES.ADMIN]}>
+          <FacultyVerificationDashboard />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/faculty/verifications/:id"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.FACULTY, ROLES.ADMIN]}>
+          <VerificationDetail />
         </ProtectedRoute>
       }
     />
@@ -190,6 +231,14 @@ const AppRoutes = () => (
       element={
         <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
           <GithubIntegration />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/ai-insights"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
+          <AIInsights />
         </ProtectedRoute>
       }
     />

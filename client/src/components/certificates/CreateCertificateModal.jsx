@@ -6,16 +6,9 @@ import {
   UploadCloud,
   FileText,
   AlertCircle,
-  Award,
-  Calendar,
-  Building,
-  Link,
-  Hash,
-  Sparkles,
 } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
 import { createCertificate } from '@/services/certificateService';
 import { getErrorMessage } from '@/utils/formatters';
 
@@ -274,7 +267,7 @@ const CreateCertificateModal = ({ open, onClose, onSuccess }) => {
               accept="application/pdf,image/jpeg,image/png"
               className="hidden"
             />
-            <UploadCloud className="w-6 h-6 text-blue-400 mb-2" />
+            <UploadCloud className="w-6 h-6 text-orange-300 mb-2" />
             {selectedFile ? (
               <p className="text-xs text-emerald-400 font-semibold flex items-center gap-1">
                 <FileText className="w-4 h-4" /> {selectedFile.name} ({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)

@@ -61,6 +61,24 @@ class AuthController {
 
     return ApiResponse.ok(res, 'Token refreshed successfully', { accessToken, refreshToken });
   });
+
+  /**
+   * POST /api/v1/auth/forgot-password
+   */
+  forgotPassword = asyncHandler(async (req, res) => {
+    const { email } = req.body;
+    const result = await authService.forgotPassword(email);
+    return ApiResponse.ok(res, result.message, result);
+  });
+
+  /**
+   * POST /api/v1/auth/reset-password
+   */
+  resetPassword = asyncHandler(async (req, res) => {
+    const { token, newPassword } = req.body;
+    const result = await authService.resetPassword(token, newPassword);
+    return ApiResponse.ok(res, result.message, result);
+  });
 }
 
 export default new AuthController();

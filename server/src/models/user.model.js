@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
-import { env } from "../config/env.js";
 import { generateAccessToken, generateRefreshToken } from "../utils/jwt.util.js";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -83,6 +82,18 @@ const userSchema = new mongoose.Schema(
 
     refreshToken: {
       type: String,
+      select: false,
+      default: null,
+    },
+
+    passwordResetToken: {
+      type: String,
+      select: false,
+      default: null,
+    },
+
+    passwordResetExpires: {
+      type: Date,
       select: false,
       default: null,
     },

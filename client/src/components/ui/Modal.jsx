@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useId, useRef } from 'react';
 import { X } from 'lucide-react';
 
 /**
@@ -20,6 +20,7 @@ const SIZE_MAP = {
 
 const Modal = ({ open, onClose, title, size = 'md', children, footer }) => {
   const overlayRef = useRef(null);
+  const titleId = useId();
 
   // ESC key to close
   useEffect(() => {
@@ -51,22 +52,22 @@ const Modal = ({ open, onClose, title, size = 'md', children, footer }) => {
     <div
       ref={overlayRef}
       onClick={handleBackdropClick}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 fade-in"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="modal-title"
+      aria-labelledby={titleId}
     >
       <div className={`
         w-full ${SIZE_MAP[size] || SIZE_MAP.md}
-        bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl
+        bg-slate-900 border border-slate-800 rounded-lg shadow-lg
         fade-in-up overflow-hidden
       `}>
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
-          <h2 id="modal-title" className="text-base font-bold text-white">{title}</h2>
+          <h2 id={titleId} className="text-base font-bold text-white">{title}</h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
             aria-label="Close modal"
           >
             <X className="w-4 h-4" />

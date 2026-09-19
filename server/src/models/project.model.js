@@ -15,6 +15,7 @@ export const PROJECT_CATEGORIES = [
 
 export const PROJECT_STATUSES = ['Completed', 'In Progress', 'Prototype', 'Archived'];
 export const VERIFICATION_STATUSES = ['Pending', 'Verified', 'Rejected'];
+export const DEPLOYMENT_STATUSES = ['not_provided', 'pending', 'reachable', 'unreachable', 'failed'];
 
 const projectSchema = new mongoose.Schema(
   {
@@ -119,6 +120,12 @@ const projectSchema = new mongoose.Schema(
     featured: {
       type: Boolean,
       default: false,
+      index: true,
+    },
+    deploymentStatus: {
+      type: String,
+      enum: ['not_provided', 'pending', 'reachable', 'unreachable', 'failed'],
+      default: 'not_provided',
       index: true,
     },
   },

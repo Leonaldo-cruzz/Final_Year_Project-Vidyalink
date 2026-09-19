@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -6,8 +6,6 @@ import { z } from 'zod';
 import {
   FolderKanban,
   Plus,
-  CheckCircle2,
-  XCircle,
   Clock,
   ExternalLink,
   Award,
@@ -16,7 +14,6 @@ import {
   Trash2,
   UploadCloud,
   ShieldCheck,
-  AlertCircle
 } from 'lucide-react';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { SectionCard } from '@/components/ui/Card';
@@ -55,6 +52,7 @@ const WorkspaceDetail = () => {
   const [milestones, setMilestones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [actionError, setActionError] = useState('');
 
   // Modals state
   const [showAddMilestone, setShowAddMilestone] = useState(false);
@@ -67,6 +65,8 @@ const WorkspaceDetail = () => {
   const [verifyStatus, setVerifyStatus] = useState('verified');
   const [verifyFeedback, setVerifyFeedback] = useState('');
   const [submittingVerify, setSubmittingVerify] = useState(false);
+  const [milestoneToDelete, setMilestoneToDelete] = useState(null);
+  const [deletingMilestoneId, setDeletingMilestoneId] = useState(null);
 
   const isOwner = workspace?.owner?._id === user?._id || user?.role === 'admin' || user?.role === 'faculty' || user?.role === 'recruiter';
   const isStudent = workspace?.student?._id === user?._id;
@@ -85,7 +85,7 @@ const WorkspaceDetail = () => {
     formState: { errors: deliverableErrors },
   } = useForm({ resolver: zodResolver(deliverableSchema) });
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const [wsRes, msRes] = await Promise.all([
@@ -99,11 +99,11 @@ const WorkspaceDetail = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [workspaceId]);
 
   useEffect(() => {
     if (workspaceId) fetchData();
-  }, [workspaceId]);
+  }, [fetchData, workspaceId]);
 
   const onAddMilestone = async (data) => {
     try {
@@ -116,19 +116,22 @@ const WorkspaceDetail = () => {
       setShowAddMilestone(false);
       await fetchData();
     } catch (err) {
-      alert(getErrorMessage(err));
+      setActionError(getErrorMessage(err));
     } finally {
       setSubmittingMilestone(false);
     }
   };
 
   const onDeleteMilestone = async (id) => {
-    if (!window.confirm('Delete this milestone?')) return;
     try {
+      setDeletingMilestoneId(id);
       await deleteMilestone(id);
+      setMilestoneToDelete(null);
       await fetchData();
     } catch (err) {
-      alert(getErrorMessage(err));
+      setActionError(getErrorMessage(err));
+    } finally {
+      setDeletingMilestoneId(null);
     }
   };
 
@@ -141,7 +144,7 @@ const WorkspaceDetail = () => {
       setActiveDeliverableMilestone(null);
       await fetchData();
     } catch (err) {
-      alert(getErrorMessage(err));
+      setActionError(getErrorMessage(err));
     } finally {
       setSubmittingDeliverable(false);
     }
@@ -158,7 +161,7 @@ const WorkspaceDetail = () => {
       setActiveVerifyMilestone(null);
       await fetchData();
     } catch (err) {
-      alert(getErrorMessage(err));
+      setActionError(getErrorMessage(err));
     } finally {
       setSubmittingVerify(false);
     }
@@ -168,7 +171,7 @@ const WorkspaceDetail = () => {
     return (
       <DashboardLayout>
         <div className="py-24 text-center">
-          <Loader2 className="w-8 h-8 text-blue-500 animate-spin mx-auto mb-3" />
+          <Loader2 className="w-8 h-8 text-orange-300 animate-spin mx-auto mb-3" />
           <p className="text-sm text-slate-400">Loading live project workspace...</p>
         </div>
       </DashboardLayout>
@@ -188,6 +191,11 @@ const WorkspaceDetail = () => {
   return (
     <DashboardLayout>
       <div className="max-w-6xl mx-auto space-y-6">
+        {actionError && (
+          <div role="alert" className="rounded-lg border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+            {actionError}
+          </div>
+        )}
         {/* Header */}
         <div>
           <button
@@ -199,7 +207,7 @@ const WorkspaceDetail = () => {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-3 mb-1">
-                <h1 className="text-2xl font-extrabold text-white">
+                <h1 className="page-title text-white">
                   {workspace.project?.title}
                 </h1>
                 <Badge variant={workspace.status === 'completed' ? 'success' : 'info'}>
@@ -253,7 +261,7 @@ const WorkspaceDetail = () => {
               </div>
               <div className="w-full h-3 rounded-full bg-slate-800 overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-400 transition-all duration-500"
+                  className="h-full bg-orange-300 transition-all duration-500"
                   style={{ width: `${workspace.progressPercentage}%` }}
                 />
               </div>
@@ -265,7 +273,7 @@ const WorkspaceDetail = () => {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <FolderKanban className="w-5 h-5 text-blue-400" /> Project Milestones & Deliverables
+              <FolderKanban className="w-5 h-5 text-orange-300" /> Project Milestones & Deliverables
             </h2>
 
             {isOwner && workspace.status !== 'completed' && (
@@ -327,7 +335,7 @@ const WorkspaceDetail = () => {
                               href={ms.deliverableUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-blue-400 hover:underline inline-flex items-center gap-1"
+                              className="text-orange-300 hover:underline inline-flex items-center gap-1"
                             >
                               View Submission <ExternalLink className="w-3 h-3" />
                             </a>
@@ -377,7 +385,7 @@ const WorkspaceDetail = () => {
 
                       {isOwner && (
                         <button
-                          onClick={() => onDeleteMilestone(ms._id)}
+                          onClick={() => setMilestoneToDelete(ms)}
                           className="p-2 text-slate-400 hover:text-red-400 rounded-lg hover:bg-slate-800 transition-colors"
                           title="Delete Milestone"
                         >
@@ -509,7 +517,7 @@ const WorkspaceDetail = () => {
                 href={activeVerifyMilestone?.deliverableUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-400 hover:underline block truncate"
+                className="text-orange-300 hover:underline block truncate"
               >
                 {activeVerifyMilestone?.deliverableUrl}
               </a>
@@ -551,6 +559,29 @@ const WorkspaceDetail = () => {
               </Button>
               <Button loading={submittingVerify} onClick={onConfirmVerify}>
                 Complete Review
+              </Button>
+            </div>
+          </div>
+        </Modal>
+
+        <Modal
+          open={Boolean(milestoneToDelete)}
+          onClose={() => setMilestoneToDelete(null)}
+          title="Delete milestone?"
+          size="sm"
+        >
+          <div className="space-y-4">
+            <p className="text-sm leading-relaxed text-slate-300">
+              Delete <strong className="text-white">{milestoneToDelete?.title}</strong>? Any submitted deliverable attached to this milestone will also be removed.
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button variant="ghost" onClick={() => setMilestoneToDelete(null)}>Cancel</Button>
+              <Button
+                variant="danger"
+                loading={deletingMilestoneId === milestoneToDelete?._id}
+                onClick={() => onDeleteMilestone(milestoneToDelete?._id)}
+              >
+                Delete Milestone
               </Button>
             </div>
           </div>

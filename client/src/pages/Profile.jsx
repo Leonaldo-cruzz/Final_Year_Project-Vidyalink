@@ -219,7 +219,7 @@ const Profile = () => {
       <div className="max-w-5xl mx-auto">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-extrabold text-white">Student Profile</h1>
+            <h1 className="page-title text-white">Student Profile</h1>
             <p className="text-slate-400 text-sm mt-1">Build the academic profile recruiters and faculty will review.</p>
           </div>
           {!editing && (
@@ -279,7 +279,7 @@ const Profile = () => {
               <SectionCard title="Skills" className="mb-6">
                 <div className="flex flex-wrap gap-2">
                   {displayedSkills.map((skill) => (
-                    <span key={skill} className="px-3 py-1.5 rounded-full bg-blue-600/10 border border-blue-500/25 text-blue-300 text-xs font-semibold">
+                    <span key={skill} className="px-3 py-1.5 rounded-md bg-orange-300/10 border border-orange-300/25 text-orange-200 text-xs font-semibold">
                       {skill}
                     </span>
                   ))}

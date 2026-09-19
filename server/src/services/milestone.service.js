@@ -2,6 +2,7 @@ import Milestone from '../models/milestone.model.js';
 import Workspace from '../models/workspace.model.js';
 import workspaceService from './workspace.service.js';
 import portfolioService from './portfolio.service.js';
+import notificationService from './notification.service.js';
 import ApiError from '../utils/ApiError.js';
 
 class MilestoneService {
@@ -92,22 +93,62 @@ class MilestoneService {
     milestone.submittedAt = new Date();
     await milestone.save();
 
+    // Trigger notification to workspace owner
+    await notificationService.createNotification({
+      recipient: milestone.workspace.owner,
+      sender: userId,
+      type: 'verification',
+      title: 'New Deliverable Submitted',
+      message: `Deliverable evidence submitted for "${milestone.title}".`,
+      link: `/workspace/${milestone.workspace._id}`,
+      metadata: { milestoneId: milestone._id, workspaceId: milestone.workspace._id },
+    });
+
     return milestone;
   }
 
-  async verifyMilestone(userId, milestoneId, { status, feedback }) {
+  async getPendingVerifications(userId, userRole) {
+    const query = { status: 'submitted' };
+    const milestones = await Milestone.find(query)
+      .populate({
+        path: 'workspace',
+        populate: [
+          { path: 'project', select: 'title technologies domain category' },
+          { path: 'student', select: 'fullName email college branch graduationYear avatar' },
+          { path: 'owner', select: 'fullName email college role' },
+        ],
+      })
+      .sort({ submittedAt: -1 });
+
+    return milestones.filter((m) => {
+      if (userRole === 'faculty' || userRole === 'admin') return true;
+      return m.workspace?.owner?._id?.toString() === userId.toString();
+    });
+  }
+
+  async verifyMilestone(userId, milestoneId, { status, verificationStatus, feedback }, userRole) {
     const milestone = await Milestone.findById(milestoneId).populate('workspace');
     if (!milestone) {
       throw ApiError.notFound('Milestone not found');
     }
 
-    if (milestone.workspace.owner.toString() !== userId.toString()) {
+    const isAuthorized =
+      userRole === 'faculty' ||
+      userRole === 'admin' ||
+      milestone.workspace.owner.toString() === userId.toString();
+
+    if (!isAuthorized) {
       throw ApiError.forbidden('Only workspace owner or faculty can verify deliverables');
     }
 
-    milestone.status = status;
+    const targetStatus = status || verificationStatus;
+    if (!['verified', 'rejected'].includes(targetStatus)) {
+      throw ApiError.badRequest('Verification status must be verified or rejected');
+    }
+
+    milestone.status = targetStatus;
     if (feedback) milestone.feedback = feedback;
-    if (status === 'verified') {
+    if (targetStatus === 'verified') {
       milestone.verifiedAt = new Date();
     }
     await milestone.save();
@@ -120,8 +161,23 @@ class MilestoneService {
       portfolio = await portfolioService.generatePortfolioForWorkspace(milestone.workspace._id);
     }
 
+    // Trigger notification to student
+    const isVerified = targetStatus === 'verified';
+    await notificationService.createNotification({
+      recipient: milestone.workspace.student,
+      sender: userId,
+      type: 'verification',
+      title: isVerified ? 'Milestone Evidence Verified!' : 'Milestone Review Update',
+      message: isVerified
+        ? `Your deliverable for "${milestone.title}" has been verified.`
+        : `Faculty feedback for "${milestone.title}": ${feedback || 'Changes requested.'}`,
+      link: `/workspace/${milestone.workspace._id}`,
+      metadata: { milestoneId: milestone._id, workspaceId: milestone.workspace._id },
+    });
+
     return { milestone, progress, portfolio };
   }
 }
 
 export default new MilestoneService();
+

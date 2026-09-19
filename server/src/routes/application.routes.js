@@ -35,6 +35,14 @@ router.delete(
 );
 
 // Recruiter Endpoints
+
+// Single-query fetch: all applications across all recruiter's projects
+router.get(
+  '/recruiter',
+  authorize('recruiter', 'admin'),
+  applicationController.getRecruiterCandidates
+);
+
 router.get(
   '/project/:projectId',
   authorize('recruiter', 'faculty', 'admin'),
