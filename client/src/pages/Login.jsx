@@ -50,7 +50,7 @@ const Login = () => {
   };
 
   return (
-    <AuthLayout title="Welcome back" subtitle="Sign in to your university or industry partner account.">
+    <AuthLayout title="Welcome back" subtitle="Sign in to your VidyaLink account">
       {sessionExpired && (
         <div className="mb-5 flex items-start gap-3 rounded-md border border-amber-600/30 bg-amber-50 px-3.5 py-3 text-sm text-amber-800">
           <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
@@ -68,7 +68,7 @@ const Login = () => {
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
         <div>
           <label htmlFor="login-email" className="mb-2 block text-xs font-extrabold uppercase tracking-[0.12em] text-[#53606b]">
-            Institutional or Corporate Email
+            Email Address
           </label>
           <input
             {...register('email')}
@@ -118,14 +118,14 @@ const Login = () => {
           className="primary-action w-full rounded-md disabled:cursor-not-allowed disabled:opacity-50"
         >
           <LogIn className="mr-2 h-4 w-4" />
-          {isSubmitting ? 'Authenticating…' : 'Sign in to VidyaLink'}
+          {isSubmitting ? 'Signing in…' : 'Sign In'}
         </button>
       </form>
 
       <p className="mt-6 border-t border-[#ddd8ce] pt-5 text-center text-sm text-[#6d767c]">
         Don't have an account?{' '}
         <Link to={ROUTES.REGISTER} className="font-extrabold text-[#a9603b] hover:text-[#7f452b]">
-          Register institutional account <span aria-hidden="true">→</span>
+          Create one <span aria-hidden="true">→</span>
         </Link>
       </p>
     </AuthLayout>

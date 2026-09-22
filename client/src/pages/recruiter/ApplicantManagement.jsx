@@ -20,9 +20,9 @@ import Modal from '@/components/ui/Modal';
 import Avatar from '@/components/ui/Avatar';
 import ScheduleInterviewModal from '@/components/applications/ScheduleInterviewModal';
 import ApplicationStatusTimeline from '@/components/applications/ApplicationStatusTimeline';
-import api from '@/services/api';
 import {
   getProjectApplications,
+  getRecruiterApplications,
   updateApplicationStatus,
   selectCandidate,
 } from '@/services/applicationService';
@@ -42,7 +42,6 @@ const ApplicantManagement = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
 
-  const [resolvedProjectId, setResolvedProjectId] = useState(projectId || null);
   const [projectTitle, setProjectTitle] = useState('');
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -58,46 +57,30 @@ const ApplicantManagement = () => {
   const [recruiterNotes, setRecruiterNotes] = useState('');
   const [submittingStatus, setSubmittingStatus] = useState(false);
 
-  // If no projectId in URL, resolve from /projects
-  useEffect(() => {
-    const resolveProject = async () => {
-      if (projectId) {
-        setResolvedProjectId(projectId);
-        return;
-      }
-      try {
-        const res = await api.get('/projects');
-        const list = res.data?.data || res.data || [];
-        if (list.length > 0) {
-          setResolvedProjectId(list[0]._id);
-          setProjectTitle(list[0].title);
-        }
-      } catch {
-        // Honest empty state
-      }
-    };
-    resolveProject();
-  }, [projectId]);
-
   const fetchApplications = useCallback(async () => {
-    if (!resolvedProjectId) {
-      setApplications([]);
-      setLoading(false);
-      return;
-    }
     try {
       setLoading(true);
       setError('');
-      const res = await getProjectApplications(resolvedProjectId);
-      const data = res.data || [];
-      setApplications(Array.isArray(data) ? data : []);
+      if (projectId) {
+        const res = await getProjectApplications(projectId);
+        const data = res.data || [];
+        setApplications(Array.isArray(data) ? data : []);
+        if (data.length > 0 && (data[0].projectOpportunityId?.title || data[0].project?.title)) {
+          setProjectTitle(data[0].projectOpportunityId?.title || data[0].project?.title);
+        }
+      } else {
+        const res = await getRecruiterApplications();
+        const data = res.data || [];
+        setApplications(Array.isArray(data) ? data : []);
+        setProjectTitle('All Campus Opportunities');
+      }
     } catch (err) {
       setError(getErrorMessage(err));
       setApplications([]);
     } finally {
       setLoading(false);
     }
-  }, [resolvedProjectId]);
+  }, [projectId]);
 
   useEffect(() => {
     fetchApplications();

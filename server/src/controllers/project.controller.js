@@ -8,12 +8,12 @@ const createProject = asyncHandler(async (req, res) => {
 });
 
 const getProjects = asyncHandler(async (req, res) => {
-  const projects = await projectService.getProjects(req.user._id, req.query);
+  const projects = await projectService.getProjects(req.user._id, req.query, req.user.role);
   return ApiResponse.ok(res, 'Projects fetched successfully', projects);
 });
 
 const getProjectById = asyncHandler(async (req, res) => {
-  const project = await projectService.getProjectById(req.user._id, req.params.id);
+  const project = await projectService.getProjectById(req.user._id, req.params.id, req.user.role);
   return ApiResponse.ok(res, 'Project fetched successfully', project);
 });
 

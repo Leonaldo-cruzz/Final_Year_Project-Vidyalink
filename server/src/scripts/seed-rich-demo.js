@@ -9,6 +9,17 @@ import Portfolio from '../models/portfolio.model.js';
 import Application from '../models/application.model.js';
 import { env } from '../config/env.js';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// DEVELOPMENT / STAGING ONLY — NEVER RUN IN PRODUCTION
+// This script creates synthetic demo accounts for local development and
+// manual QA sessions.  It is NOT called anywhere in the application startup
+// path and MUST NOT be added to any production CI/CD pipeline.
+// ─────────────────────────────────────────────────────────────────────────────
+if (env.NODE_ENV === 'production') {
+  console.error('\n❌  BLOCKED: seed-rich-demo.js MUST NOT be run in production.\n');
+  process.exit(1);
+}
+
 const DEMO_USERS = [
   {
     fullName: 'Alex Student',

@@ -43,7 +43,7 @@ class ApplicationService {
       project: projectId,
       studentId,
       student: studentId,
-      recruiterId: project.createdBy || project.user,
+      recruiterId: project.userId || project.createdBy || project.user,
       coverLetter,
       pitch: coverLetter,
       resumeSnapshot,
@@ -55,7 +55,7 @@ class ApplicationService {
       status: 'Applied',
     });
 
-    const recruiterId = project.createdBy || project.user;
+    const recruiterId = project.userId || project.createdBy || project.user;
     if (recruiterId) {
       await notificationService.createNotification({
         recipient: recruiterId,
@@ -111,6 +111,7 @@ class ApplicationService {
     }
 
     const isOwner =
+      project.userId?.toString() === userId.toString() ||
       project.createdBy?.toString() === userId.toString() ||
       project.user?.toString() === userId.toString();
 
@@ -154,7 +155,7 @@ class ApplicationService {
 
   async getRecruiterCandidates(recruiterId) {
     const projects = await Project.find({
-      $or: [{ createdBy: recruiterId }, { user: recruiterId }],
+      $or: [{ userId: recruiterId }, { createdBy: recruiterId }, { user: recruiterId }],
     }).select('_id title');
 
     const projectIds = projects.map((p) => p._id);
@@ -207,6 +208,7 @@ class ApplicationService {
 
     const project = application.projectOpportunityId || application.project;
     const isOwner =
+      project.userId?.toString() === userId.toString() ||
       project.createdBy?.toString() === userId.toString() ||
       project.user?.toString() === userId.toString() ||
       application.recruiterId?.toString() === userId.toString();
@@ -273,6 +275,7 @@ class ApplicationService {
 
     const project = application.projectOpportunityId || application.project;
     const isOwner =
+      project.userId?.toString() === userId.toString() ||
       project.createdBy?.toString() === userId.toString() ||
       project.user?.toString() === userId.toString() ||
       application.recruiterId?.toString() === userId.toString();
@@ -318,6 +321,7 @@ class ApplicationService {
     const project = await Project.findById(projectObj._id || projectObj);
 
     const isOwner =
+      project.userId?.toString() === userId.toString() ||
       project.createdBy?.toString() === userId.toString() ||
       project.user?.toString() === userId.toString() ||
       application.recruiterId?.toString() === userId.toString();

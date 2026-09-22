@@ -66,8 +66,8 @@ class ProjectService {
     return project;
   }
 
-  async getProjects(userId, { filter, search, sort } = {}) {
-    const query = { userId };
+  async getProjects(userId, { filter, search, sort } = {}, userRole = 'student') {
+    const query = userRole === 'alumni' ? { verificationStatus: 'Verified' } : { userId };
 
     if (filter === 'Verified' || filter === 'Pending') {
       query.verificationStatus = filter;
@@ -94,11 +94,17 @@ class ProjectService {
       'Recently Updated': { updatedAt: -1 },
     };
 
-    return Project.find(query).sort(sortOptions[sort] || { createdAt: -1 });
+    return Project.find(query)
+      .populate('userId', 'fullName email avatar college branch graduationYear')
+      .sort(sortOptions[sort] || { createdAt: -1 });
   }
 
-  async getProjectById(userId, id) {
-    const project = await Project.findOne({ _id: id, userId });
+  async getProjectById(userId, id, userRole = 'student') {
+    const query = ['admin', 'faculty', 'alumni'].includes(userRole)
+      ? { _id: id }
+      : { _id: id, userId };
+    const project = await Project.findOne(query)
+      .populate('userId', 'fullName email avatar college branch graduationYear');
     if (!project) throw ApiError.notFound('Project not found');
     return project;
   }

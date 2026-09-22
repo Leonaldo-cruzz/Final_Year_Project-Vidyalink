@@ -78,7 +78,7 @@ describe('Product Truth & Data Integrity Tests', () => {
     vi.clearAllMocks();
   });
 
-  it('TC-PT1: Login page contains NO demo preset buttons or role switchers', () => {
+  it('TC-PT1: Login page contains NO demo preset buttons or role switchers and renders genuine auth fields', () => {
     useAuth.mockReturnValue({
       isAuthenticated: false,
       user: null,
@@ -92,14 +92,28 @@ describe('Product Truth & Data Integrity Tests', () => {
       </MemoryRouter>
     );
 
-    // Assert absence of demo presets
+    // Assert absolute absence of demo presets and autofill UI
+    expect(screen.queryByText(/quick demo autofill/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/one-click role access/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/student demo/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/faculty demo/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/recruiter demo/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/alumni demo/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /student/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /faculty/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /recruiter/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /alumni/i })).not.toBeInTheDocument();
     expect(screen.queryByText('Alex Student')).not.toBeInTheDocument();
     expect(screen.queryByText('Dr. Sarah Jenkins')).not.toBeInTheDocument();
+    expect(screen.queryByText('Marcus Vance')).not.toBeInTheDocument();
+    expect(screen.queryByText('Elena Rostova')).not.toBeInTheDocument();
+
+    // Assert presence of genuine auth form elements
+    expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /forgot password\?/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /create one/i })).toBeInTheDocument();
   });
 
   it('TC-PT2: Student dashboard with 0 data renders 0 counts and honest empty states', async () => {

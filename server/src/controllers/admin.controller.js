@@ -4,6 +4,7 @@ import Portfolio from '../models/portfolio.model.js';
 import Application from '../models/application.model.js';
 import Mentorship from '../models/mentorship.model.js';
 import Referral from '../models/referral.model.js';
+import Verification from '../models/verification.model.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
@@ -17,15 +18,23 @@ export const getAdminStats = asyncHandler(async (_req, res) => {
     totalMentorships,
     totalReferrals,
     totalInterviews,
+    pendingVerifications,
+    verifiedVerifications,
+    rejectedVerifications,
+    changesRequestedVerifications,
     usersByRole,
   ] = await Promise.all([
     User.countDocuments(),
-    Project.countDocuments({ status: { $ne: 'archived' } }),
+    Project.countDocuments({ projectStatus: { $ne: 'Archived' } }),
     Portfolio.countDocuments(),
     Application.countDocuments(),
     Mentorship.countDocuments(),
     Referral.countDocuments(),
     Application.countDocuments({ status: 'Interview Scheduled' }),
+    Verification.countDocuments({ status: 'PENDING' }),
+    Verification.countDocuments({ status: 'VERIFIED' }),
+    Verification.countDocuments({ status: 'REJECTED' }),
+    Verification.countDocuments({ status: 'CHANGES_REQUESTED' }),
     User.aggregate([
       { $group: { _id: '$role', count: { $sum: 1 } } },
     ]),
@@ -44,6 +53,10 @@ export const getAdminStats = asyncHandler(async (_req, res) => {
     totalMentorships,
     totalReferrals,
     totalInterviews,
+    pendingVerifications,
+    verifiedVerifications,
+    rejectedVerifications,
+    changesRequestedVerifications,
     roleCounts,
   });
 });

@@ -116,7 +116,7 @@ const AppRoutes = () => (
     <Route
       path="/projects"
       element={
-        <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.FACULTY, ROLES.RECRUITER, ROLES.ALUMNI, ROLES.ADMIN]}>
           <Projects />
         </ProtectedRoute>
       }

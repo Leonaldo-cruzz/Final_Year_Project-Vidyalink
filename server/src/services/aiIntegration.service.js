@@ -149,6 +149,7 @@ class AIIntegrationService {
     const portfolio = await this.models.Portfolio.findOne(query)
       .populate('student', 'fullName email college branch graduationYear role')
       .populate('verifiedBy', 'fullName email role')
+      .populate('project')
       .populate({
         path: 'workspace',
         populate: { path: 'project' },
@@ -206,7 +207,7 @@ class AIIntegrationService {
 
   async buildPortfolioPayload(portfolio, studentId) {
     const context = await this.getStudentContext(studentId);
-    const project = portfolio?.workspace?.project;
+    let project = portfolio?.workspace?.project || portfolio?.project;
     const resumeText = context.resume?.rawText || await extractResumeText(context.resume);
     const profile = context.profile || {};
     const student = context.student;
@@ -245,27 +246,44 @@ class AIIntegrationService {
       };
     }
 
-    if (project) {
-      payload.projects.push({
-        title: project.title,
-        description: project.detailedDescription || project.shortDescription || '',
-        technologies: project.technologies || [],
-        github_url: project.githubRepository || null,
-        demo_url: project.liveDeployment || project.demoVideo || null,
-        deployment_url: project.liveDeployment || null,
-        deployment_status: project.deploymentStatus || null,
-        documentation: project.documentationUrl || null,
-        complexity_indicators: uniqueStrings([project.category, project.domain]),
-        innovation_indicators: [],
-        code_quality_indicators: [],
-        // This flag is backed by the existing Portfolio verification record,
-        // which is only generated after the faculty-reviewed workspace is complete.
-        verified: Boolean(portfolio?.verifiedBy && portfolio?.verificationHash),
-        verification_status: 'verified',
-      });
+    const mapProject = (p, isVerified) => ({
+      title: p.title,
+      description: p.detailedDescription || p.shortDescription || '',
+      technologies: p.technologies || [],
+      github_url: p.githubRepository || null,
+      demo_url: p.liveDeployment || p.demoVideo || null,
+      deployment_url: p.liveDeployment || null,
+      deployment_status: p.deploymentStatus || null,
+      documentation: p.documentationUrl || null,
+      complexity_indicators: uniqueStrings([p.category, p.domain]),
+      innovation_indicators: [],
+      code_quality_indicators: [],
+      verified: Boolean(isVerified),
+      verification_status: isVerified ? 'verified' : (p.verificationStatus ? p.verificationStatus.toLowerCase() : 'pending'),
+    });
+
+    let studentProjects = [];
+    if (this.models.Project?.find) {
+      studentProjects = await this.models.Project.find({ userId: studentId }).lean();
     }
 
-    return { payload, context, project };
+    const seenProjectIds = new Set();
+    for (const p of studentProjects) {
+      seenProjectIds.add(p._id.toString());
+      const isVerified = p.verificationStatus === 'Verified' || Boolean(
+        portfolio?.verifiedBy && portfolio?.verificationHash && (
+          portfolio.project?.toString() === p._id.toString() ||
+          portfolio.workspace?.project?.toString() === p._id.toString()
+        )
+      );
+      payload.projects.push(mapProject(p, isVerified));
+    }
+
+    if (project && (!project._id || !seenProjectIds.has(project._id.toString()))) {
+      payload.projects.push(mapProject(project, Boolean(portfolio?.verifiedBy && portfolio?.verificationHash)));
+    }
+
+    return { payload, context, project: project || studentProjects[0] || null };
   }
 
   async getPortfolioSourceFingerprint(portfolio, studentId) {

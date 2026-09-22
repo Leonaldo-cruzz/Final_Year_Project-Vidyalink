@@ -75,6 +75,67 @@ const fetchGithubProfile = async (username) => {
   }
 };
 
+const mapGithubRepository = (repo) => ({
+  id: repo.id,
+  name: repo.name,
+  fullName: repo.full_name,
+  htmlUrl: repo.html_url,
+  description: repo.description || null,
+  language: repo.language || null,
+  stars: Number(repo.stargazers_count) || 0,
+  forks: Number(repo.forks_count) || 0,
+  isPrivate: Boolean(repo.private),
+  updatedAt: repo.updated_at ? new Date(repo.updated_at) : null,
+  defaultBranch: repo.default_branch || 'main',
+});
+
+const fetchGithubRepositories = async (username) => {
+  const normalizedUsername = normalizeUsername(username);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), GITHUB_REQUEST_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(
+      `${GITHUB_API_BASE_URL}/users/${encodeURIComponent(normalizedUsername)}/repos?sort=updated&per_page=30`,
+      {
+        headers: {
+          Accept: 'application/vnd.github+json',
+          'User-Agent': 'VidyaLink-GitHub-Integration',
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+        signal: controller.signal,
+      }
+    );
+
+    if (response.status === 404) {
+      throw ApiError.notFound('GitHub username was not found');
+    }
+
+    if (response.status === 403 || response.status === 429) {
+      throw ApiError.tooManyRequests('GitHub rate limit reached. Please try again later.');
+    }
+
+    if (!response.ok) {
+      throw ApiError.internal('GitHub could not return repositories right now');
+    }
+
+    const repos = await response.json();
+    if (!Array.isArray(repos)) {
+      throw ApiError.internal('GitHub returned invalid repository data');
+    }
+
+    return repos.map(mapGithubRepository);
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    if (error.name === 'AbortError') {
+      throw ApiError.internal('GitHub repository request timed out');
+    }
+    throw ApiError.internal('Unable to connect to GitHub right now');
+  } finally {
+    clearTimeout(timeout);
+  }
+};
+
 class GithubService {
   async connect(userId, githubUsername) {
     const profileSnapshot = await fetchGithubProfile(githubUsername);
@@ -98,6 +159,15 @@ class GithubService {
     const account = await GitHubAccount.findOne({ userId });
     if (!account) throw ApiError.notFound('No GitHub account is connected');
     return account;
+  }
+
+  async getRepositories(userId) {
+    const account = await GitHubAccount.findOne({ userId });
+    if (!account) throw ApiError.notFound('No GitHub account is connected');
+    if (account.connectionStatus === 'Disconnected') {
+      throw ApiError.badRequest('Connect your GitHub account to retrieve repositories');
+    }
+    return fetchGithubRepositories(account.githubUsername);
   }
 
   async sync(userId) {
@@ -126,5 +196,5 @@ class GithubService {
   }
 }
 
-export { fetchGithubProfile };
+export { fetchGithubProfile, fetchGithubRepositories };
 export default new GithubService();

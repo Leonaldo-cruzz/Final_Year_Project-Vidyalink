@@ -15,6 +15,11 @@ export const syncGithubProfile = async () => {
   return response.data;
 };
 
+export const getGithubRepositories = async () => {
+  const response = await api.get('/github/repositories');
+  return response.data;
+};
+
 export const disconnectGithub = async () => {
   const response = await api.delete('/github/disconnect');
   return response.data;
@@ -23,6 +28,7 @@ export const disconnectGithub = async () => {
 export default {
   connectGithub,
   getGithubProfile,
+  getGithubRepositories,
   syncGithubProfile,
   disconnectGithub,
 };

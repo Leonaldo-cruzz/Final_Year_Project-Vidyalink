@@ -2,6 +2,11 @@ import mongoose from 'mongoose';
 import User from '../models/user.model.js';
 import { env } from '../config/env.js';
 
+if (env.NODE_ENV === 'production') {
+  console.error('\n❌ BLOCKED: seed.js MUST NOT be run in production.\n');
+  process.exit(1);
+}
+
 const DEMO_USERS = [
   {
     fullName: 'Alex Student',

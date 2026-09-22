@@ -17,6 +17,11 @@ const sync = asyncHandler(async (req, res) => {
   return ApiResponse.ok(res, 'GitHub profile synced successfully', account);
 });
 
+const getRepositories = asyncHandler(async (req, res) => {
+  const repositories = await githubService.getRepositories(req.user._id);
+  return ApiResponse.ok(res, 'GitHub repositories fetched successfully', repositories);
+});
+
 const disconnect = asyncHandler(async (req, res) => {
   const account = await githubService.disconnect(req.user._id);
   return ApiResponse.ok(res, 'GitHub account disconnected successfully', account);
@@ -25,6 +30,7 @@ const disconnect = asyncHandler(async (req, res) => {
 export default {
   connect,
   getProfile,
+  getRepositories,
   sync,
   disconnect,
 };

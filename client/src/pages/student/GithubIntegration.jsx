@@ -1,9 +1,8 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Code2 as Github, Link2, RefreshCw, ShieldCheck, Unplug } from 'lucide-react';
+import { Code2 as Github, ExternalLink, GitFork, Link2, RefreshCw, ShieldCheck, Star, Unplug } from 'lucide-react';
 
 import DashboardLayout from '@/layouts/DashboardLayout';
 import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
+import Card, { SectionCard } from '@/components/ui/Card';
 import Modal from '@/components/ui/Modal';
 import { FullPageSpinner } from '@/components/ui/Spinner';
 import GithubConnectModal from '@/components/github/GithubConnectModal';
@@ -12,6 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 import {
   disconnectGithub,
   getGithubProfile,
+  getGithubRepositories,
   syncGithubProfile,
 } from '@/services/githubService';
 import { getErrorMessage } from '@/utils/formatters';
@@ -19,6 +19,8 @@ import { getErrorMessage } from '@/utils/formatters';
 const GithubIntegration = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState(null);
+  const [repos, setRepos] = useState([]);
+  const [loadingRepos, setLoadingRepos] = useState(false);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
@@ -27,22 +29,38 @@ const GithubIntegration = () => {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
 
+  const loadRepos = useCallback(async () => {
+    try {
+      setLoadingRepos(true);
+      const res = await getGithubRepositories();
+      setRepos(Array.isArray(res.data) ? res.data : []);
+    } catch {
+      setRepos([]);
+    } finally {
+      setLoadingRepos(false);
+    }
+  }, []);
+
   const loadProfile = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
       const response = await getGithubProfile();
       setProfile(response.data);
+      if (response.data?.connectionStatus === 'Connected') {
+        loadRepos();
+      }
     } catch (requestError) {
       if (requestError?.response?.status === 404) {
         setProfile(null);
+        setRepos([]);
       } else {
         setError(getErrorMessage(requestError, 'Unable to load GitHub profile'));
       }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [loadRepos]);
 
   useEffect(() => {
     loadProfile();
@@ -115,13 +133,53 @@ const GithubIntegration = () => {
         )}
 
         {profile ? (
-          <GithubProfileCard
-            profile={profile}
-            onSync={handleSync}
-            onDisconnect={() => setDisconnectOpen(true)}
-            syncing={syncing}
-            disconnecting={disconnecting}
-          />
+          <>
+            <GithubProfileCard
+              profile={profile}
+              onSync={handleSync}
+              onDisconnect={() => setDisconnectOpen(true)}
+              syncing={syncing}
+              disconnecting={disconnecting}
+            />
+
+            {profile.connectionStatus === 'Connected' && (
+              <SectionCard
+                title={`Public Repositories (${repos.length})`}
+                subtitle="Your public repositories fetched live from GitHub"
+              >
+                {loadingRepos ? (
+                  <p className="py-8 text-center text-xs text-slate-400">Loading repositories…</p>
+                ) : repos.length === 0 ? (
+                  <p className="py-8 text-center text-xs text-slate-400">No public repositories found for this account.</p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {repos.map((repo) => (
+                      <div key={repo.id || repo.name} className="p-3.5 rounded-lg border border-slate-800 bg-slate-900/60 flex flex-col justify-between space-y-2">
+                        <div>
+                          <div className="flex items-center justify-between gap-2">
+                            <h3 className="text-sm font-bold text-white truncate">{repo.name}</h3>
+                            <a href={repo.htmlUrl} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white shrink-0" aria-label={`Open ${repo.name}`}>
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                          </div>
+                          {repo.description && <p className="text-xs text-slate-400 line-clamp-2 mt-1">{repo.description}</p>}
+                        </div>
+                        <div className="flex items-center gap-3 text-[11px] text-slate-400 pt-1">
+                          {repo.language && (
+                            <span className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 font-mono text-orange-200">
+                              {repo.language}
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1"><Star className="w-3 h-3 text-amber-400" /> {repo.stars}</span>
+                          <span className="flex items-center gap-1"><GitFork className="w-3 h-3 text-slate-400" /> {repo.forks}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </SectionCard>
+            )}
+          </>
         ) : (
           <Card className="relative overflow-hidden p-6 sm:p-10">
             <div className="absolute right-0 top-0 h-24 w-24 border-l border-b border-orange-300/20" aria-hidden="true" />

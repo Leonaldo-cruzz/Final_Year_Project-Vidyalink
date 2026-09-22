@@ -11,6 +11,7 @@ router.use(authenticate, authorize('student'));
 
 router.post('/connect', validate(connectGithubSchema), githubController.connect);
 router.get('/profile', githubController.getProfile);
+router.get('/repositories', githubController.getRepositories);
 router.post('/sync', githubController.sync);
 router.delete('/disconnect', githubController.disconnect);
 

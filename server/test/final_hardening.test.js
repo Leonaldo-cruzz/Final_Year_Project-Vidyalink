@@ -94,12 +94,19 @@ test('REGRESSION 2: Unauthorized resource access (IDOR) is rejected', async () =
   const origProjFindOne = Project.findOne;
 
   // Student 2 tries to update or delete Student 1's project
-  Project.findOne = async (query) => {
-    // query includes { _id: 'proj-1', userId: 'student-2' }
+  // The service chains .populate() on findOne(), so the mock must return a
+  // Mongoose-Query-like thenable that resolves with the populated document or null.
+  const makeQueryLike = (resolvedValue) => ({
+    populate: function () { return this; },
+    then: (resolve, reject) => Promise.resolve(resolvedValue).then(resolve, reject),
+  });
+
+  Project.findOne = (query) => {
+    // Only return the project when queried as student-1's owner
     if (query.userId === 'student-1' && query._id === 'proj-1') {
-      return { _id: 'proj-1', userId: 'student-1', title: 'Student 1 Project' };
+      return makeQueryLike({ _id: 'proj-1', userId: 'student-1', title: 'Student 1 Project' });
     }
-    return null; // Not found for student-2
+    return makeQueryLike(null); // Not found for student-2 → service throws 404
   };
 
   try {

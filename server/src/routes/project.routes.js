@@ -12,23 +12,24 @@ import {
 const router = Router();
 
 router.use(authenticate);
-router.use(authorize('student'));
 
 router.post(
   '/',
+  authorize('student', 'recruiter', 'admin'),
   projectScreenshotUpload,
   validate(createProjectSchema),
   projectController.createProject
 );
-router.get('/', projectController.getProjects);
-router.get('/:id', projectController.getProjectById);
-router.post('/:id/verify-deployment', projectController.verifyDeployment);
+router.get('/', authorize('student', 'recruiter', 'faculty', 'alumni', 'admin'), projectController.getProjects);
+router.get('/:id', authorize('student', 'recruiter', 'faculty', 'alumni', 'admin'), projectController.getProjectById);
+router.post('/:id/verify-deployment', authorize('student', 'admin'), projectController.verifyDeployment);
 router.put(
   '/:id',
+  authorize('student', 'recruiter', 'admin'),
   projectScreenshotUpload,
   validate(updateProjectSchema),
   projectController.updateProject
 );
-router.delete('/:id', projectController.deleteProject);
+router.delete('/:id', authorize('student', 'recruiter', 'admin'), projectController.deleteProject);
 
 export default router;
