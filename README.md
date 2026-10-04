@@ -30,6 +30,41 @@ VIDYALINK is built as a **monorepo** containing three primary application servic
 | `ai-service`   | FastAPI AI microservice — ATS scoring, portfolio evaluation, readiness| 8000  |
 | `docs`         | Architecture specifications, test matrices, and API contracts       | —     |
 
+## Approved VIDYALINK Workflow
+
+```
+Student Registration
+  ↳ Profile Setup & Evidence Upload (Resume, Projects, Certificates, GitHub)
+    ↳ Faculty Verification (Approval / Rejection / Changes Requested)
+      ↳ Live Deployment Verification (Active reachability probing)
+        ↳ AI Portfolio Evaluation (Canonical 6-dimension deterministic scoring)
+          ↳ Verified Skill Profile & ATS Ingestion / Resume Generation
+            ↳ Industry Readiness Analysis
+              ↳ Alumni Mentorship & Campus Referrals
+                ↳ Recruiter Search & Filters
+                  ↳ Candidate Dossier Review
+                    ↳ Shortlisting & Interview Scheduling
+                      ↳ Candidate Selection / Hiring (Status: Selected, Notifications)
+                        ↳ Admin Analytics & University Oversight
+```
+
+## Canonical Portfolio Scoring Model
+
+The single canonical portfolio scoring formula is:
+
+$$\text{Portfolio Score} = 0.25 \times \text{Project Complexity} + 0.20 \times \text{Technology Stack} + 0.15 \times \text{GitHub Activity} + 0.15 \times \text{Documentation Quality} + 0.15 \times \text{Innovation} + 0.10 \times \text{Code Quality}$$
+
+| Component Dimension | Weight | Description |
+| ------------------- | :----: | ----------- |
+| Project Complexity | 25% | Architecture depth, backend logic, microservice/distributed patterns |
+| Technology Stack | 20% | Language/framework breadth, full-stack integration, tooling diversity |
+| GitHub Activity | 15% | Factual repository metrics, commits, and activity evidence |
+| Documentation Quality | 15% | README completeness, API references, architecture documentation |
+| Innovation | 15% | Novelty indicators, problem-solving impact, unique features |
+| Code Quality | 10% | Measurable code-quality signals, test automation, linting |
+
+> **Note on Permissions**: In accordance with the approved platform specification, recruiters possess candidate search, dossier review, shortlisting, interview scheduling, and selection capabilities. Recruiters **do not** possess permissions to create, edit, or delete student projects. Candidate selection marks applications as `Selected` and notifies the student without auto-provisioning legacy marketplace workspaces.
+
 ## Tech Stack
 
 ### Frontend (`client/`)

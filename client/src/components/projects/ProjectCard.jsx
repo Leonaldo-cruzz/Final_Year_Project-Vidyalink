@@ -75,6 +75,16 @@ const ProjectCard = ({ project, onView, onEdit, onDelete, onToggleFeatured }) =>
               {project.verificationStatus}
             </Badge>
           )}
+          {/* GitHub source indicator — non-intrusive, not a verification badge */}
+          {project.githubSource === 'github_sync' && (
+            <span
+              className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-800 border border-orange-300/30 text-orange-300"
+              title={project.githubSyncStatus === 'deleted' ? 'Repository no longer found on GitHub — portfolio record preserved' : 'Imported from GitHub sync'}
+            >
+              <Github className="h-2.5 w-2.5" />
+              {project.githubSyncStatus === 'deleted' ? 'GitHub (deleted)' : 'GitHub Synced'}
+            </span>
+          )}
           {deploymentCfg && (
             <span
               className={`inline-flex items-center gap-1 text-[10px] font-semibold ${deploymentCfg.cls}`}

@@ -1,0 +1,55 @@
+{
+  "fixtures": [
+    {
+      "fixture": "Fixture A (Active)",
+      "input": {
+        "repository_count": 10,
+        "commit_count": 100,
+        "commit_frequency": 15,
+        "recent_activity": true,
+        "public_repository_count": 10
+      },
+      "score": 96.25,
+      "category": "Excellent",
+      "latency": 2.120200000000068,
+      "passed": true
+    },
+    {
+      "fixture": "Fixture B (Low Activity)",
+      "input": {
+        "repository_count": 2,
+        "commit_count": 5,
+        "commit_frequency": 1,
+        "recent_activity": false,
+        "public_repository_count": 2
+      },
+      "score": 11,
+      "category": "Needs Improvement",
+      "latency": 1.6037000000000035,
+      "passed": true
+    },
+    {
+      "fixture": "Fixture C (Empty)",
+      "input": {
+        "repository_count": 0,
+        "commit_count": 0,
+        "recent_activity": false,
+        "public_repository_count": 0
+      },
+      "score": 0,
+      "category": "Needs Improvement",
+      "latency": 2.0727000000000544,
+      "passed": true
+    },
+    {
+      "fixture": "Fixture D (Missing/Partial Metrics)",
+      "input": {
+        "repository_count": 5
+      },
+      "score": 50,
+      "category": "Needs Improvement",
+      "latency": 1.8074000000000296,
+      "passed": true
+    }
+  ]
+}

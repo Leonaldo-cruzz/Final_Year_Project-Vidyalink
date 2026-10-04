@@ -6,7 +6,7 @@ import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, URL } from 'node:url';
 
 import authRoutes from './routes/auth.routes.js';
 import profileRoutes from './routes/profile.routes.js';
@@ -35,8 +35,35 @@ const __dirname = path.dirname(__filename);
 const uploadsDirectory = path.resolve(__dirname, '../uploads');
 
 const getAllowedOrigins = () => {
-  const origins = env.CORS_ORIGIN || env.CLIENT_URL;
+  const origins = `${env.CORS_ORIGIN || ''},${env.CLIENT_URL || ''}`;
   return origins.split(',').map((origin) => origin.trim()).filter(Boolean);
+};
+
+const isOriginAllowed = (origin, allowedOrigins) => {
+  if (!origin) return true;
+  if (allowedOrigins.includes(origin)) return true;
+
+  // In non-production environments, allow any localhost, 127.0.0.1, or local LAN IP on any port
+  if (env.NODE_ENV !== 'production') {
+    try {
+      const parsed = new URL(origin);
+      const isLoopback =
+        parsed.hostname === 'localhost' ||
+        parsed.hostname === '127.0.0.1' ||
+        parsed.hostname === '[::1]';
+      const isLocalNetwork =
+        parsed.hostname.startsWith('192.168.') ||
+        parsed.hostname.startsWith('10.') ||
+        parsed.hostname.endsWith('.local');
+      if (isLoopback || isLocalNetwork) {
+        return true;
+      }
+    } catch {
+      return false;
+    }
+  }
+
+  return false;
 };
 
 const getTrustProxySetting = () => {
@@ -60,7 +87,9 @@ export const createApp = () => {
   app.use(cors({
     credentials: true,
     origin(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+      if (isOriginAllowed(origin, allowedOrigins)) {
+        return callback(null, true);
+      }
       return callback(ApiError.forbidden('Origin is not allowed by CORS'));
     },
   }));

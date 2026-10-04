@@ -45,10 +45,10 @@ const TARGET_ROLES = [
 
 // Official portfolio component weights matching the FastAPI scoring engine
 const COMPONENT_META = {
-  complexity: { label: 'Complexity', weight: '25%' },
+  complexity: { label: 'Project Complexity', weight: '25%' },
   technology_stack: { label: 'Technology Stack', weight: '20%' },
   github_activity: { label: 'GitHub Activity', weight: '15%' },
-  documentation_quality: { label: 'Documentation', weight: '15%' },
+  documentation_quality: { label: 'Documentation Quality', weight: '15%' },
   innovation: { label: 'Innovation', weight: '15%' },
   code_quality: { label: 'Code Quality', weight: '10%' },
 };

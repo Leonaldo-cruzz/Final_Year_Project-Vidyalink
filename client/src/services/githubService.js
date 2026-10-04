@@ -10,6 +10,14 @@ export const getGithubProfile = async () => {
   return response.data;
 };
 
+/**
+ * Syncs GitHub profile + repositories → auto-discovers / imports projects.
+ *
+ * On success, response.data contains:
+ *   account:    updated GitHub account snapshot
+ *   syncResult: { repositoriesFound, projectsImported, projectsUpdated,
+ *                 repositoriesMarkedDeleted, failed }
+ */
 export const syncGithubProfile = async () => {
   const response = await api.post('/github/sync');
   return response.data;

@@ -14,7 +14,9 @@ const Footer = () => {
         </div>
         <div className="flex flex-col gap-2 text-sm lg:items-end">
           <a href="#features" className="inline-flex items-center gap-1 font-semibold text-slate-300 hover:text-orange-200">Explore the platform <ArrowUpRight className="h-3.5 w-3.5" /></a>
-          <span className="text-xs text-slate-600">© {new Date().getFullYear()} VidyaLink</span>
+          <span className="text-xs text-slate-500">B.Tech Capstone Project · Department of Computer Engineering</span>
+          <span className="text-xs text-slate-500">G H Raisoni College of Engineering & Management, Wagholi, Pune (Affiliated to SPPU, NAAC A+)</span>
+          <span className="text-xs text-slate-600">© {new Date().getFullYear()} VIDYALINK — All rights reserved</span>
         </div>
       </div>
     </footer>

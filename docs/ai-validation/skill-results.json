@@ -1,0 +1,73 @@
+{
+  "canonicalExtraction": {
+    "sampleText": "\nWe build software with reactjs and nodejs. Database backend uses mongo db and postgres.\nDeployment uses docker, k8s, and git. Machine learning uses python and fast api.\nNote: words like reacting, nodule, mongoc, or banana should not trigger false positives.\n",
+    "detectedSkills": [
+      "Docker",
+      "FastAPI",
+      "Git",
+      "Kubernetes",
+      "Machine Learning",
+      "MongoDB",
+      "Node.js",
+      "PostgreSQL",
+      "Python",
+      "React"
+    ],
+    "expectedCanonical": [
+      "React",
+      "Node.js",
+      "MongoDB",
+      "PostgreSQL",
+      "Docker",
+      "Kubernetes",
+      "Git",
+      "Python",
+      "FastAPI"
+    ],
+    "hasAllExpected": true,
+    "noNoise": true
+  },
+  "gapAnalysis": {
+    "target": [
+      "React",
+      "Node.js",
+      "MongoDB",
+      "Docker",
+      "AWS"
+    ],
+    "current": [
+      "React",
+      "Node.js",
+      "MongoDB"
+    ],
+    "result": {
+      "target_role": null,
+      "required_skills": [
+        "AWS",
+        "Docker",
+        "MongoDB",
+        "Node.js",
+        "React"
+      ],
+      "matched_skills": [
+        "MongoDB",
+        "Node.js",
+        "React"
+      ],
+      "missing_skills": [
+        "AWS",
+        "Docker"
+      ],
+      "coverage_percentage": 60,
+      "recommendations": [
+        "Build evidence for AWS through a verified project, coursework, or certification.",
+        "Build evidence for Docker through a verified project, coursework, or certification."
+      ],
+      "recommended_learning_areas": [
+        "Build evidence for AWS through a verified project, coursework, or certification.",
+        "Build evidence for Docker through a verified project, coursework, or certification."
+      ]
+    },
+    "passed": true
+  }
+}

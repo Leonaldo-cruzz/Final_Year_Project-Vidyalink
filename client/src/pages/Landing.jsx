@@ -179,6 +179,40 @@ const Landing = () => {
             </div>
           </div>
         </section>
+
+        {/* Academic Project Credits Section */}
+        <section className="border-t border-[#ddd8ce] bg-[#f5f1e9] px-4 py-12 text-[#111820] sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="rounded-xl border border-[#c98254]/30 bg-[#fffdf8] p-6 sm:p-8 shadow-sm">
+              <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[#a9603b]">
+                    Final Year Capstone Project (2026)
+                  </p>
+                  <h3 className="mt-1 text-xl font-extrabold text-[#111820]">
+                    VIDYALINK: An AI-Powered Student Portfolio Verification and Recruitment Platform
+                  </h3>
+                  <p className="mt-2 text-sm text-[#53606b]">
+                    Department of Computer Engineering · G H Raisoni College of Engineering and Management, Wagholi, Pune
+                  </p>
+                  <p className="mt-0.5 text-xs text-[#6d767c]">
+                    (An Autonomous Institute Affiliated to SPPU, Pune · NAAC A+ Accredited)
+                  </p>
+                </div>
+                <div className="flex flex-col gap-3 rounded-lg border border-[#ddd8ce] bg-[#faf7f2] p-4 text-xs">
+                  <div>
+                    <span className="font-bold text-[#111820]">Project Guide: </span>
+                    <span className="text-[#53606b]">Mr. Anup Dange</span>
+                  </div>
+                  <div>
+                    <span className="font-bold text-[#111820]">Team Members: </span>
+                    <span className="text-[#53606b]">Anamika Singh (A-20), Himanshu A Raut (A-56), Neha Patil (A-63)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
       <Footer />
     </div>

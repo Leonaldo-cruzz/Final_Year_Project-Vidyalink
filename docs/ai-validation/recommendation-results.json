@@ -1,0 +1,44 @@
+{
+  "ranking": {
+    "mentors": [
+      {
+        "id": "alumni-match-high",
+        "name": "Sarah Chen (Senior Web Architect)",
+        "title": null,
+        "organization": null,
+        "match_score": 61,
+        "matchScore": 61,
+        "reason": "Recommended because of strong overlap in Node.js, React and shared interests in Web Development; recent alumni from a relevant graduating cohort.",
+        "alumni_id": "alumni-match-high",
+        "alumniId": "alumni-match-high",
+        "opportunity_id": null,
+        "opportunityId": null,
+        "matched_signals": [
+          "2 matching technical skills (Node.js, React)",
+          "Matching domain/career interest (Web Development)",
+          "Relevant graduating cohort (2024)",
+          "Verified portfolio compatibility"
+        ],
+        "matchedSignals": [
+          "2 matching technical skills (Node.js, React)",
+          "Matching domain/career interest (Web Development)",
+          "Relevant graduating cohort (2024)",
+          "Verified portfolio compatibility"
+        ],
+        "matched_skills": [
+          "Node.js",
+          "React"
+        ],
+        "matchedSkills": [
+          "Node.js",
+          "React"
+        ],
+        "missing_skills": [],
+        "missingSkills": []
+      }
+    ],
+    "topMentorId": "alumni-match-high",
+    "topScore": 61,
+    "passed": true
+  }
+}

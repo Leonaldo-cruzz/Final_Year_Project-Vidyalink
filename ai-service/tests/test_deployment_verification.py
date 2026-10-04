@@ -45,7 +45,7 @@ def test_verify_deployment_reachable(mock_client_cls):
 
 
 @patch("src.services.deployment_verification.httpx.Client")
-def test_verify_deployment_unreachable_status(mock_client_cls):
+def test_verify_deployment_unreachable_status_503(mock_client_cls):
     mock_instance = MagicMock()
     mock_response = MagicMock(status_code=503)
     mock_instance.head.return_value = mock_response
@@ -54,6 +54,42 @@ def test_verify_deployment_unreachable_status(mock_client_cls):
     res = verify_deployment("https://example.com/down")
     assert res.status == "unreachable"
     assert res.status_code == 503
+
+
+@patch("src.services.deployment_verification.httpx.Client")
+def test_verify_deployment_404_not_found(mock_client_cls):
+    mock_instance = MagicMock()
+    mock_response = MagicMock(status_code=404)
+    mock_instance.head.return_value = mock_response
+    mock_client_cls.return_value.__enter__.return_value = mock_instance
+
+    res = verify_deployment("https://example.com/missing-page")
+    assert res.status == "unreachable"
+    assert res.status_code == 404
+
+
+@patch("src.services.deployment_verification.httpx.Client")
+def test_verify_deployment_500_internal_error(mock_client_cls):
+    mock_instance = MagicMock()
+    mock_response = MagicMock(status_code=500)
+    mock_instance.head.return_value = mock_response
+    mock_client_cls.return_value.__enter__.return_value = mock_instance
+
+    res = verify_deployment("https://example.com/server-error")
+    assert res.status == "unreachable"
+    assert res.status_code == 500
+
+
+@patch("src.services.deployment_verification.httpx.Client")
+def test_verify_deployment_unreachable_host_network_error(mock_client_cls):
+    mock_instance = MagicMock()
+    mock_instance.head.side_effect = httpx.ConnectError("Failed to resolve host")
+    mock_instance.get.side_effect = httpx.ConnectError("Failed to resolve host")
+    mock_client_cls.return_value.__enter__.return_value = mock_instance
+
+    res = verify_deployment("https://nonexistent-domain-xyz123.com")
+    assert res.status == "failed"
+    assert "Network reachability check failed" in res.message
 
 
 @patch("src.services.deployment_verification.httpx.Client")

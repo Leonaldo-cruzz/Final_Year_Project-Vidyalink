@@ -137,9 +137,9 @@ const RecruiterDashboard = () => {
               variant="primary"
               size="sm"
               leftIcon={Briefcase}
-              onClick={() => navigate(ROUTES.CREATE_PROJECT)}
+              onClick={() => navigate(ROUTES.PROJECTS)}
             >
-              Post Opportunity
+              Browse Verified Talent
             </Button>
           </div>
         </div>
@@ -185,7 +185,7 @@ const RecruiterDashboard = () => {
           color="blue"
         />
         <StatCard
-          label="Active Opportunities"
+          label="Verified Project Pool"
           value={projects.length.toString()}
           icon={Briefcase}
           color="amber"
@@ -247,10 +247,10 @@ const RecruiterDashboard = () => {
                 <Users className="w-10 h-10 text-slate-600 mx-auto" />
                 <h4 className="text-base font-bold text-white">No Candidate Applications Yet</h4>
                 <p className="text-xs text-slate-400 max-w-md mx-auto">
-                  Student applications for your posted projects will appear here with verified academic evidence.
+                  Student applications for campus opportunities will appear here with verified academic evidence.
                 </p>
-                <Button size="sm" variant="secondary" onClick={() => navigate(ROUTES.CREATE_PROJECT)}>
-                  Post Project Opportunity
+                <Button size="sm" variant="secondary" onClick={() => navigate(ROUTES.PROJECTS)}>
+                  Browse Verified Talent
                 </Button>
               </div>
             ) : (
@@ -338,39 +338,40 @@ const RecruiterDashboard = () => {
           </SectionCard>
         </div>
 
-        {/* Right col: Requisitions & Quick Actions */}
+        {/* Right col: Verified Pool & Quick Actions */}
         <div className="space-y-6">
           <SectionCard
-            title="Active Requisitions"
-            subtitle="Your open project opportunities"
+            title="Verified Projects Pool"
+            subtitle="Pre-screened engineering deliverables available for talent review"
             action={
               <button
                 type="button"
-                onClick={() => navigate(ROUTES.CREATE_PROJECT)}
+                onClick={() => navigate(ROUTES.PROJECTS)}
                 className="text-xs font-semibold text-orange-300 hover:text-orange-200"
               >
-                + New
+                View All
               </button>
             }
           >
             {projects.length === 0 ? (
               <div className="py-8 text-center space-y-2">
                 <Briefcase className="w-8 h-8 text-slate-600 mx-auto" />
-                <p className="text-xs text-slate-400">No active requisitions posted.</p>
-                <Button size="sm" variant="ghost" onClick={() => navigate(ROUTES.CREATE_PROJECT)}>
-                  Create Opportunity
+                <p className="text-xs text-slate-400">No verified student projects currently in pool.</p>
+                <Button size="sm" variant="ghost" onClick={() => navigate(ROUTES.PROJECTS)}>
+                  Explore Projects
                 </Button>
               </div>
             ) : (
               <div className="space-y-3">
-                {projects.map((req) => (
+                {projects.slice(0, 5).map((req) => (
                   <div
                     key={req._id || req.id}
-                    className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 space-y-1.5"
+                    className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 space-y-1.5 cursor-pointer hover:border-slate-700 transition-colors"
+                    onClick={() => navigate(`/projects/${req._id || req.id}`)}
                   >
                     <div className="flex items-center justify-between">
                       <h5 className="text-xs font-bold text-white truncate flex-1 mr-2">{req.title}</h5>
-                      <Badge variant="emerald" size="sm">Active</Badge>
+                      <Badge variant="emerald" size="sm">Verified</Badge>
                     </div>
                     {req.domain && (
                       <p className="text-[11px] text-slate-400">{req.domain}</p>
@@ -395,9 +396,9 @@ const RecruiterDashboard = () => {
                 className="w-full justify-start text-xs"
                 variant="secondary"
                 leftIcon={Briefcase}
-                onClick={() => navigate(ROUTES.CREATE_PROJECT)}
+                onClick={() => navigate(ROUTES.PROJECTS)}
               >
-                Post New Opportunity
+                Browse Verified Portfolios
               </Button>
             </div>
           </SectionCard>

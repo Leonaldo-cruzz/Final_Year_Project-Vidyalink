@@ -1,0 +1,197 @@
+{
+  "groundTruth": [
+    {
+      "fixture": "Fixture 1 (All 100)",
+      "input": {
+        "complexity": 100,
+        "technology_stack": 100,
+        "github_activity": 100,
+        "documentation_quality": 100,
+        "innovation": 100,
+        "code_quality": 100
+      },
+      "expected": 100,
+      "actual": 100,
+      "absError": 0,
+      "relError": 0,
+      "passed": true
+    },
+    {
+      "fixture": "Fixture 2 (Mixed Canonical)",
+      "input": {
+        "complexity": 80,
+        "technology_stack": 60,
+        "github_activity": 50,
+        "documentation_quality": 40,
+        "innovation": 70,
+        "code_quality": 90
+      },
+      "expected": 65,
+      "actual": 65,
+      "absError": 0,
+      "relError": 0,
+      "passed": true
+    },
+    {
+      "fixture": "Fixture 3 (Non-trivial Combination)",
+      "input": {
+        "complexity": 90,
+        "technology_stack": 85,
+        "github_activity": 70,
+        "documentation_quality": 60,
+        "innovation": 80,
+        "code_quality": 75
+      },
+      "expected": 78.5,
+      "actual": 78.5,
+      "absError": 0,
+      "relError": 0,
+      "passed": true
+    },
+    {
+      "fixture": "Fixture 4 (Custom Varied)",
+      "input": {
+        "complexity": 72,
+        "technology_stack": 85,
+        "github_activity": 40,
+        "documentation_quality": 90,
+        "innovation": 60,
+        "code_quality": 50
+      },
+      "expected": 68.5,
+      "actual": 68.5,
+      "absError": 0,
+      "relError": 0,
+      "passed": true
+    }
+  ],
+  "sensitivity": [
+    {
+      "dimension": "complexity",
+      "perturbedInput": {
+        "complexity": 80,
+        "technology_stack": 50,
+        "github_activity": 50,
+        "documentation_quality": 50,
+        "innovation": 50,
+        "code_quality": 50
+      },
+      "baseScore": 50,
+      "perturbedScore": 57.5,
+      "expectedDelta": 7.5,
+      "actualDelta": 7.5,
+      "passed": true
+    },
+    {
+      "dimension": "technology_stack",
+      "perturbedInput": {
+        "complexity": 50,
+        "technology_stack": 80,
+        "github_activity": 50,
+        "documentation_quality": 50,
+        "innovation": 50,
+        "code_quality": 50
+      },
+      "baseScore": 50,
+      "perturbedScore": 56,
+      "expectedDelta": 6,
+      "actualDelta": 6,
+      "passed": true
+    },
+    {
+      "dimension": "github_activity",
+      "perturbedInput": {
+        "complexity": 50,
+        "technology_stack": 50,
+        "github_activity": 80,
+        "documentation_quality": 50,
+        "innovation": 50,
+        "code_quality": 50
+      },
+      "baseScore": 50,
+      "perturbedScore": 54.5,
+      "expectedDelta": 4.5,
+      "actualDelta": 4.5,
+      "passed": true
+    },
+    {
+      "dimension": "documentation_quality",
+      "perturbedInput": {
+        "complexity": 50,
+        "technology_stack": 50,
+        "github_activity": 50,
+        "documentation_quality": 80,
+        "innovation": 50,
+        "code_quality": 50
+      },
+      "baseScore": 50,
+      "perturbedScore": 54.5,
+      "expectedDelta": 4.5,
+      "actualDelta": 4.5,
+      "passed": true
+    },
+    {
+      "dimension": "innovation",
+      "perturbedInput": {
+        "complexity": 50,
+        "technology_stack": 50,
+        "github_activity": 50,
+        "documentation_quality": 50,
+        "innovation": 80,
+        "code_quality": 50
+      },
+      "baseScore": 50,
+      "perturbedScore": 54.5,
+      "expectedDelta": 4.5,
+      "actualDelta": 4.5,
+      "passed": true
+    },
+    {
+      "dimension": "code_quality",
+      "perturbedInput": {
+        "complexity": 50,
+        "technology_stack": 50,
+        "github_activity": 50,
+        "documentation_quality": 50,
+        "innovation": 50,
+        "code_quality": 20
+      },
+      "baseScore": 50,
+      "perturbedScore": 47,
+      "expectedDelta": -3,
+      "actualDelta": -3,
+      "passed": true
+    }
+  ],
+  "determinism": {
+    "runs": [
+      {
+        "trial": 1,
+        "score": 70.16,
+        "latency": 17.984899999999925
+      },
+      {
+        "trial": 2,
+        "score": 70.16,
+        "latency": 5.019999999999982
+      },
+      {
+        "trial": 3,
+        "score": 70.16,
+        "latency": 3.855099999999993
+      },
+      {
+        "trial": 4,
+        "score": 70.16,
+        "latency": 3.1499000000000024
+      },
+      {
+        "trial": 5,
+        "score": 70.16,
+        "latency": 3.011000000000081
+      }
+    ],
+    "scoreVariance": 0,
+    "passed": true
+  }
+}

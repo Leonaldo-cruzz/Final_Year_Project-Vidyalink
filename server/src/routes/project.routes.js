@@ -15,7 +15,7 @@ router.use(authenticate);
 
 router.post(
   '/',
-  authorize('student', 'recruiter', 'admin'),
+  authorize('student', 'admin'),
   projectScreenshotUpload,
   validate(createProjectSchema),
   projectController.createProject
@@ -25,11 +25,11 @@ router.get('/:id', authorize('student', 'recruiter', 'faculty', 'alumni', 'admin
 router.post('/:id/verify-deployment', authorize('student', 'admin'), projectController.verifyDeployment);
 router.put(
   '/:id',
-  authorize('student', 'recruiter', 'admin'),
+  authorize('student', 'admin'),
   projectScreenshotUpload,
   validate(updateProjectSchema),
   projectController.updateProject
 );
-router.delete('/:id', authorize('student', 'recruiter', 'admin'), projectController.deleteProject);
+router.delete('/:id', authorize('student', 'admin'), projectController.deleteProject);
 
 export default router;

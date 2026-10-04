@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Send, FileText, Code2 as Github, Ban, Loader2 } from 'lucide-react';
+import { Send, FileText, Code2 as Github, Ban, Loader2, CheckCircle2 } from 'lucide-react';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { SectionCard } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -105,9 +105,9 @@ const StudentApplications = () => {
 
                     <div className="flex items-center gap-2">
                       {app.status === 'Selected' && (
-                        <Button size="sm" onClick={() => navigate('/workspaces')}>
-                          Open Workspace
-                        </Button>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs font-semibold text-emerald-400">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> Selected / Offer Extended
+                        </span>
                       )}
 
                       {app.status !== 'Selected' && app.status !== 'Withdrawn' && app.status !== 'Rejected' && (

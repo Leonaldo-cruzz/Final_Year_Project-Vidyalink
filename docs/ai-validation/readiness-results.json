@@ -1,0 +1,36 @@
+{
+  "fixtures": [
+    {
+      "fixture": "Strong Evidence",
+      "expected": 85,
+      "actual": 85,
+      "expectedCategory": "Very Good",
+      "actualCategory": "Very Good",
+      "passed": true
+    },
+    {
+      "fixture": "Medium Evidence",
+      "expected": 64.25,
+      "actual": 64.25,
+      "expectedCategory": "Average",
+      "actualCategory": "Average",
+      "passed": true
+    },
+    {
+      "fixture": "Weak Evidence",
+      "expected": 37,
+      "actual": 37,
+      "expectedCategory": "Needs Improvement",
+      "actualCategory": "Needs Improvement",
+      "passed": true
+    },
+    {
+      "fixture": "Insufficient Evidence (All nulls)",
+      "expected": 0,
+      "actual": 0,
+      "expectedCategory": "Insufficient Evidence",
+      "actualCategory": "Insufficient Evidence",
+      "passed": true
+    }
+  ]
+}

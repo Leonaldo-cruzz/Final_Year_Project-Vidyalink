@@ -48,8 +48,6 @@ export const ROUTES = {
   APPLICATIONS: '/applications',
   PROJECT_DETAIL: '/projects/:id',
   CREATE_PROJECT: '/projects/new',
-  WORKSPACES: '/workspaces',
-  WORKSPACE_DETAIL: '/workspace/:workspaceId',
   PORTFOLIO: '/portfolio/me',
   RESUME: '/resume',
   CERTIFICATES: '/certificates',

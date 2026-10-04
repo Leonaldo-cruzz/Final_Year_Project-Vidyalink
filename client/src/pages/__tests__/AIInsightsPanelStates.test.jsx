@@ -180,8 +180,9 @@ describe('AIInsights page states', () => {
       // Component breakdown title
       expect(screen.getByText(/portfolio evidence breakdown/i)).toBeInTheDocument();
       // Component labels from COMPONENT_META
-      expect(screen.getByText('Complexity')).toBeInTheDocument();
+      expect(screen.getByText('Project Complexity')).toBeInTheDocument();
       expect(screen.getByText('Technology Stack')).toBeInTheDocument();
+      expect(screen.getByText('Documentation Quality')).toBeInTheDocument();
     });
   });
 

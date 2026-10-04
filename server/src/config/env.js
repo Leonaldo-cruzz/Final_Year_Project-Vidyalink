@@ -42,7 +42,7 @@ export const env = Object.freeze({
   JWT_ISSUER: process.env.JWT_ISSUER || 'vidyalink-api',
   JWT_AUDIENCE: process.env.JWT_AUDIENCE || 'vidyalink-client',
   API_PREFIX: process.env.API_PREFIX || '/api/v1',
-  CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174',
   CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
   COOKIE_SAME_SITE: process.env.COOKIE_SAME_SITE || (process.env.NODE_ENV === 'production' ? 'strict' : 'lax'),
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN || undefined,

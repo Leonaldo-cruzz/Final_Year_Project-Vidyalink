@@ -65,12 +65,39 @@ const projectSchema = new mongoose.Schema(
         message: 'At least one technology is required',
       },
     },
+    // Manually entered or previously synced GitHub repository URL (html_url).
+    // Used as secondary URL match key during sync when githubRepositoryId is absent.
     githubRepository: {
       type: String,
       trim: true,
       maxlength: 2048,
       default: null,
     },
+    // ── GitHub Auto-Discovery Fields ─────────────────────────────────────────
+    // Stable primary identity key from GitHub's API (repo.id — numeric integer).
+    // Idempotent matching: the same repo found on repeat syncs is never duplicated.
+    githubRepositoryId: {
+      type: Number,
+      default: null,
+    },
+    // Current sync state for this project's GitHub link.
+    //  'none'    — no GitHub sync involvement (manual project)
+    //  'synced'  — linked and up-to-date with GitHub
+    //  'deleted' — was present on last sync but absent now; project is preserved
+    githubSyncStatus: {
+      type: String,
+      enum: ['none', 'synced', 'deleted'],
+      default: 'none',
+    },
+    // Provenance: where the project record originated.
+    //  'manual'      — student created directly in VidyaLink
+    //  'github_sync' — automatically imported from a GitHub sync
+    githubSource: {
+      type: String,
+      enum: ['manual', 'github_sync'],
+      default: 'manual',
+    },
+    // ─────────────────────────────────────────────────────────────────────────
     liveDeployment: {
       type: String,
       trim: true,
@@ -136,6 +163,8 @@ const projectSchema = new mongoose.Schema(
 
 projectSchema.index({ userId: 1, createdAt: -1 });
 projectSchema.index({ userId: 1, verificationStatus: 1, projectStatus: 1 });
+// Sparse compound index: only indexes docs where githubRepositoryId is set (O(1) duplicate lookup)
+projectSchema.index({ userId: 1, githubRepositoryId: 1 }, { sparse: true });
 
 const Project = mongoose.models.Project || mongoose.model('Project', projectSchema);
 

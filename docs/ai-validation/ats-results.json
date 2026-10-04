@@ -1,0 +1,148 @@
+{
+  "evaluations": [
+    {
+      "fixture": "Resume A (Complete & Strong)",
+      "textLength": 1222,
+      "atsScore": 96.67,
+      "keywordScore": 88.89,
+      "skillsScore": 100,
+      "formattingScore": 100,
+      "detectedSkills": [
+        "AWS",
+        "Docker",
+        "Express",
+        "FastAPI",
+        "Git",
+        "GitHub",
+        "JavaScript",
+        "MongoDB",
+        "Node.js",
+        "PostgreSQL",
+        "Python",
+        "REST APIs",
+        "React",
+        "SQL"
+      ],
+      "missingKeywords": [
+        "JavaScript"
+      ],
+      "suggestionsCount": 2,
+      "latency": 4.748800000000074,
+      "passed": true
+    },
+    {
+      "fixture": "Resume B (Missing Keywords)",
+      "textLength": 157,
+      "atsScore": 33.5,
+      "keywordScore": 25,
+      "skillsScore": 0,
+      "formattingScore": 85,
+      "detectedSkills": [
+        "Python",
+        "SQL"
+      ],
+      "missingKeywords": [
+        "Docker",
+        "React",
+        "frontend"
+      ],
+      "suggestionsCount": 9,
+      "latency": 2.987899999999968,
+      "passed": true
+    },
+    {
+      "fixture": "Resume C (Poor Formatting)",
+      "textLength": 307,
+      "atsScore": 57.5,
+      "keywordScore": 50,
+      "skillsScore": 100,
+      "formattingScore": 75,
+      "detectedSkills": [
+        "JavaScript"
+      ],
+      "missingKeywords": [
+        "developer"
+      ],
+      "suggestionsCount": 9,
+      "latency": 4.657900000000041,
+      "passed": true
+    },
+    {
+      "fixture": "Resume D (Incomplete)",
+      "textLength": 67,
+      "atsScore": 8.5,
+      "keywordScore": 0,
+      "skillsScore": 0,
+      "formattingScore": 85,
+      "detectedSkills": [],
+      "missingKeywords": [
+        "Python",
+        "developer"
+      ],
+      "suggestionsCount": 10,
+      "latency": 3.2596000000000913,
+      "passed": true
+    },
+    {
+      "fixture": "Resume E (Empty / Boundary)",
+      "textLength": 0,
+      "latency": 1.6967999999999392,
+      "passed": true
+    }
+  ],
+  "groundTruthResumeA": {
+    "expected": [
+      "React",
+      "Node.js",
+      "Express",
+      "MongoDB",
+      "Python",
+      "FastAPI",
+      "Docker",
+      "Git",
+      "SQL",
+      "PostgreSQL",
+      "REST APIs",
+      "AWS",
+      "GitHub"
+    ],
+    "detected": [
+      "AWS",
+      "Docker",
+      "Express",
+      "FastAPI",
+      "Git",
+      "GitHub",
+      "JavaScript",
+      "MongoDB",
+      "Node.js",
+      "PostgreSQL",
+      "Python",
+      "REST APIs",
+      "React",
+      "SQL"
+    ],
+    "truePositives": [
+      "AWS",
+      "Docker",
+      "Express",
+      "FastAPI",
+      "Git",
+      "GitHub",
+      "MongoDB",
+      "Node.js",
+      "PostgreSQL",
+      "Python",
+      "REST APIs",
+      "React",
+      "SQL"
+    ],
+    "falsePositives": [
+      "JavaScript"
+    ],
+    "falseNegatives": [],
+    "precision": 0.93,
+    "recall": 1,
+    "f1": 0.96
+  }
+}

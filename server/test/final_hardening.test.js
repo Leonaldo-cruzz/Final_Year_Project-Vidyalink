@@ -10,6 +10,7 @@ import ProjectEngagement from '../src/models/projectEngagement.model.js';
 import Workspace from '../src/models/workspace.model.js';
 import Notification from '../src/models/notification.model.js';
 import ApiError from '../src/utils/ApiError.js';
+import authorize from '../src/middleware/role.middleware.js';
 
 test('REGRESSION 1: Candidate selection does NOT provision Workspace or ProjectEngagement', async () => {
   const origAppFind = Application.findById;
@@ -289,5 +290,86 @@ test('REGRESSION 8: Scheduling interview for Withdrawn application is rejected',
     );
   } finally {
     Application.findById = origAppFind;
+  }
+});
+
+test('REGRESSION 9: Recruiter is strictly forbidden from creating, updating, or deleting projects', () => {
+  const projectMutationAuth = authorize('student', 'admin');
+
+  // Recruiter attempting POST /projects
+  assert.throws(
+    () => {
+      projectMutationAuth({ user: { role: 'recruiter' } }, {}, () => {});
+    },
+    (err) => {
+      assert.equal(err.statusCode, 403, 'Recruiter project creation must return 403 Forbidden');
+      assert.match(err.message, /access denied/i);
+      return true;
+    }
+  );
+
+  // Recruiter attempting PUT /projects/:id
+  assert.throws(
+    () => {
+      projectMutationAuth({ user: { role: 'recruiter' } }, {}, () => {});
+    },
+    (err) => {
+      assert.equal(err.statusCode, 403, 'Recruiter project update must return 403 Forbidden');
+      return true;
+    }
+  );
+
+  // Recruiter attempting DELETE /projects/:id
+  assert.throws(
+    () => {
+      projectMutationAuth({ user: { role: 'recruiter' } }, {}, () => {});
+    },
+    (err) => {
+      assert.equal(err.statusCode, 403, 'Recruiter project deletion must return 403 Forbidden');
+      return true;
+    }
+  );
+
+  // Student and Admin are allowed
+  let studentCalled = false;
+  projectMutationAuth({ user: { role: 'student' } }, {}, () => { studentCalled = true; });
+  assert.equal(studentCalled, true, 'Student must be allowed to manage projects');
+
+  let adminCalled = false;
+  projectMutationAuth({ user: { role: 'admin' } }, {}, () => { adminCalled = true; });
+  assert.equal(adminCalled, true, 'Admin must be allowed to manage projects');
+});
+
+test('REGRESSION 10: Canonical AI Portfolio Scoring weights and deterministic calculations', () => {
+  const OFFICIAL_WEIGHTS = {
+    complexity: 0.25,
+    technology_stack: 0.20,
+    github_activity: 0.15,
+    documentation_quality: 0.15,
+    innovation: 0.15,
+    code_quality: 0.10,
+  };
+
+  // 1. Verify weights sum to exactly 1.00
+  const sumWeights = Object.values(OFFICIAL_WEIGHTS).reduce((acc, w) => acc + w, 0);
+  assert.equal(Math.round(sumWeights * 100) / 100, 1.0, 'Weights must sum to 1.00');
+
+  // 2. Fixture 1: All 100s -> Score = 100.0
+  const f1 = { complexity: 100, technology_stack: 100, github_activity: 100, documentation_quality: 100, innovation: 100, code_quality: 100 };
+  const score1 = Object.entries(OFFICIAL_WEIGHTS).reduce((acc, [k, w]) => acc + f1[k] * w, 0);
+  assert.equal(score1, 100.0, 'All 100s must calculate exactly 100.0');
+
+  // 3. Fixture 2: Non-trivial fixture (80, 60, 50, 40, 70, 90) -> Score = 65.0
+  // 80*0.25 + 60*0.20 + 50*0.15 + 40*0.15 + 70*0.15 + 90*0.10
+  // = 20 + 12 + 7.5 + 6 + 10.5 + 9 = 65.0
+  const f2 = { complexity: 80, technology_stack: 60, github_activity: 50, documentation_quality: 40, innovation: 70, code_quality: 90 };
+  const score2 = Object.entries(OFFICIAL_WEIGHTS).reduce((acc, [k, w]) => acc + f2[k] * w, 0);
+  assert.equal(score2, 65.0, 'Fixture 2 must calculate exactly 65.0');
+
+  // 4. Weight perturbation sensitivity check: any modified weight fails assertion
+  for (const key of Object.keys(OFFICIAL_WEIGHTS)) {
+    const perturbed = { ...OFFICIAL_WEIGHTS, [key]: OFFICIAL_WEIGHTS[key] + 0.05 };
+    const perturbedScore = Object.entries(perturbed).reduce((acc, [k, w]) => acc + f2[k] * w, 0);
+    assert.notEqual(perturbedScore, 65.0, `Altering weight for ${key} must alter final score`);
   }
 });

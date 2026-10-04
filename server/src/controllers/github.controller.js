@@ -12,9 +12,21 @@ const getProfile = asyncHandler(async (req, res) => {
   return ApiResponse.ok(res, 'GitHub profile fetched successfully', account);
 });
 
+/**
+ * POST /github/sync
+ *
+ * Refreshes GitHub profile, fetches all repositories (paginated),
+ * matches against existing VidyaLink projects, and imports new ones.
+ *
+ * Response includes:
+ *   - account: updated GitHub account snapshot
+ *   - syncResult: { repositoriesFound, projectsImported, projectsUpdated,
+ *                   repositoriesMarkedDeleted, failed }
+ */
 const sync = asyncHandler(async (req, res) => {
-  const account = await githubService.sync(req.user._id);
-  return ApiResponse.ok(res, 'GitHub profile synced successfully', account);
+  // userId is always derived from the authenticated JWT — never from the request body.
+  const { account, syncResult } = await githubService.sync(req.user._id);
+  return ApiResponse.ok(res, 'GitHub sync complete', { account, syncResult });
 });
 
 const getRepositories = asyncHandler(async (req, res) => {

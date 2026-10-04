@@ -50,7 +50,11 @@ The VidyaLink AI Subsystem is a **deterministic, evidence-driven evaluation engi
 
 The portfolio evaluation algorithm aggregates individual verified project evaluations into an evidence-weighted composite score ($0–100$) using the official distribution:
 
-$$\text{Overall Score} = \sum (\text{Component Score} \times \text{Official Weight})$$
+$$\text{Portfolio Score (PS)} = 0.25 \times \text{Project Complexity} + 0.20 \times \text{Technology Stack} + 0.15 \times \text{GitHub Activity} + 0.15 \times \text{Documentation Quality} + 0.15 \times \text{Innovation} + 0.10 \times \text{Code Quality}$$
+
+> [!NOTE]
+> **Canonical Model Enforcement:**
+> The six dimensions above represent the single canonical Portfolio Scoring model. The deprecated alternative model (Technical Skills 25%, Project Quality 20%, GitHub 15%, Certifications 15%, Academic Background 15%, Leadership/Extras 10%) is explicitly invalid and strictly prohibited across all services.
 
 | Component Dimension | Official Weight | Evaluation Basis |
 |---|:---:|---|

@@ -23,8 +23,7 @@ import CreateProject  from '@/pages/projects/CreateProject';
 import EditProject    from '@/pages/projects/EditProject';
 import ProjectDetails from '@/pages/projects/ProjectDetails';
 import ApplicantManagement from '@/pages/recruiter/ApplicantManagement';
-import WorkspaceList   from '@/pages/workspace/WorkspaceList';
-import WorkspaceDetail from '@/pages/workspace/WorkspaceDetail';
+
 import VerifiedPortfolio from '@/pages/portfolio/VerifiedPortfolio';
 import FacultyVerificationDashboard from '@/pages/faculty/FacultyVerificationDashboard';
 import VerificationDetail from '@/pages/faculty/VerificationDetail';
@@ -132,7 +131,7 @@ const AppRoutes = () => (
     <Route
       path="/projects/new"
       element={
-        <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.FACULTY, ROLES.RECRUITER, ROLES.ADMIN]}>
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.ADMIN]}>
           <CreateProject />
         </ProtectedRoute>
       }
@@ -140,7 +139,7 @@ const AppRoutes = () => (
     <Route
       path="/projects/:projectId/edit"
       element={
-        <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.FACULTY, ROLES.RECRUITER, ROLES.ADMIN]}>
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.ADMIN]}>
           <EditProject />
         </ProtectedRoute>
       }
@@ -169,22 +168,7 @@ const AppRoutes = () => (
         </ProtectedRoute>
       }
     />
-    <Route
-      path="/workspaces"
-      element={
-        <ProtectedRoute>
-          <WorkspaceList />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/workspace/:workspaceId"
-      element={
-        <ProtectedRoute>
-          <WorkspaceDetail />
-        </ProtectedRoute>
-      }
-    />
+
     <Route path="/portfolio" element={<Navigate to="/portfolio/me" replace />} />
     <Route path="/portfolio/verified" element={<Navigate to="/portfolio/me" replace />} />
     <Route
@@ -204,7 +188,7 @@ const AppRoutes = () => (
       }
     />
     <Route
-      path="/faculty/verifications/:id"
+      path="/faculty/verifications/:verificationId"
       element={
         <ProtectedRoute allowedRoles={[ROLES.FACULTY, ROLES.ADMIN]}>
           <VerificationDetail />

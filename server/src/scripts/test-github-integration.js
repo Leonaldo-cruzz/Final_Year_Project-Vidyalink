@@ -19,6 +19,31 @@ const mockGithubResponse = (overrides = {}) => ({
   ...overrides,
 });
 
+import Project from '../models/project.model.js';
+
+const mockGithubRepo = (overrides = {}) => ({
+  id: 99901,
+  name: 'vidyalink-portfolio',
+  full_name: 'vidyalink-test-user/vidyalink-portfolio',
+  html_url: 'https://github.com/vidyalink-test-user/vidyalink-portfolio',
+  clone_url: 'https://github.com/vidyalink-test-user/vidyalink-portfolio.git',
+  description: 'Automated portfolio discovery test repository',
+  language: 'JavaScript',
+  topics: ['react', 'nodejs'],
+  stargazers_count: 5,
+  forks_count: 1,
+  open_issues_count: 0,
+  private: false,
+  fork: false,
+  archived: false,
+  size: 120,
+  pushed_at: '2026-09-24T00:00:00Z',
+  updated_at: '2026-09-24T00:00:00Z',
+  created_at: '2026-01-01T00:00:00Z',
+  default_branch: 'main',
+  ...overrides,
+});
+
 const run = async () => {
   let testUser;
   const previousFetch = globalThis.fetch;
@@ -33,11 +58,21 @@ const run = async () => {
       status: 'active',
     });
 
-    globalThis.fetch = async () => ({
-      ok: true,
-      status: 200,
-      json: async () => mockGithubResponse(),
-    });
+    globalThis.fetch = async (url) => {
+      const urlStr = String(url);
+      if (urlStr.includes('/repos')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => [mockGithubRepo()],
+        };
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => mockGithubResponse(),
+      };
+    };
 
     const connected = await githubService.connect(testUser._id, 'vidyalink-test-user');
     assert.equal(connected.connectionStatus, 'Connected');
@@ -47,13 +82,26 @@ const run = async () => {
     const fetched = await githubService.getProfile(testUser._id);
     assert.equal(fetched.githubUsername, 'vidyalink-test-user');
 
-    globalThis.fetch = async () => ({
-      ok: true,
-      status: 200,
-      json: async () => mockGithubResponse({ followers: 43 }),
-    });
+    globalThis.fetch = async (url) => {
+      const urlStr = String(url);
+      if (urlStr.includes('/repos')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => [mockGithubRepo()],
+        };
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => mockGithubResponse({ followers: 43 }),
+      };
+    };
+
     const synced = await githubService.sync(testUser._id);
-    assert.equal(synced.followers, 43);
+    assert.equal(synced.account.followers, 43);
+    assert.equal(synced.syncResult.projectsImported, 1);
+    assert.equal(await Project.countDocuments({ userId: testUser._id }), 1);
 
     const disconnected = await githubService.disconnect(testUser._id);
     assert.equal(disconnected.connectionStatus, 'Disconnected');
@@ -67,6 +115,7 @@ const run = async () => {
   } finally {
     globalThis.fetch = previousFetch;
     if (testUser) {
+      await Project.deleteMany({ userId: testUser._id });
       await GitHubAccount.deleteOne({ userId: testUser._id });
       await User.deleteOne({ _id: testUser._id });
     }
