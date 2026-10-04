@@ -1,6 +1,6 @@
 # VIDYALINK — AI Validation, Benchmarking & Empirical Evidence Report
 
-**Generated:** 2026-09-24T08:52:06.989Z  
+**Generated:** 2026-10-04T19:44:40.426Z  
 **Environment:** Node v24.13.0 | Python FastAPI AI Microservice (`http://localhost:8000`) | MongoDB  
 **Status:** **51 of 51 Scenarios Passed (0 Failed)**
 
@@ -122,11 +122,11 @@ $$\text{Sample Variance } \sigma^2 = 0$$
 
 | Resume Fixture | Extracted Length | ATS Score | Keyword Score | Skills Score | Formatting Score | Latency |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Resume A (Complete & Strong)** | 1222 chars | **96.67/100** | 88.89/100 | 100/100 | 100/100 | 4.7 ms |
-| **Resume B (Missing Keywords)** | 157 chars | **33.5/100** | 25/100 | 0/100 | 85/100 | 3.0 ms |
-| **Resume C (Poor Formatting)** | 307 chars | **57.5/100** | 50/100 | 100/100 | 75/100 | 4.7 ms |
-| **Resume D (Incomplete)** | 67 chars | **8.5/100** | 0/100 | 0/100 | 85/100 | 3.3 ms |
-| **Resume E (Empty / Boundary)** | 0 chars | **undefined/100** | undefined/100 | undefined/100 | undefined/100 | 1.7 ms |
+| **Resume A (Complete & Strong)** | 1222 chars | **96.67/100** | 88.89/100 | 100/100 | 100/100 | 13.2 ms |
+| **Resume B (Missing Keywords)** | 157 chars | **33.5/100** | 25/100 | 0/100 | 85/100 | 6.3 ms |
+| **Resume C (Poor Formatting)** | 307 chars | **57.5/100** | 50/100 | 100/100 | 75/100 | 4.4 ms |
+| **Resume D (Incomplete)** | 67 chars | **8.5/100** | 0/100 | 0/100 | 85/100 | 3.7 ms |
+| **Resume E (Empty / Boundary)** | 0 chars | **undefined/100** | undefined/100 | undefined/100 | undefined/100 | 2.7 ms |
 
 ### Ground-Truth Skill Extraction on Resume A
 
@@ -203,13 +203,13 @@ Measured across 5 consecutive execution trials per component:
 
 | Component | Minimum Latency | Maximum Latency | Mean Latency | Median Latency |
 | :--- | :---: | :---: | :---: | :---: |
-| **Portfolio Evaluation** | 1.68 ms | 2.21 ms | **1.95 ms** | 1.98 ms |
-| **ATS Resume Analysis** | 3.6 ms | 4.15 ms | **3.81 ms** | 3.68 ms |
-| **Skill Extraction** | 2.11 ms | 2.45 ms | **2.24 ms** | 2.23 ms |
-| **Skill Gap Analysis** | 1.41 ms | 2 ms | **1.75 ms** | 1.77 ms |
-| **GitHub Analytics** | 1.41 ms | 1.83 ms | **1.57 ms** | 1.55 ms |
-| **Industry Readiness** | 1.24 ms | 1.97 ms | **1.63 ms** | 1.56 ms |
-| **Recommendations** | 1.43 ms | 2.01 ms | **1.69 ms** | 1.6 ms |
+| **Portfolio Evaluation** | 1.99 ms | 2.98 ms | **2.27 ms** | 2.1 ms |
+| **ATS Resume Analysis** | 4.21 ms | 5.86 ms | **5.24 ms** | 5.23 ms |
+| **Skill Extraction** | 2.06 ms | 4.13 ms | **2.75 ms** | 2.58 ms |
+| **Skill Gap Analysis** | 1.64 ms | 2.7 ms | **1.98 ms** | 1.87 ms |
+| **GitHub Analytics** | 1.51 ms | 2.19 ms | **1.99 ms** | 2.09 ms |
+| **Industry Readiness** | 1.44 ms | 2.3 ms | **1.84 ms** | 1.92 ms |
+| **Recommendations** | 1.93 ms | 2.33 ms | **2.13 ms** | 2.18 ms |
 
 ---
 
@@ -222,7 +222,7 @@ Measured across 5 consecutive execution trials per component:
 - **Successful Requests:** 80
 - **Failed Requests:** 0
 - **Error Percentage:** **0.0%**
-- **Latency Distribution:** Min: 0 ms, Max: 5.05 ms, Mean: 1.27 ms, Median: 0 ms
+- **Latency Distribution:** Min: 0 ms, Max: 6.24 ms, Mean: 1.61 ms, Median: 0 ms
 
 ---
 
@@ -250,16 +250,16 @@ A comprehensive search of the codebase verified:
 | **Sensitivity-Docs** | Docs +30 | Delta = +4.50 | Delta = +4.50 | **PASS** | < 1 ms |
 | **Sensitivity-Innov** | Innovation +30 | Delta = +4.50 | Delta = +4.50 | **PASS** | < 1 ms |
 | **Sensitivity-Code** | Code Quality -30 | Delta = -3.00 | Delta = -3.00 | **PASS** | < 1 ms |
-| **Determinism-Trials** | 5 consecutive runs | Variance = 0.0 | Variance = 0.0 | **PASS** | 1.95 ms |
-| **ATS-Resume-A** | Complete Full Stack text | Score > 80 | Score = 96.67 | **PASS** | 4.7 ms |
-| **ATS-Resume-B** | Missing keyword text | Score < Resume A | Score = 33.5 | **PASS** | 3.0 ms |
-| **ATS-Resume-C** | Poor formatting text | Formatting penalized | Formatting = 75 | **PASS** | 4.7 ms |
-| **Skill-Synonyms** | reactjs, k8s, mongo db | Canonical names | Canonical matched | **PASS** | 2.24 ms |
-| **Skill-Gap** | 3 current vs 5 required | 3 matched, 2 missing | 3 matched, 2 missing | **PASS** | 1.75 ms |
-| **Readiness-Strong** | 5 high scores | 85.0 ('Very Good') | 85.0 ('Very Good') | **PASS** | 1.63 ms |
-| **Readiness-Empty** | All null inputs | 0.0 ('Insufficient') | 0.0 ('Insufficient') | **PASS** | 1.63 ms |
-| **Data-Gating-Unver** | Unverified project | Excluded from score | Excluded (score=0) | **PASS** | 1.95 ms |
-| **Data-Gating-Ver** | Verified project | Included in score | Included (score>0) | **PASS** | 1.95 ms |
+| **Determinism-Trials** | 5 consecutive runs | Variance = 0.0 | Variance = 0.0 | **PASS** | 2.27 ms |
+| **ATS-Resume-A** | Complete Full Stack text | Score > 80 | Score = 96.67 | **PASS** | 13.2 ms |
+| **ATS-Resume-B** | Missing keyword text | Score < Resume A | Score = 33.5 | **PASS** | 6.3 ms |
+| **ATS-Resume-C** | Poor formatting text | Formatting penalized | Formatting = 75 | **PASS** | 4.4 ms |
+| **Skill-Synonyms** | reactjs, k8s, mongo db | Canonical names | Canonical matched | **PASS** | 2.75 ms |
+| **Skill-Gap** | 3 current vs 5 required | 3 matched, 2 missing | 3 matched, 2 missing | **PASS** | 1.98 ms |
+| **Readiness-Strong** | 5 high scores | 85.0 ('Very Good') | 85.0 ('Very Good') | **PASS** | 1.84 ms |
+| **Readiness-Empty** | All null inputs | 0.0 ('Insufficient') | 0.0 ('Insufficient') | **PASS** | 1.84 ms |
+| **Data-Gating-Unver** | Unverified project | Excluded from score | Excluded (score=0) | **PASS** | 2.27 ms |
+| **Data-Gating-Ver** | Verified project | Included in score | Included (score>0) | **PASS** | 2.27 ms |
 | **Failure-Offline** | Target invalid port | Clean error / 503 | Handled cleanly | **PASS** | < 5 ms |
 | **Failure-Timeout** | 1ms abort limit | 504 Timeout error | Handled cleanly | **PASS** | < 5 ms |
 | **Failure-Schema** | Malformed JSON | 422 Bad Request | Handled cleanly | **PASS** | < 5 ms |

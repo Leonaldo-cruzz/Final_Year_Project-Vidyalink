@@ -41,12 +41,12 @@ Each component was tested using a dual validation harness:
 
 ### Q5. How was performance measured?
 Performance was timed using `performance.now()` over 5 consecutive trials per component:
-- **Portfolio Evaluation:** Mean **1.95 ms**
-- **ATS Analysis:** Mean **3.81 ms**
-- **Skill Extraction:** Mean **2.24 ms**
-- **Readiness Calculation:** Mean **1.63 ms**
-- **Recommendations:** Mean **1.69 ms**
-- **Repeatability Load Test:** 80 consecutive requests executed with **0% errors** and an average latency of **1.27 ms**.
+- **Portfolio Evaluation:** Mean **2.27 ms**
+- **ATS Analysis:** Mean **5.24 ms**
+- **Skill Extraction:** Mean **2.75 ms**
+- **Readiness Calculation:** Mean **1.84 ms**
+- **Recommendations:** Mean **2.13 ms**
+- **Repeatability Load Test:** 80 consecutive requests executed with **0% errors** and an average latency of **1.61 ms**.
 
 ---
 

@@ -11,7 +11,7 @@
       },
       "score": 96.25,
       "category": "Excellent",
-      "latency": 2.120200000000068,
+      "latency": 3.3256000000000085,
       "passed": true
     },
     {
@@ -25,7 +25,7 @@
       },
       "score": 11,
       "category": "Needs Improvement",
-      "latency": 1.6037000000000035,
+      "latency": 2.583500000000072,
       "passed": true
     },
     {
@@ -38,7 +38,7 @@
       },
       "score": 0,
       "category": "Needs Improvement",
-      "latency": 2.0727000000000544,
+      "latency": 2.326599999999985,
       "passed": true
     },
     {
@@ -48,7 +48,7 @@
       },
       "score": 50,
       "category": "Needs Improvement",
-      "latency": 1.8074000000000296,
+      "latency": 2.6170999999999367,
       "passed": true
     }
   ]
