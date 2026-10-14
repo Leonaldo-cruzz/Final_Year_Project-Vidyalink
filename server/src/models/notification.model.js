@@ -6,6 +6,7 @@ export const NOTIFICATION_TYPES = [
   'interview',
   'mentorship',
   'referral',
+  'endorsement',
   'system',
 ];
 

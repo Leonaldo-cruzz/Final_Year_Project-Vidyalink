@@ -2,9 +2,9 @@ import { z } from 'zod';
 import { VERIFICATION_TARGET_TYPES } from '../models/verification.model.js';
 
 const objectIdSchema = z
-  .string({ required_error: 'Target ID is required' })
+  .string({ required_error: 'ID is required' })
   .trim()
-  .regex(/^[a-f\d]{24}$/i, 'Target ID must be a valid MongoDB ObjectId');
+  .regex(/^[a-f\d]{24}$/i, 'ID must be a valid 24-character hexadecimal MongoDB ObjectId');
 
 const targetTypeSchema = z.enum(VERIFICATION_TARGET_TYPES, {
   errorMap: () => ({ message: `Target type must be one of: ${VERIFICATION_TARGET_TYPES.join(', ')}` }),
@@ -36,14 +36,14 @@ export const submitVerificationSchema = z.object({
     targetType: targetTypeSchema,
     targetId: objectIdSchema,
     remarks: optionalRemarksSchema,
-  }),
+  }).strict(),
 });
 
 export const verificationHistorySchema = z.object({
   query: z.object({
     targetType: targetTypeSchema.optional(),
     targetId: objectIdSchema.optional(),
-  }).refine(
+  }).strict().refine(
     (query) => !query.targetId || query.targetType,
     { message: 'targetType is required when targetId is provided', path: ['targetType'] }
   ),
@@ -53,31 +53,31 @@ export const verificationStatusSchema = z.object({
   params: z.object({
     targetType: targetTypeSchema,
     targetId: objectIdSchema,
-  }),
+  }).strict(),
 });
 
 export const verificationIdSchema = z.object({
   params: z.object({
     id: objectIdSchema,
-  }),
+  }).strict(),
 });
 
 export const approveVerificationSchema = z.object({
   params: z.object({
     id: objectIdSchema,
-  }),
+  }).strict(),
   body: z.object({
     remarks: optionalRemarksSchema,
-  }),
+  }).strict().default({}),
 });
 
 export const rejectVerificationSchema = z.object({
   params: z.object({
     id: objectIdSchema,
-  }),
+  }).strict(),
   body: z.object({
     remarks: requiredRemarksSchema,
-  }),
+  }).strict(),
 });
 
 export const requestChangesVerificationSchema = rejectVerificationSchema;
@@ -88,20 +88,26 @@ export const facultyVerificationDashboardSchema = z.object({
     targetType: z.enum([...VERIFICATION_TARGET_TYPES, 'ALL']).optional(),
     search: z.string().trim().max(200, 'Search must not exceed 200 characters').optional(),
     sort: dashboardSortSchema.optional(),
-  }),
+  }).strict(),
 });
 
 export const facultyVerificationDetailSchema = z.object({
   params: z.object({
     id: objectIdSchema,
-  }),
+  }).strict(),
 });
 
 export const studentSummarySchema = z.object({
   params: z.object({
-    studentId: z
-      .string({ required_error: 'Student ID is required' })
-      .trim()
-      .regex(/^[a-f\d]{24}$/i, 'Student ID must be a valid MongoDB ObjectId'),
-  }),
+    studentId: objectIdSchema,
+  }).strict(),
+});
+
+export const assignVerificationSchema = z.object({
+  params: z.object({
+    id: objectIdSchema,
+  }).strict(),
+  body: z.object({
+    facultyId: objectIdSchema.nullable().optional(),
+  }).strict(),
 });

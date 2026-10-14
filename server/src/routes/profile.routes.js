@@ -9,6 +9,9 @@ import {
   updateProfileSchema,
 } from '../validators/profile.validator.js';
 
+import endorsementController from '../controllers/endorsement.controller.js';
+import { getStudentEndorsementsSchema } from '../validators/endorsement.validator.js';
+
 const router = Router();
 
 router.use(authenticate);
@@ -19,5 +22,12 @@ router.get('/me', profileController.getMyProfile);
 router.patch('/', validate(updateProfileSchema), profileController.updateProfile);
 router.post('/photo', profilePhotoUpload, profileController.updateProfilePhoto);
 router.delete('/', profileController.deleteProfile);
+
+// Student endorsements
+router.get(
+  '/:studentId/endorsements',
+  validate(getStudentEndorsementsSchema),
+  endorsementController.getStudentEndorsements
+);
 
 export default router;

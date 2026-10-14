@@ -27,7 +27,7 @@
         "JavaScript"
       ],
       "suggestionsCount": 2,
-      "latency": 13.152400000000057,
+      "latency": 9.100000000000136,
       "passed": true
     },
     {
@@ -47,7 +47,7 @@
         "frontend"
       ],
       "suggestionsCount": 9,
-      "latency": 6.327300000000037,
+      "latency": 5.454500000000053,
       "passed": true
     },
     {
@@ -64,7 +64,7 @@
         "developer"
       ],
       "suggestionsCount": 9,
-      "latency": 4.405300000000011,
+      "latency": 5.662200000000212,
       "passed": true
     },
     {
@@ -80,13 +80,13 @@
         "developer"
       ],
       "suggestionsCount": 10,
-      "latency": 3.7432000000000016,
+      "latency": 4.538299999999936,
       "passed": true
     },
     {
       "fixture": "Resume E (Empty / Boundary)",
       "textLength": 0,
-      "latency": 2.705799999999954,
+      "latency": 2.2394999999999072,
       "passed": true
     }
   ],

@@ -4,13 +4,15 @@ import {
   FolderKanban,
   ArrowRight, Award, ShieldCheck, CheckCircle2,
   GraduationCap, Code2, FileText, Loader2,
-  Clock, AlertTriangle, RefreshCw, FolderPlus
+  Clock, AlertTriangle, RefreshCw, FolderPlus,
+  Eye, CalendarCheck
 } from 'lucide-react';
 
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { StatCard, SectionCard, ActionCard } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import Modal from '@/components/ui/Modal';
 import { useAuth } from '@/context/AuthContext';
 import { ROUTES } from '@/constants';
 import { getMyPortfolios } from '@/services/portfolioService';
@@ -20,6 +22,7 @@ import { getCertificates } from '@/services/certificateService';
 import { getStudentApplications } from '@/services/applicationService';
 import { getGithubProfile } from '@/services/githubService';
 import { getResume } from '@/services/resumeService';
+import mentorshipService from '@/services/mentorshipService';
 import AIAnalysisPanel from './AIAnalysisPanel';
 import PortfolioVerificationCard from '@/components/verification/PortfolioVerificationCard';
 import SubmitVerificationModal from '@/components/verification/SubmitVerificationModal';
@@ -47,6 +50,9 @@ const StudentDashboard = () => {
   const [applications, setApplications] = useState([]);
   const [githubConnected, setGithubConnected] = useState(false);
   const [hasResume, setHasResume] = useState(false);
+  const [endorsements, setEndorsements] = useState([]);
+  const [mockInterviews, setMockInterviews] = useState([]);
+  const [activeScorecardModal, setActiveScorecardModal] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
 
@@ -60,7 +66,9 @@ const StudentDashboard = () => {
         certRes,
         appRes,
         githubRes,
-        resumeRes
+        resumeRes,
+        endorsementRes,
+        mockInterviewRes,
       ] = await Promise.allSettled([
         getMyPortfolios(),
         getProjects(),
@@ -69,6 +77,8 @@ const StudentDashboard = () => {
         getStudentApplications(),
         getGithubProfile(),
         getResume(),
+        mentorshipService.getMyEndorsements(),
+        mentorshipService.getMyMockInterviews(),
       ]);
 
       if (portfolioRes.status === 'fulfilled') {
@@ -92,6 +102,12 @@ const StudentDashboard = () => {
       }
       if (resumeRes.status === 'fulfilled') {
         setHasResume(Boolean(resumeRes.value?.data));
+      }
+      if (endorsementRes.status === 'fulfilled') {
+        setEndorsements(Array.isArray(endorsementRes.value) ? endorsementRes.value : []);
+      }
+      if (mockInterviewRes.status === 'fulfilled') {
+        setMockInterviews(Array.isArray(mockInterviewRes.value) ? mockInterviewRes.value : []);
       }
     } catch {
       // Honest state on error: keep arrays empty
@@ -547,6 +563,225 @@ const StudentDashboard = () => {
               </div>
             )}
           </SectionCard>
+
+          {/* Alumni Technical Skill Endorsements */}
+          <SectionCard
+            title="Alumni Skill Endorsements"
+            subtitle="Formal technical endorsements validated by graduate engineering alumni"
+          >
+            {loading ? (
+              <div className="py-8 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin text-orange-300" /> Loading endorsements…
+              </div>
+            ) : endorsements.length === 0 ? (
+              <div className="py-8 text-center space-y-2">
+                <Award className="w-8 h-8 text-slate-600 mx-auto" />
+                <h4 className="text-xs font-bold text-white">No Alumni Endorsements Yet</h4>
+                <p className="text-[11px] text-slate-400 max-w-sm mx-auto">
+                  Demonstrate strong project and technical skills in mentorship sessions to earn official alumni skill badges.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {endorsements.map((end) => (
+                  <div
+                    key={end._id}
+                    className="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 space-y-2 hover:border-slate-700 transition-colors"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-7 h-7 rounded-lg bg-orange-300/10 border border-orange-300/25 flex items-center justify-center shrink-0">
+                          <Award className="w-4 h-4 text-orange-300" />
+                        </div>
+                        <span className="text-xs font-bold text-white truncate">
+                          {end.skill}
+                        </span>
+                      </div>
+                      <Badge variant="emerald" size="sm">Endorsed</Badge>
+                    </div>
+
+                    <p className="text-[11px] text-slate-300">
+                      Endorsed by{' '}
+                      <strong className="text-white">
+                        {end.alumni?.fullName || 'Alumni Mentor'}
+                      </strong>
+                      {end.alumni?.college && (
+                        <span className="text-slate-400 block mt-0.5">
+                          {end.alumni.college}
+                          {end.alumni.graduationYear ? ` (Class of '${end.alumni.graduationYear})` : ''}
+                        </span>
+                      )}
+                    </p>
+
+                    {end.notes && (
+                      <p className="text-[11px] text-slate-400 italic bg-slate-900/60 p-2 rounded-lg border border-slate-800/80">
+                        "{end.notes}"
+                      </p>
+                    )}
+
+                    <p className="text-[10px] text-slate-500">
+                      Validated {new Date(end.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </SectionCard>
+
+          {/* Mock Technical Interview Evaluations */}
+          <SectionCard
+            title="Mock Interview Evaluations & Schedules"
+            subtitle="Structured rubrics, verified scoring, and technical growth recommendations"
+          >
+            {loading ? (
+              <div className="py-8 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin text-orange-300" /> Loading interview scorecards…
+              </div>
+            ) : mockInterviews.length === 0 ? (
+              <div className="py-8 text-center space-y-2">
+                <CalendarCheck className="w-8 h-8 text-slate-600 mx-auto" />
+                <h4 className="text-xs font-bold text-white">No Mock Interviews Scheduled</h4>
+                <p className="text-[11px] text-slate-400 max-w-sm mx-auto">
+                  Connect with an alumni mentor to arrange technical interview preparation and receive structured evaluation.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3.5">
+                {mockInterviews.map((item) => {
+                  const isCompleted = item.status === 'completed';
+                  const isCancelled = item.status === 'cancelled';
+                  const evalData = item.evaluation;
+
+                  return (
+                    <div
+                      key={item._id}
+                      className="p-4 rounded-xl bg-slate-950/75 border border-slate-800 space-y-3"
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-white">
+                              {item.focusDomain}
+                            </span>
+                            <Badge
+                              variant={
+                                isCompleted ? 'emerald' : isCancelled ? 'rose' : 'blue'
+                              }
+                              size="sm"
+                            >
+                              {item.status.toUpperCase()}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-slate-400 mt-1">
+                            Interviewer:{' '}
+                            <strong className="text-slate-200">
+                              {item.alumni?.fullName || 'Alumni Mentor'}
+                            </strong>
+                            {item.alumni?.college && ` • ${item.alumni.college}`}
+                          </p>
+                          <p className="text-[11px] text-slate-500 mt-0.5 flex items-center gap-2">
+                            <span>
+                              {new Date(item.scheduledDate).toLocaleString(undefined, {
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </span>
+                            <span>•</span>
+                            <span className="capitalize">{item.mode}</span>
+                          </p>
+                        </div>
+
+                        {isCompleted && evalData && (
+                          <div className="flex items-center gap-2.5">
+                            <div className="text-right">
+                              <span className="text-[10px] text-slate-400 uppercase font-bold block">
+                                Overall Score
+                              </span>
+                              <span className="text-lg font-black text-emerald-400">
+                                {evalData.overallScore}%
+                              </span>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              leftIcon={Eye}
+                              onClick={() => setActiveScorecardModal(item)}
+                            >
+                              Scorecard
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Completed Rubric Highlight */}
+                      {isCompleted && evalData && (
+                        <div className="space-y-2 pt-2 border-t border-slate-800/80">
+                          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-xs">
+                            <div className="p-2 bg-slate-900/80 rounded-lg border border-slate-800">
+                              <span className="text-[10px] text-slate-400 block truncate">Technical</span>
+                              <span className="font-bold text-white text-xs">{evalData.technicalKnowledge}/5</span>
+                            </div>
+                            <div className="p-2 bg-slate-900/80 rounded-lg border border-slate-800">
+                              <span className="text-[10px] text-slate-400 block truncate">Problem-Solving</span>
+                              <span className="font-bold text-white text-xs">{evalData.problemSolving}/5</span>
+                            </div>
+                            <div className="p-2 bg-slate-900/80 rounded-lg border border-slate-800">
+                              <span className="text-[10px] text-slate-400 block truncate">Communication</span>
+                              <span className="font-bold text-white text-xs">{evalData.communication}/5</span>
+                            </div>
+                            <div className="p-2 bg-slate-900/80 rounded-lg border border-slate-800">
+                              <span className="text-[10px] text-slate-400 block truncate">Project Depth</span>
+                              <span className="font-bold text-white text-xs">{evalData.projectUnderstanding}/5</span>
+                            </div>
+                            <div className="p-2 bg-slate-900/80 rounded-lg border border-slate-800 col-span-2 sm:col-span-1">
+                              <span className="text-[10px] text-slate-400 block truncate">Confidence</span>
+                              <span className="font-bold text-white text-xs">{evalData.confidence}/5</span>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
+                            <div className="p-2.5 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 block mb-0.5">
+                                Strengths
+                              </span>
+                              <p className="text-slate-300 line-clamp-2 text-[11px]">
+                                {evalData.strengths}
+                              </p>
+                            </div>
+                            <div className="p-2.5 rounded-lg bg-amber-500/5 border border-amber-500/20">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 block mb-0.5">
+                                Growth Areas
+                              </span>
+                              <p className="text-slate-300 line-clamp-2 text-[11px]">
+                                {evalData.improvements}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Scheduled Meeting Link */}
+                      {!isCompleted && !isCancelled && item.meetingLink && (
+                        <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800 flex items-center justify-between text-xs">
+                          <span className="text-slate-400 truncate">Meeting: {item.meetingLink}</span>
+                          <a
+                            href={item.meetingLink}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-orange-300 hover:underline font-semibold ml-2 shrink-0"
+                          >
+                            Join Session
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </SectionCard>
         </div>
 
         {/* Right col */}
@@ -657,6 +892,90 @@ const StudentDashboard = () => {
           fetchDashboardData();
         }}
       />
+
+      {/* Modal for Detailed Mock Interview Scorecard */}
+      <Modal
+        open={Boolean(activeScorecardModal)}
+        onClose={() => setActiveScorecardModal(null)}
+        title={`Mock Interview Scorecard — ${activeScorecardModal?.focusDomain || 'Evaluation'}`}
+        size="md"
+      >
+        {activeScorecardModal?.evaluation && (
+          <div className="space-y-4 text-sm text-slate-300">
+            <div className="flex items-center justify-between p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
+              <div>
+                <p className="text-[11px] text-emerald-400 font-extrabold uppercase tracking-wider">
+                  Verified Alumni Score
+                </p>
+                <p className="text-xs text-slate-300 mt-0.5">
+                  Interviewer: {activeScorecardModal.alumni?.fullName || 'Alumni Mentor'}
+                </p>
+              </div>
+              <div className="text-right">
+                <span className="text-3xl font-black text-white">
+                  {activeScorecardModal.evaluation.overallScore}
+                </span>
+                <span className="text-emerald-400 font-bold text-lg"> / 100</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800">
+                <span className="text-slate-400 block text-[11px]">Technical Knowledge</span>
+                <span className="font-bold text-white text-sm">
+                  {activeScorecardModal.evaluation.technicalKnowledge} / 5
+                </span>
+              </div>
+              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800">
+                <span className="text-slate-400 block text-[11px]">Problem-Solving</span>
+                <span className="font-bold text-white text-sm">
+                  {activeScorecardModal.evaluation.problemSolving} / 5
+                </span>
+              </div>
+              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800">
+                <span className="text-slate-400 block text-[11px]">Communication</span>
+                <span className="font-bold text-white text-sm">
+                  {activeScorecardModal.evaluation.communication} / 5
+                </span>
+              </div>
+              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800">
+                <span className="text-slate-400 block text-[11px]">Project Understanding</span>
+                <span className="font-bold text-white text-sm">
+                  {activeScorecardModal.evaluation.projectUnderstanding} / 5
+                </span>
+              </div>
+              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 col-span-2">
+                <span className="text-slate-400 block text-[11px]">Confidence & Professionalism</span>
+                <span className="font-bold text-white text-sm">
+                  {activeScorecardModal.evaluation.confidence} / 5
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-2.5">
+              <div className="p-3 bg-slate-950 rounded-xl border border-emerald-500/20">
+                <h5 className="text-xs font-bold text-emerald-400 mb-1">Demonstrated Strengths</h5>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  {activeScorecardModal.evaluation.strengths}
+                </p>
+              </div>
+
+              <div className="p-3 bg-slate-950 rounded-xl border border-amber-500/20">
+                <h5 className="text-xs font-bold text-amber-400 mb-1">Recommended Improvements</h5>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  {activeScorecardModal.evaluation.improvements}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <Button variant="ghost" onClick={() => setActiveScorecardModal(null)}>
+                Close
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </DashboardLayout>
   );
 };

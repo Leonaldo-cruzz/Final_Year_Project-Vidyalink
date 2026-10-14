@@ -13,6 +13,7 @@ import {
   Mail,
   Save,
   Upload,
+  Award,
 } from 'lucide-react';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import { SectionCard } from '@/components/ui/Card';
@@ -22,6 +23,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/services/api';
+import mentorshipService from '@/services/mentorshipService';
 import { getErrorMessage } from '@/utils/formatters';
 
 const githubUsernamePattern = /^(?!-)[A-Za-z\d]+(?:-[A-Za-z\d]+)*$/;
@@ -85,6 +87,7 @@ const Profile = () => {
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState('');
   const [photoError, setPhotoError] = useState('');
+  const [endorsements, setEndorsements] = useState([]);
 
   const {
     register,
@@ -99,10 +102,23 @@ const Profile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await api.get('/profile/me');
-        const profile = response.data?.data?.profile || null;
-        setProfileData(profile);
-        reset(getFormValues(profile, user));
+        const [profRes, endRes] = await Promise.allSettled([
+          api.get('/profile/me'),
+          mentorshipService.getMyEndorsements(),
+        ]);
+
+        if (profRes.status === 'fulfilled') {
+          const profile = profRes.value.data?.data?.profile || null;
+          setProfileData(profile);
+          reset(getFormValues(profile, user));
+        } else if (profRes.reason?.response?.status !== 404) {
+          setSaveError(getErrorMessage(profRes.reason));
+          reset(getFormValues(null, user));
+        }
+
+        if (endRes.status === 'fulfilled') {
+          setEndorsements(Array.isArray(endRes.value) ? endRes.value : []);
+        }
       } catch (error) {
         if (error.response?.status !== 404) {
           setSaveError(getErrorMessage(error));
@@ -276,13 +292,36 @@ const Profile = () => {
             )}
 
             {displayedSkills.length > 0 && (
-              <SectionCard title="Skills" className="mb-6">
-                <div className="flex flex-wrap gap-2">
-                  {displayedSkills.map((skill) => (
-                    <span key={skill} className="px-3 py-1.5 rounded-md bg-orange-300/10 border border-orange-300/25 text-orange-200 text-xs font-semibold">
-                      {skill}
-                    </span>
-                  ))}
+              <SectionCard title="Skills & Alumni Endorsements" className="mb-6">
+                <div className="space-y-3">
+                  <div className="flex flex-wrap gap-2">
+                    {displayedSkills.map((skill) => {
+                      const end = endorsements.find(
+                        (e) =>
+                          (e.canonicalSkill && e.canonicalSkill === skill.toLowerCase()) ||
+                          e.skill.toLowerCase() === skill.toLowerCase()
+                      );
+
+                      return (
+                        <span
+                          key={skill}
+                          className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 ${
+                            end
+                              ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-300'
+                              : 'bg-orange-300/10 border border-orange-300/25 text-orange-200'
+                          }`}
+                        >
+                          {end && <Award className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
+                          {skill}
+                          {end && (
+                            <span className="text-[10px] text-emerald-400/80 font-normal ml-0.5">
+                              • Endorsed by {end.alumni?.fullName || 'Alumni Mentor'}
+                            </span>
+                          )}
+                        </span>
+                      );
+                    })}
+                  </div>
                 </div>
               </SectionCard>
             )}

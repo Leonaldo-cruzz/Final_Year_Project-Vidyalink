@@ -8,8 +8,25 @@ const createProject = asyncHandler(async (req, res) => {
 });
 
 const getProjects = asyncHandler(async (req, res) => {
-  const projects = await projectService.getProjects(req.user._id, req.query, req.user.role);
-  return ApiResponse.ok(res, 'Projects fetched successfully', projects);
+  const queryParams = req.validated?.query || req.query;
+  const result = await projectService.getProjects(req.user._id, queryParams, req.user.role);
+  const projects = Array.isArray(result) ? result : (result.projects || []);
+  const pagination = result.pagination || {
+    total: projects.length,
+    page: 1,
+    limit: projects.length || 12,
+    totalPages: 1,
+    hasMore: false,
+  };
+  return ApiResponse.ok(res, 'Projects fetched successfully', {
+    projects,
+    pagination,
+    total: pagination.total,
+    page: pagination.page,
+    limit: pagination.limit,
+    totalPages: pagination.totalPages,
+    hasMore: pagination.hasMore,
+  });
 });
 
 const getProjectById = asyncHandler(async (req, res) => {

@@ -5,6 +5,7 @@ import authorize from '../middleware/role.middleware.js';
 import validate from '../middleware/validate.middleware.js';
 import {
   approveVerificationSchema,
+  assignVerificationSchema,
   facultyVerificationDashboardSchema,
   facultyVerificationDetailSchema,
   rejectVerificationSchema,
@@ -63,6 +64,12 @@ router.patch(
   authorize('faculty', 'admin'),
   validate(requestChangesVerificationSchema),
   verificationController.requestChanges
+);
+router.patch(
+  '/:id/assign',
+  authorize('admin'),
+  validate(assignVerificationSchema),
+  verificationController.assign
 );
 
 export default router;

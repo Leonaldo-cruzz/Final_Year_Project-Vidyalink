@@ -121,6 +121,7 @@ export const createApp = () => {
   }));
   app.use(`${apiPrefix}/auth`, authRoutes);
   app.use(`${apiPrefix}/profile`, profileRoutes);
+  app.use(`${apiPrefix}/profiles`, profileRoutes);
   app.use(`${apiPrefix}/projects`, projectRoutes);
   app.use(`${apiPrefix}/applications`, applicationRoutes);
   app.use(`${apiPrefix}/workspaces`, workspaceRoutes);

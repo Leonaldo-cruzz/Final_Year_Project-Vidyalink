@@ -76,15 +76,39 @@ const mapAnalysis = (analysis) => ({
   sourceUpdatedAt: analysis.sourceUpdatedAt,
 });
 
-const stableValue = (value) => {
-  if (value instanceof Date) return value.toISOString();
-  if (Array.isArray(value)) return value.map(stableValue);
-  if (value && typeof value === 'object') {
-    return Object.keys(value).sort().reduce((result, key) => {
-      result[key] = stableValue(value[key]);
-      return result;
-    }, {});
+const stableValue = (value, seen = new WeakSet()) => {
+  if (value === null || value === undefined) return value;
+
+  if (typeof value?.toHexString === 'function') {
+    return value.toHexString();
   }
+
+  if (typeof value?.toObject === 'function') {
+    return stableValue(value.toObject(), seen);
+  }
+
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => stableValue(item, seen));
+  }
+
+  if (typeof value === 'object') {
+    if (seen.has(value)) return null;
+    seen.add(value);
+
+    return Object.keys(value)
+      .sort()
+      .reduce((result, key) => {
+        if (!key.startsWith('$') && !key.startsWith('_')) {
+          result[key] = stableValue(value[key], seen);
+        }
+        return result;
+      }, {});
+  }
+
   return value;
 };
 
@@ -287,17 +311,21 @@ class AIIntegrationService {
   }
 
   async getPortfolioSourceFingerprint(portfolio, studentId) {
-    const built = await this.buildPortfolioPayload(portfolio, studentId) || {};
+    const plainPortfolio = typeof portfolio?.toObject === 'function'
+      ? portfolio.toObject()
+      : portfolio;
+
+    const built = await this.buildPortfolioPayload(plainPortfolio, studentId) || {};
     const context = built.context || {};
     const project = built.project || null;
     const sourceSnapshot = {
       portfolio: {
-        id: toId(portfolio),
-        updatedAt: portfolio?.updatedAt,
-        issuedAt: portfolio?.issuedAt,
-        verificationHash: portfolio?.verificationHash,
-        skillsVerified: portfolio?.skillsVerified || [],
-        milestonesSummary: portfolio?.milestonesSummary || [],
+        id: toId(plainPortfolio),
+        updatedAt: plainPortfolio?.updatedAt,
+        issuedAt: plainPortfolio?.issuedAt,
+        verificationHash: plainPortfolio?.verificationHash,
+        skillsVerified: plainPortfolio?.skillsVerified || [],
+        milestonesSummary: plainPortfolio?.milestonesSummary || [],
       },
       project: project && {
         id: toId(project),

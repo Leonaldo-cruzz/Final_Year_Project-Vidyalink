@@ -14,6 +14,7 @@ import {
 } from '@/services/portfolioService';
 import { getVerificationHistory } from '@/services/verificationService';
 import { getLatestAIResults, runAIEvaluation } from '@/services/aiService';
+import mentorshipService from '@/services/mentorshipService';
 import { getErrorMessage } from '@/utils/formatters';
 import { ROUTES } from '@/constants';
 
@@ -23,6 +24,7 @@ const VerifiedPortfolio = () => {
 
   const [portfolios, setPortfolios] = useState([]);
   const [singlePortfolio, setSinglePortfolio] = useState(null);
+  const [endorsements, setEndorsements] = useState([]);
   const [verificationStatus, setVerificationStatus] = useState('NOT_SUBMITTED');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -37,10 +39,28 @@ const VerifiedPortfolio = () => {
         if (certificateId) {
           const res = await verifyCertificate(certificateId);
           setSinglePortfolio(res.data);
+          const studentId = res.data?.student?._id || res.data?.student;
+          if (studentId) {
+            try {
+              const endRes = await mentorshipService.getStudentEndorsements(studentId);
+              setEndorsements(Array.isArray(endRes) ? endRes : endRes?.data || []);
+            } catch {
+              // Ignore endorsement lookup error
+            }
+          }
         } else {
-          const res = await getMyPortfolios();
-          const nextPortfolios = res.data || [];
+          const [portRes, endRes] = await Promise.allSettled([
+            getMyPortfolios(),
+            mentorshipService.getMyEndorsements(),
+          ]);
+
+          const nextPortfolios = portRes.status === 'fulfilled' ? portRes.value?.data || [] : [];
           setPortfolios(nextPortfolios);
+
+          if (endRes.status === 'fulfilled') {
+            setEndorsements(Array.isArray(endRes.value) ? endRes.value : endRes.value?.data || []);
+          }
+
           if (nextPortfolios.length === 0) {
             try {
               const historyRes = await getVerificationHistory({ targetType: 'PROJECT' });
@@ -400,6 +420,42 @@ const VerifiedPortfolio = () => {
         <div className="space-y-6">
           {portfolios.map((p) => renderPortfolioCard(p, true))}
         </div>
+      )}
+
+      {/* Alumni Technical Skill Endorsements */}
+      {endorsements.length > 0 && (
+        <SectionCard
+          title="Alumni Skill Endorsements"
+          subtitle="Formal technical endorsements issued by verified university alumni"
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {endorsements.map((end) => (
+              <div
+                key={end._id}
+                className="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 space-y-2"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <Award className="w-3.5 h-3.5 text-emerald-400" />
+                    {end.skill}
+                  </span>
+                  <span className="text-[10px] text-emerald-300 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                    Alumni Endorsed
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300">
+                  Endorsed by <strong>{end.alumni?.fullName || 'Alumni Mentor'}</strong>
+                  {end.alumni?.college && ` • ${end.alumni.college}`}
+                </p>
+                {end.notes && (
+                  <p className="text-[11px] text-slate-400 italic bg-slate-900/60 p-2 rounded-lg border border-slate-800/80">
+                    "{end.notes}"
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </SectionCard>
       )}
     </div>
   );

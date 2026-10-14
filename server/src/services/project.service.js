@@ -2,7 +2,11 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import mongoose from 'mongoose';
 import Project from '../models/project.model.js';
+import User from '../models/user.model.js';
+import Profile from '../models/profile.model.js';
+import AIEvaluation from '../models/aiEvaluation.model.js';
 import ApiError from '../utils/ApiError.js';
 import {
   PROJECT_SCREENSHOT_DIRECTORY,
@@ -66,39 +70,284 @@ class ProjectService {
     return project;
   }
 
-  async getProjects(userId, { filter, search, sort } = {}, userRole = 'student') {
-    const query = ['alumni', 'recruiter'].includes(userRole)
-      ? { verificationStatus: 'Verified' }
-      : (userRole === 'admin' ? {} : { userId });
+  async getProjects(
+    userId,
+    {
+      branch,
+      graduationYear,
+      minAiScore,
+      maxAiScore,
+      category,
+      technology,
+      search,
+      filter,
+      sort,
+      page = 1,
+      limit = 12,
+    } = {},
+    userRole = 'student'
+  ) {
+    const isRecruiterOrAlumni = ['alumni', 'recruiter'].includes(userRole);
+    const isAdmin = userRole === 'admin';
 
-    if (filter === 'Verified' || filter === 'Pending') {
-      query.verificationStatus = filter;
-    } else if (filter === 'Completed' || filter === 'In Progress') {
+    const hasCandidateFilter = Boolean(
+      (branch !== undefined && branch !== null && branch !== '') ||
+      (graduationYear !== undefined && graduationYear !== null && graduationYear !== '') ||
+      (minAiScore !== undefined && minAiScore !== null && minAiScore !== '') ||
+      (maxAiScore !== undefined && maxAiScore !== null && maxAiScore !== '')
+    );
+
+    if (hasCandidateFilter && !['recruiter', 'admin', 'alumni'].includes(userRole)) {
+      throw ApiError.forbidden('Candidate search filters are restricted to recruiters and administrators');
+    }
+
+    const query = {};
+
+    if (isRecruiterOrAlumni) {
+      // Security: Recruiters and alumni can ONLY ever discover Verified projects
+      query.verificationStatus = 'Verified';
+    } else if (isAdmin) {
+      if (filter === 'Verified' || filter === 'Pending' || filter === 'Rejected') {
+        query.verificationStatus = filter;
+      }
+    } else {
+      query.userId = userId;
+      if (filter === 'Verified' || filter === 'Pending' || filter === 'Rejected') {
+        query.verificationStatus = filter;
+      }
+    }
+
+    if (['Completed', 'In Progress', 'Prototype', 'Archived'].includes(filter)) {
       query.projectStatus = filter;
     } else if (filter === 'Featured') {
       query.featured = true;
     }
 
+    if (category && category !== 'All') {
+      query.category = category;
+    }
+
+    if (technology && technology.trim()) {
+      query.technologies = {
+        $elemMatch: { $regex: new RegExp(escapeRegExp(technology.trim()), 'i') },
+      };
+    }
+
     if (search?.trim()) {
       const searchRegex = new RegExp(escapeRegExp(search.trim()), 'i');
-      query.$or = [
-        { title: searchRegex },
-        { shortDescription: searchRegex },
-        { detailedDescription: searchRegex },
-        { domain: searchRegex },
-        { technologies: searchRegex },
-      ];
+      query.$and = query.$and || [];
+      query.$and.push({
+        $or: [
+          { title: searchRegex },
+          { shortDescription: searchRegex },
+          { detailedDescription: searchRegex },
+          { domain: searchRegex },
+          { technologies: searchRegex },
+        ],
+      });
     }
+
+    let candidateStudentFilterApplied = false;
+    let matchingCandidateUserIds = null;
+
+    if (branch && branch.trim()) {
+      candidateStudentFilterApplied = true;
+      const branchRegex = new RegExp(escapeRegExp(branch.trim()), 'i');
+      const [usersWithBranch, profilesWithBranch] = await Promise.all([
+        User.find({ role: 'student', branch: branchRegex }).select('_id'),
+        Profile.find({ branch: branchRegex }).select('user'),
+      ]);
+
+      const branchIds = new Set([
+        ...usersWithBranch.map((u) => u._id.toString()),
+        ...profilesWithBranch.map((p) => p.user?.toString()).filter(Boolean),
+      ]);
+      matchingCandidateUserIds = branchIds;
+    }
+
+    if (graduationYear !== undefined && graduationYear !== null && graduationYear !== '') {
+      candidateStudentFilterApplied = true;
+      const gradYearNum = Number(graduationYear);
+      const [usersWithGrad, profilesWithGrad] = await Promise.all([
+        User.find({ role: 'student', graduationYear: gradYearNum }).select('_id'),
+        Profile.find({ graduationYear: gradYearNum }).select('user'),
+      ]);
+
+      const gradIds = new Set([
+        ...usersWithGrad.map((u) => u._id.toString()),
+        ...profilesWithGrad.map((p) => p.user?.toString()).filter(Boolean),
+      ]);
+
+      if (matchingCandidateUserIds === null) {
+        matchingCandidateUserIds = gradIds;
+      } else {
+        matchingCandidateUserIds = new Set(
+          [...matchingCandidateUserIds].filter((id) => gradIds.has(id))
+        );
+      }
+    }
+
+    if (
+      (minAiScore !== undefined && minAiScore !== null && minAiScore !== '') ||
+      (maxAiScore !== undefined && maxAiScore !== null && maxAiScore !== '')
+    ) {
+      candidateStudentFilterApplied = true;
+      const minScore =
+        minAiScore !== undefined && minAiScore !== null && minAiScore !== ''
+          ? Number(minAiScore)
+          : null;
+      const maxScore =
+        maxAiScore !== undefined && maxAiScore !== null && maxAiScore !== ''
+          ? Number(maxAiScore)
+          : null;
+
+      const scoreMatch = {};
+      if (minScore !== null) scoreMatch.$gte = minScore;
+      if (maxScore !== null) scoreMatch.$lte = maxScore;
+
+      const pipeline = [
+        { $sort: { createdAt: -1 } },
+        {
+          $group: {
+            _id: '$studentId',
+            latestScore: { $first: '$overallScore' },
+          },
+        },
+        {
+          $match: {
+            latestScore: scoreMatch,
+          },
+        },
+      ];
+
+      const matchingEvals = await AIEvaluation.aggregate(pipeline);
+      const aiScoreUserIds = new Set(matchingEvals.map((e) => e._id.toString()));
+
+      if (matchingCandidateUserIds === null) {
+        matchingCandidateUserIds = aiScoreUserIds;
+      } else {
+        matchingCandidateUserIds = new Set(
+          [...matchingCandidateUserIds].filter((id) => aiScoreUserIds.has(id))
+        );
+      }
+    }
+
+    if (candidateStudentFilterApplied) {
+      const idsArray = Array.from(matchingCandidateUserIds);
+      if (idsArray.length === 0) {
+        query.userId = { $in: [] };
+      } else {
+        const objectIds = idsArray.map((id) => new mongoose.Types.ObjectId(id));
+        if (query.userId) {
+          if (!matchingCandidateUserIds.has(query.userId.toString())) {
+            query.userId = { $in: [] };
+          }
+        } else {
+          query.userId = { $in: objectIds };
+        }
+      }
+    }
+
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 12));
+    const skip = (pageNum - 1) * limitNum;
+
+    const total = await Project.countDocuments(query);
+    const totalPages = Math.max(1, Math.ceil(total / limitNum));
+    const hasMore = pageNum < totalPages;
 
     const sortOptions = {
       Oldest: { createdAt: 1 },
       'A-Z': { title: 1 },
       'Recently Updated': { updatedAt: -1 },
+      Newest: { createdAt: -1 },
+    };
+    const sortCriteria = sortOptions[sort] || { createdAt: -1 };
+
+    const rawProjects = await Project.find(query)
+      .populate('userId', 'fullName email avatar college branch graduationYear')
+      .sort(sortCriteria)
+      .skip(skip)
+      .limit(limitNum);
+
+    const studentIds = [
+      ...new Set(
+        rawProjects
+          .map((p) => (p.userId?._id ? p.userId._id.toString() : p.userId?.toString()))
+          .filter(Boolean)
+      ),
+    ];
+
+    let evalMap = new Map();
+    let profileMap = new Map();
+
+    if (studentIds.length > 0) {
+      const studentObjectIds = studentIds.map((id) => new mongoose.Types.ObjectId(id));
+      const [evaluations, profiles] = await Promise.all([
+        AIEvaluation.find({ studentId: { $in: studentObjectIds } }).sort({ createdAt: -1 }),
+        Profile.find({ user: { $in: studentObjectIds } }).select('user branch graduationYear college'),
+      ]);
+
+      evaluations.forEach((ev) => {
+        const sId = ev.studentId?.toString();
+        if (sId && !evalMap.has(sId)) {
+          evalMap.set(sId, ev);
+        }
+      });
+
+      profiles.forEach((pr) => {
+        const uId = pr.user?.toString();
+        if (uId && !profileMap.has(uId)) {
+          profileMap.set(uId, pr);
+        }
+      });
+    }
+
+    const projects = rawProjects.map((p) => {
+      const obj = p.toObject ? p.toObject() : { ...p };
+      const sId = obj.userId?._id ? obj.userId._id.toString() : obj.userId?.toString();
+      const evaluation = sId ? evalMap.get(sId) : null;
+      const profile = sId ? profileMap.get(sId) : null;
+
+      if (obj.userId && typeof obj.userId === 'object') {
+        if (!obj.userId.branch && profile?.branch) {
+          obj.userId.branch = profile.branch;
+        }
+        if (!obj.userId.graduationYear && profile?.graduationYear) {
+          obj.userId.graduationYear = profile.graduationYear;
+        }
+        if (!obj.userId.college && profile?.college) {
+          obj.userId.college = profile.college;
+        }
+      }
+
+      if (evaluation) {
+        obj.aiEvaluation = evaluation;
+        obj.aiScore = evaluation.overallScore;
+      } else {
+        obj.aiEvaluation = null;
+        obj.aiScore = null;
+      }
+
+      return obj;
+    });
+
+    const pagination = {
+      total,
+      page: pageNum,
+      limit: limitNum,
+      totalPages,
+      hasMore,
     };
 
-    return Project.find(query)
-      .populate('userId', 'fullName email avatar college branch graduationYear')
-      .sort(sortOptions[sort] || { createdAt: -1 });
+    projects.pagination = pagination;
+    projects.total = total;
+    projects.page = pageNum;
+    projects.limit = limitNum;
+    projects.totalPages = totalPages;
+    projects.hasMore = hasMore;
+
+    return projects;
   }
 
   async getProjectById(userId, id, userRole = 'student') {

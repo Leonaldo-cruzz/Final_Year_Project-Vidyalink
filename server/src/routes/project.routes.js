@@ -6,6 +6,7 @@ import projectScreenshotUpload from '../middleware/projectScreenshotUpload.middl
 import validate from '../middleware/validate.middleware.js';
 import {
   createProjectSchema,
+  getProjectsQuerySchema,
   updateProjectSchema,
 } from '../validators/project.validator.js';
 
@@ -20,7 +21,12 @@ router.post(
   validate(createProjectSchema),
   projectController.createProject
 );
-router.get('/', authorize('student', 'recruiter', 'faculty', 'alumni', 'admin'), projectController.getProjects);
+router.get(
+  '/',
+  authorize('student', 'recruiter', 'faculty', 'alumni', 'admin'),
+  validate(getProjectsQuerySchema),
+  projectController.getProjects
+);
 router.get('/:id', authorize('student', 'recruiter', 'faculty', 'alumni', 'admin'), projectController.getProjectById);
 router.post('/:id/verify-deployment', authorize('student', 'admin'), projectController.verifyDeployment);
 router.put(

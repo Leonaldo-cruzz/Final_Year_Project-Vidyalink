@@ -1,5 +1,18 @@
 import React from 'react';
-import { CheckCircle2, Code2 as Github, ExternalLink, Eye, FilePenLine, Image as ImageIcon, Loader2, Star, Trash2, WifiOff, XCircle } from 'lucide-react';
+import {
+  CheckCircle2,
+  Code2 as Github,
+  ExternalLink,
+  Eye,
+  FilePenLine,
+  Image as ImageIcon,
+  Loader2,
+  Sparkles,
+  Star,
+  Trash2,
+  WifiOff,
+  XCircle,
+} from 'lucide-react';
 
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
@@ -49,18 +62,20 @@ const ProjectCard = ({ project, onView, onEdit, onDelete, onToggleFeatured }) =>
             <ImageIcon className="h-10 w-10 text-blue-300/40" />
           </div>
         )}
-        <button
-          type="button"
-          onClick={() => onToggleFeatured?.(project)}
-          className={`absolute right-3 top-3 rounded-md border p-2 ${
-            project.featured
-              ? 'border-amber-400/50 bg-amber-500/20 text-amber-300'
-              : 'border-slate-700 bg-slate-950/80 text-slate-400 hover:text-amber-300'
-          }`}
-          aria-label={project.featured ? 'Remove featured flag' : 'Mark project as featured'}
-        >
-          <Star className="h-4 w-4" fill={project.featured ? 'currentColor' : 'none'} />
-        </button>
+        {onToggleFeatured && (
+          <button
+            type="button"
+            onClick={() => onToggleFeatured?.(project)}
+            className={`absolute right-3 top-3 rounded-md border p-2 ${
+              project.featured
+                ? 'border-amber-400/50 bg-amber-500/20 text-amber-300'
+                : 'border-slate-700 bg-slate-950/80 text-slate-400 hover:text-amber-300'
+            }`}
+            aria-label={project.featured ? 'Remove featured flag' : 'Mark project as featured'}
+          >
+            <Star className="h-4 w-4" fill={project.featured ? 'currentColor' : 'none'} />
+          </button>
+        )}
       </div>
 
       <div className="flex flex-1 flex-col p-5">
@@ -74,6 +89,15 @@ const ProjectCard = ({ project, onView, onEdit, onDelete, onToggleFeatured }) =>
             <Badge variant={VERIFICATION_VARIANTS[project.verificationStatus] || 'slate'} size="sm">
               {project.verificationStatus}
             </Badge>
+          )}
+          {project.aiScore !== undefined && project.aiScore !== null && (
+            <span
+              className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40"
+              title="Verified AI Evaluation Score"
+            >
+              <Sparkles className="h-3 w-3 text-purple-400" />
+              AI Score: {project.aiScore}/100
+            </span>
           )}
           {/* GitHub source indicator — non-intrusive, not a verification badge */}
           {project.githubSource === 'github_sync' && (
@@ -97,6 +121,24 @@ const ProjectCard = ({ project, onView, onEdit, onDelete, onToggleFeatured }) =>
         </div>
 
         <h3 className="line-clamp-2 text-lg font-bold leading-snug text-white">{project.title}</h3>
+
+        {project.userId && (project.userId.fullName || project.userId.branch) && (
+          <div className="mt-1 mb-2 text-xs text-slate-400 flex items-center gap-1.5 flex-wrap">
+            {project.userId.fullName && (
+              <span className="font-semibold text-slate-200">{project.userId.fullName}</span>
+            )}
+            {(project.userId.branch || project.userId.graduationYear) && (
+              <span className="text-slate-500">•</span>
+            )}
+            {project.userId.branch && (
+              <span className="text-slate-300">{project.userId.branch}</span>
+            )}
+            {project.userId.graduationYear && (
+              <span className="text-slate-400">Class of {project.userId.graduationYear}</span>
+            )}
+          </div>
+        )}
+
         {description && (
           <p className="mt-2 line-clamp-3 min-h-[3.75rem] text-sm leading-relaxed text-slate-400">
             {description}
@@ -161,22 +203,26 @@ const ProjectCard = ({ project, onView, onEdit, onDelete, onToggleFeatured }) =>
             </a>
           )}
           <div className="ml-auto flex gap-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="xs"
-              leftIcon={FilePenLine}
-              onClick={() => onEdit(project)}
-              aria-label="Edit project"
-            />
-            <Button
-              type="button"
-              variant="danger"
-              size="xs"
-              leftIcon={Trash2}
-              onClick={() => onDelete(project)}
-              aria-label="Delete project"
-            />
+            {onEdit && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="xs"
+                leftIcon={FilePenLine}
+                onClick={() => onEdit(project)}
+                aria-label="Edit project"
+              />
+            )}
+            {onDelete && (
+              <Button
+                type="button"
+                variant="danger"
+                size="xs"
+                leftIcon={Trash2}
+                onClick={() => onDelete(project)}
+                aria-label="Delete project"
+              />
+            )}
           </div>
         </div>
       </div>

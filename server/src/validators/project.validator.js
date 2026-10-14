@@ -84,5 +84,68 @@ const updateProjectBodySchema = createProjectBodySchema.partial().extend({
   existingScreenshots: screenshotsSchema,
 });
 
+const parseOptionalNumber = (value) => {
+  if (value === undefined || value === null || value === '') return undefined;
+  const num = Number(value);
+  return Number.isNaN(num) ? value : num;
+};
+
+export const getProjectsQuerySchema = z.object({
+  query: z
+    .object({
+      branch: z.string().trim().max(100).optional(),
+      graduationYear: z.preprocess(
+        parseOptionalNumber,
+        z
+          .number({ invalid_type_error: 'Graduation year must be a valid number' })
+          .int('Graduation year must be an integer')
+          .min(1900, 'Graduation year must be after 1900')
+          .max(2100, 'Graduation year must be before 2100')
+          .optional()
+      ),
+      minAiScore: z.preprocess(
+        parseOptionalNumber,
+        z
+          .number({ invalid_type_error: 'Minimum AI score must be a valid number' })
+          .min(0, 'Minimum AI score must be at least 0')
+          .max(100, 'Minimum AI score cannot exceed 100')
+          .optional()
+      ),
+      maxAiScore: z.preprocess(
+        parseOptionalNumber,
+        z
+          .number({ invalid_type_error: 'Maximum AI score must be a valid number' })
+          .min(0, 'Maximum AI score must be at least 0')
+          .max(100, 'Maximum AI score cannot exceed 100')
+          .optional()
+      ),
+      category: z.string().trim().max(100).optional(),
+      technology: z.string().trim().max(100).optional(),
+      search: z.string().trim().max(200).optional(),
+      filter: z.string().trim().max(50).optional(),
+      sort: z.string().trim().max(50).optional(),
+      page: z.preprocess(
+        parseOptionalNumber,
+        z.number({ invalid_type_error: 'Page must be a valid number' }).int('Page must be an integer').min(1, 'Page must be at least 1').optional()
+      ),
+      limit: z.preprocess(
+        parseOptionalNumber,
+        z.number({ invalid_type_error: 'Limit must be a valid number' }).int('Limit must be an integer').min(1, 'Limit must be at least 1').max(100, 'Limit cannot exceed 100').optional()
+      ),
+    })
+    .refine(
+      (data) => {
+        if (data.minAiScore !== undefined && data.maxAiScore !== undefined) {
+          return data.minAiScore <= data.maxAiScore;
+        }
+        return true;
+      },
+      {
+        message: 'Minimum AI score cannot exceed maximum AI score',
+        path: ['minAiScore'],
+      }
+    ),
+});
+
 export const createProjectSchema = z.object({ body: createProjectBodySchema });
 export const updateProjectSchema = z.object({ body: updateProjectBodySchema });
