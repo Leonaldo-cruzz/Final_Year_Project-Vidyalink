@@ -15,6 +15,7 @@
     "test:ai-validation": "node src/scripts/ai-validation-suite.js",
     "seed": "node src/scripts/seed.js",
     "seed:rich": "node src/scripts/seed-rich-demo.js",
+    "create:admin": "node src/scripts/create-admin.js",
     "lint": "eslint . --ext js --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {

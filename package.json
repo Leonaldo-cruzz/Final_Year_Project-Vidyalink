@@ -31,6 +31,7 @@
     "test:all": "npm run test:client && npm run test:server && npm run test:ai",
     "seed": "npm run seed --workspace=server",
     "seed:rich": "npm run seed:rich --workspace=server",
+    "create:admin": "npm run create:admin --workspace=server",
     "lint": "npm run lint --workspaces --if-present",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
     "clean": "rimraf client/dist server/dist node_modules/.cache"

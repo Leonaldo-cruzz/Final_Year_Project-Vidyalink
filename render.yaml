@@ -1,0 +1,74 @@
+# ============================================================
+# VIDYALINK — Render Infrastructure-as-Code Blueprint
+# ============================================================
+# Docs: https://render.com/docs/blueprint-spec
+# ============================================================
+
+services:
+  # ─────────────────────────────────────────────────────────────
+  # 1. VIDYALINK Express REST API Backend
+  # ─────────────────────────────────────────────────────────────
+  - type: web
+    name: vidyalink-api
+    runtime: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: API_PREFIX
+        value: /api/v1
+      - key: TRUST_PROXY
+        value: "true"
+      - key: COOKIE_SAME_SITE
+        value: none
+      - key: MONGODB_URI
+        sync: false # Set to your MongoDB Atlas SRV connection string
+      - key: JWT_SECRET
+        generateValue: true # Render automatically generates a 64-char crypto string
+      - key: JWT_REFRESH_SECRET
+        generateValue: true # Render automatically generates a 64-char crypto string
+      - key: JWT_EXPIRES_IN
+        value: 15m
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 7d
+      - key: CLIENT_URL
+        sync: false # Set to your live frontend URL (e.g., https://vidyalink.vercel.app)
+      - key: CORS_ORIGIN
+        sync: false # Set to your live frontend URL (e.g., https://vidyalink.vercel.app)
+      - key: AI_SERVICE_URL
+        sync: false # Set to your deployed AI service URL (e.g., https://vidyalink-ai.onrender.com)
+      - key: AI_SERVICE_TIMEOUT
+        value: "60000"
+      - key: AI_ORCHESTRATION_TIMEOUT
+        value: "90000"
+      - key: RATE_LIMIT_WINDOW_MS
+        value: "900000"
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: "300"
+
+  # ─────────────────────────────────────────────────────────────
+  # 2. VIDYALINK FastAPI AI Analytics Engine
+  # ─────────────────────────────────────────────────────────────
+  - type: web
+    name: vidyalink-ai
+    runtime: python
+    rootDir: ai-service
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn src.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: HOST
+        value: 0.0.0.0
+      - key: AI_PROVIDER
+        value: deterministic
+      - key: ALLOWED_ORIGINS
+        value: "*"
