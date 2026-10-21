@@ -131,9 +131,11 @@ const validateRecommendations = (payload) => {
 };
 
 class AIServiceClient {
-  constructor({ baseUrl = env.AI_SERVICE_URL, timeoutMs = env.AI_SERVICE_TIMEOUT } = {}) {
+  constructor({ baseUrl = env.AI_SERVICE_URL, timeoutMs = env.AI_SERVICE_TIMEOUT, apiKey = env.AI_SERVICE_API_KEY } = {}) {
     this.baseUrl = baseUrl.replace(/\/$/, '');
     this.timeoutMs = timeoutMs;
+    // The secret is stored but must never be written to logs or error responses.
+    this.apiKey = apiKey;
   }
 
   async request(path, { method = 'GET', body, validate } = {}) {
@@ -142,9 +144,14 @@ class AIServiceClient {
     const startMs = Date.now();
 
     try {
+      const outboundHeaders = {};
+      if (body) outboundHeaders['Content-Type'] = 'application/json';
+      // Attach the shared secret on every call so FastAPI can authenticate it.
+      if (this.apiKey) outboundHeaders['X-VIDYALINK-INTERNAL-KEY'] = this.apiKey;
+
       const response = await fetch(`${this.baseUrl}${path}`, {
         method,
-        headers: body ? { 'Content-Type': 'application/json' } : undefined,
+        headers: outboundHeaders,
         body: body ? JSON.stringify(body) : undefined,
         signal: controller.signal,
       });

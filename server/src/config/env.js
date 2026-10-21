@@ -11,10 +11,14 @@ const serverEnvPath = path.resolve(__dirname, '../../.env');
 dotenv.config({ path: rootEnvPath });
 dotenv.config({ path: serverEnvPath });
 
+// In production the AI_SERVICE_API_KEY must be present so the service
+// never starts unauthenticated. In non-production environments it is optional
+// to keep local development and automated tests unaffected.
 const requiredEnvVars = [
   'JWT_SECRET',
   'JWT_REFRESH_SECRET',
   'MONGODB_URI',
+  ...(process.env.NODE_ENV === 'production' ? ['AI_SERVICE_API_KEY'] : []),
 ];
 
 const missingEnvVars = requiredEnvVars.filter(
@@ -53,6 +57,9 @@ export const env = Object.freeze({
   AI_SERVICE_TIMEOUT: Number.parseInt(process.env.AI_SERVICE_TIMEOUT, 10) || 30_000,
   AI_ORCHESTRATION_TIMEOUT: Number.parseInt(process.env.AI_ORCHESTRATION_TIMEOUT, 10) || 90_000,
   AI_PROVIDER: process.env.AI_PROVIDER || 'deterministic',
+  // Shared secret used to authenticate Node → FastAPI calls.
+  // Required in production; optional in development/test.
+  AI_SERVICE_API_KEY: process.env.AI_SERVICE_API_KEY || '',
 });
 
 export default env;

@@ -1,6 +1,7 @@
 """FastAPI entrypoint for the VIDYALINK AI service."""
 
 import logging
+import sys
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -15,6 +16,18 @@ from src.routes import ats, github, health, portfolio, recommendations, skills
 logger = logging.getLogger("vidyalink-ai-service")
 settings = get_settings()
 
+# ── Production start-up guard ──────────────────────────────────────────────
+# If running in production and the shared secret is absent we refuse to start
+# rather than silently operating without authentication.  This mirrors the
+# NODE_ENV=production check in the Node.js env.js.
+if settings.is_production and not settings.ai_service_api_key:
+    logger.critical(
+        "AI_SERVICE_API_KEY is required in production but was not set. "
+        "Configure the environment variable and restart the service."
+    )
+    sys.exit(1)
+# ──────────────────────────────────────────────────────────────────────────
+
 app = FastAPI(
     title="VIDYALINK AI Service",
     description="Explainable, deterministic portfolio and career-readiness analytics.",
@@ -28,7 +41,8 @@ app.add_middleware(
     allow_origins=settings.allowed_origins_list,
     allow_credentials=False,
     allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type"],
+    # Include the internal auth header so CORS pre-flight passes it through.
+    allow_headers=["Authorization", "Content-Type", "X-VIDYALINK-INTERNAL-KEY"],
 )
 
 app.include_router(health.router)

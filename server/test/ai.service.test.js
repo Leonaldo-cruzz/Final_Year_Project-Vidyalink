@@ -5,6 +5,9 @@ process.env.JWT_SECRET ||= 'test-jwt-secret-test-jwt-secret-test';
 process.env.JWT_REFRESH_SECRET ||= 'test-refresh-secret-test-refresh-secret';
 process.env.MONGODB_URI ||= 'mongodb://127.0.0.1:27017/vidyalink-test';
 process.env.AI_PROVIDER ||= 'deterministic';
+// Explicitly provide an empty key so tests aren't affected by any
+// AI_SERVICE_API_KEY present in the surrounding shell environment.
+process.env.AI_SERVICE_API_KEY ||= '';
 
 const {
   AIServiceClient,
@@ -226,4 +229,83 @@ test('portfolio persistence writes only the validated AI response fields', async
   assert.equal(saved.overallScore, 82);
   assert.equal(saved.provider, 'deterministic');
   assert.equal(Object.hasOwn(saved, 'apiKey'), false);
+});
+
+// ── Auth header regression tests ──────────────────────────────────────────
+
+test('configured AI_SERVICE_API_KEY is forwarded in X-VIDYALINK-INTERNAL-KEY header', async () => {
+  const testKey = 'test-internal-secret-for-header-check';
+  let capturedHeaders;
+
+  globalThis.fetch = async (_url, options) => {
+    capturedHeaders = options.headers || {};
+    return response(portfolioResponse);
+  };
+
+  await new AIServiceClient({ baseUrl: 'http://ai.test', apiKey: testKey }).evaluatePortfolio(
+    { projects: [{ title: 'T', verified: true }] }
+  );
+
+  assert.equal(capturedHeaders['X-VIDYALINK-INTERNAL-KEY'], testKey,
+    'The auth header must be present and equal to the configured key');
+});
+
+test('no auth header is sent when AI_SERVICE_API_KEY is empty', async () => {
+  let capturedHeaders;
+
+  globalThis.fetch = async (_url, options) => {
+    capturedHeaders = options.headers || {};
+    return response(portfolioResponse);
+  };
+
+  // apiKey defaults to env.AI_SERVICE_API_KEY which we set to '' above.
+  await new AIServiceClient({ baseUrl: 'http://ai.test', apiKey: '' }).evaluatePortfolio(
+    { projects: [{ title: 'T', verified: true }] }
+  );
+
+  assert.equal(
+    Object.hasOwn(capturedHeaders, 'X-VIDYALINK-INTERNAL-KEY'), false,
+    'The auth header must NOT be sent when no key is configured'
+  );
+});
+
+test('HTTP 401 from AI service (missing key) is converted to 502', async () => {
+  globalThis.fetch = async () => response({ detail: 'Authentication required' }, 401);
+
+  await assert.rejects(
+    () => new AIServiceClient({ baseUrl: 'http://ai.test' }).evaluatePortfolio({}),
+    (error) => error.statusCode === 502
+  );
+});
+
+test('HTTP 403 from AI service (wrong key) is converted to 502', async () => {
+  globalThis.fetch = async () => response({ detail: 'Invalid service key' }, 403);
+
+  await assert.rejects(
+    () => new AIServiceClient({ baseUrl: 'http://ai.test' }).analyzeATS({}),
+    (error) => error.statusCode === 502
+  );
+});
+
+test('auth header value is never logged in observability output', async () => {
+  const testKey = 'secret-that-must-not-appear-in-logs';
+  const logMessages = [];
+  const origInfo = console.info;
+  const origWarn = console.warn;
+  console.info = (...args) => logMessages.push(args.join(' '));
+  console.warn = (...args) => logMessages.push(args.join(' '));
+
+  try {
+    globalThis.fetch = async () => response(portfolioResponse);
+    await new AIServiceClient({ baseUrl: 'http://ai.test', apiKey: testKey }).evaluatePortfolio(
+      { projects: [] }
+    );
+  } finally {
+    console.info = origInfo;
+    console.warn = origWarn;
+  }
+
+  for (const msg of logMessages) {
+    assert.ok(!msg.includes(testKey), `Log output must not contain the secret. Found: ${msg}`);
+  }
 });

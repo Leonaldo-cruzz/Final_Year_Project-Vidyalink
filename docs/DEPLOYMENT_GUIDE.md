@@ -45,8 +45,9 @@ This guide provides end-to-end instructions for deploying the **VIDYALINK** plat
    - Securely save the username and password.
 3. **Configure Network Access:**
    - Go to **Security > Network Access > Add IP Access List Entry**.
-   - Select **Allow Access from Anywhere** (`0.0.0.0/0`).
-   - *Note: Render outbound IP addresses are dynamic. Restricting IPs requires a paid static outbound IP add-on on Render.*
+   - Add **Render's published outbound IP addresses** for your service's region (find them in Render Dashboard → your service → "Outbound IPs").
+   - Avoid using `0.0.0.0/0` (Allow from Anywhere); it exposes Atlas to the public internet.
+   - *Note: Dynamic outbound IPs require re-allowlisting after region changes. A static IP add-on is available on Render paid plans.*
 4. **Copy Connection String:**
    - Click **Connect > Drivers (Node.js)**.
    - Format: `mongodb+srv://<username>:<password>@<cluster-address>/vidyalink?retryWrites=true&w=majority`
@@ -70,7 +71,17 @@ You can deploy both services automatically using the provided `render.yaml` Blue
    - `CLIENT_URL`: `https://<your-project>.vercel.app` (or temporary placeholder if frontend is not yet created).
    - `CORS_ORIGIN`: Same as `CLIENT_URL`.
    - `AI_SERVICE_URL`: URL of the deployed AI service (`https://vidyalink-ai.onrender.com`).
+   - `AI_SERVICE_API_KEY` (**both services**): A shared high-entropy random secret. See the key generation note below — set the **identical value** in both `vidyalink-api` and `vidyalink-ai` manually after the blueprint runs.
 6. Click **Apply**.
+
+> **⚠️ Internal service secret — `AI_SERVICE_API_KEY`**
+> This shared secret authenticates every call from the Node.js backend to the FastAPI AI service.
+> Generate it **once** locally and configure it independently in **both** Render services:
+> ```bash
+> node -e "require('crypto').randomBytes(32).toString('hex')"
+> ```
+> Paste the output into Render's Environment Variables UI for `vidyalink-api` **and** `vidyalink-ai`.
+> Never commit the generated value to Git, logs, or documentation.
 
 ### Option B: Manual Service Creation
 
@@ -85,7 +96,9 @@ You can deploy both services automatically using the provided `render.yaml` Blue
   - `PYTHON_VERSION`: `3.12.0`
   - `HOST`: `0.0.0.0`
   - `AI_PROVIDER`: `deterministic`
-  - `ALLOWED_ORIGINS`: `*`
+  - `ALLOWED_ORIGINS`: `https://<your-vercel-domain>.vercel.app`
+  - `AI_ENV`: `production`
+  - `AI_SERVICE_API_KEY`: *(same high-entropy secret as `vidyalink-api` — see key generation note)*
 
 #### 2. Express API Service (`server`)
 - **Service Type:** Web Service
@@ -110,6 +123,7 @@ You can deploy both services automatically using the provided `render.yaml` Blue
   - `AI_SERVICE_URL`: `https://<your-ai-service>.onrender.com`
   - `AI_SERVICE_TIMEOUT`: `60000`
   - `AI_ORCHESTRATION_TIMEOUT`: `90000`
+  - `AI_SERVICE_API_KEY`: *(same high-entropy secret as `vidyalink-ai` — see key generation note)*
 
 > **Secret Generation Tip:**
 > Generate 32+ byte cryptographic keys using:
@@ -159,20 +173,27 @@ npm run create:admin
 Run these quick checks against your deployed endpoints:
 
 ```bash
-# 1. Verify AI Service Health:
+# 1. Verify AI Service Health (no auth required):
 curl -f https://<ai-service>.onrender.com/health
 # Expected: {"status":"ok","service":"vidyalink-ai"}
 
-# 2. Verify Backend API Health:
+# 2. Verify that AI endpoints require the secret (expect 401 without it):
+curl -s -o /dev/null -w "%{http_code}" \
+  -X POST https://<ai-service>.onrender.com/api/v1/ats/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"resume_text":"test"}'
+# Expected: 401
+
+# 3. Verify Backend API Health:
 curl -f https://<backend-api>.onrender.com/api/v1/health
 # Expected: {"status":"success","message":"Service is healthy", ...}
 
-# 3. Test Student Registration & Auth:
+# 4. Test Student Registration & Auth:
 curl -X POST https://<backend-api>.onrender.com/api/v1/auth/register \
   -H "Content-Type: application/json" \
   -d '{"fullName":"Test Candidate","email":"test.candidate@domain.com","password":"Password123!","role":"student"}'
 
-# 4. Open frontend in browser:
+# 5. Open frontend in browser:
 # Navigate to https://<frontend>.vercel.app/login and test user login.
 ```
 

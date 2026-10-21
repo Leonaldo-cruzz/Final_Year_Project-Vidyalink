@@ -51,6 +51,8 @@ services:
         value: "900000"
       - key: RATE_LIMIT_MAX_REQUESTS
         value: "300"
+      - key: AI_SERVICE_API_KEY
+        sync: false # REQUIRED: generate with `node -e "require('crypto').randomBytes(32).toString('hex')"` and set the SAME value in vidyalink-ai
 
   # ─────────────────────────────────────────────────────────────
   # 2. VIDYALINK FastAPI AI Analytics Engine
@@ -71,4 +73,8 @@ services:
       - key: AI_PROVIDER
         value: deterministic
       - key: ALLOWED_ORIGINS
-        value: "*"
+        sync: false # Set to your live frontend URL (e.g., https://vidyalink.vercel.app)
+      - key: AI_ENV
+        value: production
+      - key: AI_SERVICE_API_KEY
+        sync: false # REQUIRED: set the SAME high-entropy secret as vidyalink-api.AI_SERVICE_API_KEY
