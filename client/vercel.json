@@ -3,6 +3,14 @@
   "cleanUrls": true,
   "rewrites": [
     {
+      "source": "/api/:path*",
+      "destination": "https://vidyalink-api.onrender.com/api/:path*"
+    },
+    {
+      "source": "/uploads/:path*",
+      "destination": "https://vidyalink-api.onrender.com/uploads/:path*"
+    },
+    {
       "source": "/((?!api/|uploads/).*)",
       "destination": "/index.html"
     }
