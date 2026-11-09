@@ -11,7 +11,7 @@
       "destination": "https://vidyalink-api.onrender.com/uploads/:path*"
     },
     {
-      "source": "/((?!api/|uploads/).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ],
