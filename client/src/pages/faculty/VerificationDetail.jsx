@@ -66,7 +66,7 @@ const VerificationDetail = () => {
       setError('');
       const response = await getFacultyVerificationDetail(verificationId);
       setDetail(response.data);
-      const portfolioId = response.data?.portfolio?._id;
+      const portfolioId = response.data?.aiPortfolioId;
       if (portfolioId) {
         getLatestAIResults(portfolioId)
           .then((aiRes) => setAiInsight(aiRes.data?.data || aiRes.data))

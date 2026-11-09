@@ -19,7 +19,7 @@ class MentorshipService {
     ]);
 
     if (!student) throw ApiError.notFound('Student not found');
-    if (!alumni) throw ApiError.notFound('Alumni mentor not found');
+    if (!alumni || alumni.role !== 'alumni') throw ApiError.notFound('Alumni mentor not found');
 
     const existingPending = await Mentorship.findOne({
       student: studentId,

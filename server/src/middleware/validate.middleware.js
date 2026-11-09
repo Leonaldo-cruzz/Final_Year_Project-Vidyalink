@@ -17,13 +17,8 @@ const validate = (schema) => (req, _res, next) => {
 
   req.validated = result.data;
   if (result.data.body !== undefined) req.body = result.data.body;
-  if (result.data.query !== undefined) {
-    try {
-      req.query = result.data.query;
-    } catch {
-      Object.assign(req.query, result.data.query);
-    }
-  }
+  // Express 5 exposes req.query as a re-parsed getter, so coerced/defaulted
+  // query values cannot be written back — controllers read req.validated.query.
   if (result.data.params !== undefined) {
     try {
       req.params = result.data.params;

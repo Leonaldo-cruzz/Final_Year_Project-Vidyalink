@@ -4,6 +4,24 @@ import Certificate from '../models/certificate.model.js';
 import ApiError from '../utils/ApiError.js';
 import { CERTIFICATE_DIRECTORY, CERTIFICATE_PUBLIC_PATH } from '../middleware/certificateUpload.middleware.js';
 
+const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// Multipart forms send skills as a comma-separated string (or a JSON array).
+const normalizeSkills = (value) => {
+  if (value === undefined || value === null) return undefined;
+  let list = value;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed.startsWith('[')) {
+      try { list = JSON.parse(trimmed); } catch { list = trimmed.split(','); }
+    } else {
+      list = trimmed ? trimmed.split(',') : [];
+    }
+  }
+  if (!Array.isArray(list)) return [];
+  return [...new Set(list.map((item) => String(item).trim()).filter(Boolean))].slice(0, 50);
+};
+
 class CertificateService {
   /**
    * Create a new certificate entry (Student only)
@@ -32,7 +50,7 @@ class CertificateService {
       credentialId: certificateData.credentialId || null,
       credentialUrl: certificateData.credentialUrl || null,
       certificateFile,
-      skills: Array.isArray(certificateData.skills) ? certificateData.skills : [],
+      skills: normalizeSkills(certificateData.skills) || [],
       verificationStatus: 'Pending', // Enforce Pending status
     });
 
@@ -52,7 +70,7 @@ class CertificateService {
 
     // Search by title, issuer, or category
     if (search) {
-      const searchRegex = new RegExp(search, 'i');
+      const searchRegex = new RegExp(escapeRegExp(String(search).trim()), 'i');
       query.$or = [
         { title: searchRegex },
         { issuer: searchRegex },
@@ -110,7 +128,8 @@ class CertificateService {
     }
     if (updateData.credentialId !== undefined) certificate.credentialId = updateData.credentialId;
     if (updateData.credentialUrl !== undefined) certificate.credentialUrl = updateData.credentialUrl;
-    if (Array.isArray(updateData.skills)) certificate.skills = updateData.skills;
+    const updatedSkills = normalizeSkills(updateData.skills);
+    if (updatedSkills) certificate.skills = updatedSkills;
 
     // Handle file replacement if new file is uploaded
     if (newFile) {

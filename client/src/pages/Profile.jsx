@@ -40,9 +40,10 @@ const profileSchema = z.object({
     z.string().trim().regex(phonePattern, 'Use international format, for example +919876543210'),
     z.literal(''),
   ]),
-  college: z.string().trim().min(2, 'Enter your college or university').max(200),
-  branch: z.string().trim().min(2, 'Enter your branch or major').max(100),
-  currentYear: z.string().regex(/^(?:[1-9]|10)$/, 'Select a current year'),
+  college: z.string().trim().min(2, 'Enter your college or organisation').max(200),
+  branch: z.string().trim().min(2, 'Enter your branch, department or domain').max(100),
+  // Required for students only (enforced in the role-aware schema below).
+  currentYear: z.union([z.string().regex(/^(?:[1-9]|10)$/, 'Enter a year from 1 to 10'), z.literal('')]),
   cgpa: z.union([
     z.string().regex(/^(?:10(?:\.0+)?|[0-9](?:\.\d+)?)$/, 'Enter a CGPA from 0 to 10'),
     z.literal(''),
@@ -60,6 +61,21 @@ const profileSchema = z.object({
   ]),
   portfolio: optionalUrl('portfolio website URL'),
 });
+
+const studentProfileSchema = profileSchema.refine(
+  (values) => values.currentYear !== '',
+  { path: ['currentYear'], message: 'Select a current year' }
+);
+
+// Field labels differ by role: recruiters/alumni/faculty record their
+// organisation and department in the same college/branch fields.
+const ROLE_FIELD_LABELS = {
+  student: { title: 'Student Profile', college: 'College / University', branch: 'Branch / Major' },
+  faculty: { title: 'Faculty Profile', college: 'College / University', branch: 'Department / Branch' },
+  alumni: { title: 'Alumni Profile', college: 'College / Current Organisation', branch: 'Branch / Domain' },
+  recruiter: { title: 'Recruiter Profile', college: 'Company / Organisation', branch: 'Team / Domain' },
+  admin: { title: 'Admin Profile', college: 'Institution', branch: 'Department' },
+};
 
 const getFormValues = (profile, user) => ({
   fullName: profile?.fullName || user?.fullName || '',
@@ -79,6 +95,8 @@ const toNullableText = (value) => value.trim() || null;
 
 const Profile = () => {
   const { user, refreshUser } = useAuth();
+  const isStudent = user?.role === 'student';
+  const labels = ROLE_FIELD_LABELS[user?.role] || ROLE_FIELD_LABELS.student;
   const [editing, setEditing] = useState(false);
   const [profileData, setProfileData] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
@@ -95,7 +113,7 @@ const Profile = () => {
     reset,
     formState: { errors, isSubmitting },
   } = useForm({
-    resolver: zodResolver(profileSchema),
+    resolver: zodResolver(isStudent ? studentProfileSchema : profileSchema),
     defaultValues: getFormValues(null, user),
   });
 
@@ -142,12 +160,14 @@ const Profile = () => {
   const displayedSkills = profileData?.skills || [];
   const overviewItems = useMemo(() => [
     { label: 'Phone', value: profileData?.phone || 'Not added' },
-    { label: 'College', value: profileData?.college || user?.college || 'Not added' },
-    { label: 'Branch', value: profileData?.branch || user?.branch || 'Not added' },
-    { label: 'Current Year', value: profileData?.currentYear ? `Year ${profileData.currentYear}` : 'Not added' },
-    { label: 'CGPA', value: profileData?.cgpa ?? 'Not added' },
+    { label: labels.college, value: profileData?.college || user?.college || 'Not added' },
+    { label: labels.branch, value: profileData?.branch || user?.branch || 'Not added' },
+    ...(isStudent ? [
+      { label: 'Current Year', value: profileData?.currentYear ? `Year ${profileData.currentYear}` : 'Not added' },
+      { label: 'CGPA', value: profileData?.cgpa ?? 'Not added' },
+    ] : []),
     { label: 'GitHub', value: profileData?.githubUsername ? `github.com/${profileData.githubUsername}` : 'Not added' },
-  ], [profileData, user]);
+  ], [profileData, user, isStudent, labels]);
 
   const clearPhotoSelection = () => {
     setSelectedPhoto(null);
@@ -183,7 +203,7 @@ const Profile = () => {
       fullName: formData.fullName.trim(),
       college: formData.college.trim(),
       branch: formData.branch.trim(),
-      currentYear: Number(formData.currentYear),
+      currentYear: formData.currentYear ? Number(formData.currentYear) : null,
       phone: toNullableText(formData.phone),
       cgpa: formData.cgpa ? Number(formData.cgpa) : null,
       bio: toNullableText(formData.bio),
@@ -235,7 +255,7 @@ const Profile = () => {
       <div className="max-w-5xl mx-auto">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
           <div>
-            <h1 className="page-title text-white">Student Profile</h1>
+            <h1 className="page-title text-white">{labels.title}</h1>
             <p className="text-slate-400 text-sm mt-1">Build the academic profile recruiters and faculty will review.</p>
           </div>
           {!editing && (
@@ -350,10 +370,14 @@ const Profile = () => {
                 <Input label="Full Name" required {...register('fullName')} error={errors.fullName?.message} placeholder="Your full name" />
                 <Input label="Email" value={user?.email || ''} readOnly disabled leftIcon={Mail} helperText="Email is managed through your account." />
                 <Input label="Phone" {...register('phone')} error={errors.phone?.message} placeholder="+919876543210" />
-                <Input label="College / University" required {...register('college')} error={errors.college?.message} placeholder="Your institution" />
-                <Input label="Branch / Major" required {...register('branch')} error={errors.branch?.message} placeholder="Computer Science" />
-                <Input label="Current Year" required {...register('currentYear')} error={errors.currentYear?.message} type="number" min="1" max="10" placeholder="e.g. 3" leftIcon={GraduationCap} />
-                <Input label="CGPA" {...register('cgpa')} error={errors.cgpa?.message} inputMode="decimal" placeholder="e.g. 8.5" />
+                <Input label={labels.college} required {...register('college')} error={errors.college?.message} placeholder="Your institution or organisation" />
+                <Input label={labels.branch} required {...register('branch')} error={errors.branch?.message} placeholder="Computer Science" />
+                {isStudent && (
+                  <>
+                    <Input label="Current Year" required {...register('currentYear')} error={errors.currentYear?.message} type="number" min="1" max="10" placeholder="e.g. 3" leftIcon={GraduationCap} />
+                    <Input label="CGPA" {...register('cgpa')} error={errors.cgpa?.message} inputMode="decimal" placeholder="e.g. 8.5" />
+                  </>
+                )}
               </div>
 
               <div className="mt-5">

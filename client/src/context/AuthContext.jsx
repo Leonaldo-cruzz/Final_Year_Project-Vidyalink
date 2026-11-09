@@ -23,6 +23,9 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading]               = useState(true); // true while restoring session
   const [error, setError]                   = useState(null);
+  // true after an explicit sign-out, so route guards don't carry the previous
+  // user's page over to whoever signs in next on this browser.
+  const [signedOut, setSignedOut]           = useState(false);
   // mountedRef guards stale state updates on unmounted components,
   // but MUST NOT gate setLoading(false) — loading must always terminate.
   const mountedRef                          = useRef(true);
@@ -74,6 +77,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const { user: loggedInUser } = await authService.login(credentials);
       if (mountedRef.current) {
+        setSignedOut(false);
         setUser(loggedInUser);
         setIsAuthenticated(true);
         // Explicitly terminate loading in case restoreSession had not yet
@@ -110,6 +114,7 @@ export const AuthProvider = ({ children }) => {
     try {
       await authService.logout();
     } finally {
+      setSignedOut(true);
       setUser(null);
       setIsAuthenticated(false);
       setError(null);
@@ -134,6 +139,7 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated,
     loading,
     error,
+    signedOut,
     setError,
     login,
     register,

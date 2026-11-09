@@ -707,7 +707,7 @@ const AIInsights = () => {
                         size="xs"
                         variant="secondary"
                         rightIcon={ArrowRight}
-                        onClick={() => navigate('/projects')}
+                        onClick={() => navigate('/opportunities')}
                         aria-label={`View opportunity: ${opp.name}`}
                       >
                         Inspect Opportunity

@@ -22,6 +22,12 @@ const CATEGORY_OPTIONS = [
 
 const STATUS_OPTIONS = ['Completed', 'In Progress', 'Prototype', 'Archived'];
 
+// Opportunities reuse projectStatus: "In Progress" = open, "Archived" = closed.
+const OPPORTUNITY_STATUS_OPTIONS = [
+  { value: 'In Progress', label: 'Open — accepting applications' },
+  { value: 'Archived', label: 'Closed' },
+];
+
 const emptyToUndefined = (value) => (value === '' ? undefined : value);
 
 export const projectFormSchema = z.object({
@@ -95,9 +101,14 @@ const TagEditor = ({ label, tags, setTags, placeholder, error, required = false 
 
 const formatDateInput = (date) => (date ? new Date(date).toISOString().slice(0, 10) : '');
 
+// Stable default: a fresh [] on every render re-triggered the screenshot
+// sync effect below and caused an endless re-render loop on /projects/new.
+const NO_SCREENSHOTS = [];
+
 const ProjectForm = ({
   initialValues,
-  initialScreenshots = [],
+  initialScreenshots = NO_SCREENSHOTS,
+  mode = 'project',
   onSubmit,
   onCancel,
   submitLabel = 'Save Project',
@@ -160,33 +171,49 @@ const ProjectForm = ({
     setScreenshots(initialScreenshots);
   }, [initialScreenshots]);
 
-  const submitForm = (values) => onSubmit({
-    ...values,
-    technologies,
-    teamMembers,
-    existingScreenshots: screenshots,
-    screenshots: newScreenshots,
-  });
+  const isOpportunity = mode === 'opportunity';
+
+  const submitForm = (values) => onSubmit(isOpportunity
+    ? {
+      // Opportunities carry no portfolio evidence (repo, demo, screenshots, team).
+      title: values.title,
+      shortDescription: values.shortDescription,
+      detailedDescription: values.detailedDescription,
+      category: values.category,
+      domain: values.domain,
+      technologies,
+      documentationUrl: values.documentationUrl,
+      startDate: values.startDate,
+      endDate: values.endDate,
+      projectStatus: values.projectStatus,
+    }
+    : {
+      ...values,
+      technologies,
+      teamMembers,
+      existingScreenshots: screenshots,
+      screenshots: newScreenshots,
+    });
 
   return (
     <form onSubmit={handleSubmit(submitForm)} noValidate className="space-y-6">
       <Card className="p-5 sm:p-7 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="md:col-span-2">
-            <label className={labelClass}>Project Title *</label>
-            <input {...register('title')} className={inputClass} placeholder="e.g. Smart Campus Navigator" />
+            <label className={labelClass}>{isOpportunity ? 'Opportunity Title' : 'Project Title'} *</label>
+            <input {...register('title')} className={inputClass} placeholder={isOpportunity ? 'e.g. Full-Stack Developer Intern' : 'e.g. Smart Campus Navigator'} />
             {errors.title && <p className="mt-1 text-xs text-red-400">{errors.title.message}</p>}
           </div>
 
           <div className="md:col-span-2">
             <label className={labelClass}>Short Description *</label>
-            <input {...register('shortDescription')} className={inputClass} placeholder="One sentence that explains the project outcome" />
+            <input {...register('shortDescription')} className={inputClass} placeholder={isOpportunity ? 'One sentence summary of the role or project' : 'One sentence that explains the project outcome'} />
             {errors.shortDescription && <p className="mt-1 text-xs text-red-400">{errors.shortDescription.message}</p>}
           </div>
 
           <div className="md:col-span-2">
             <label className={labelClass}>Detailed Description *</label>
-            <textarea {...register('detailedDescription')} rows={6} className={`${inputClass} resize-y`} placeholder="Explain the problem, your approach, key features, and your contribution..." />
+            <textarea {...register('detailedDescription')} rows={6} className={`${inputClass} resize-y`} placeholder={isOpportunity ? 'Responsibilities, expectations, duration, stipend/compensation, and how candidates are evaluated...' : 'Explain the problem, your approach, key features, and your contribution...'} />
             {errors.detailedDescription && <p className="mt-1 text-xs text-red-400">{errors.detailedDescription.message}</p>}
           </div>
 
@@ -205,9 +232,18 @@ const ProjectForm = ({
           </div>
 
           <div className="md:col-span-2">
-            <TagEditor label="Technologies" tags={technologies} setTags={setTechnologies} placeholder="Type a technology and press Enter" required error={errors.technologies?.message} />
+            <TagEditor label={isOpportunity ? 'Required Skills / Technologies' : 'Technologies'} tags={technologies} setTags={setTechnologies} placeholder="Type a technology and press Enter" required error={errors.technologies?.message} />
           </div>
 
+          {isOpportunity && (
+            <div className="md:col-span-2">
+              <label className={labelClass}>Reference / Job Description URL</label>
+              <input {...register('documentationUrl')} type="url" className={inputClass} placeholder="https://company.com/careers/..." />
+              {errors.documentationUrl && <p className="mt-1 text-xs text-red-400">{errors.documentationUrl.message}</p>}
+            </div>
+          )}
+
+          {!isOpportunity && (<>
           <div>
             <label className={labelClass}>GitHub Repository</label>
             <input {...register('githubRepository')} type="url" className={inputClass} placeholder="https://github.com/..." />
@@ -252,6 +288,7 @@ const ProjectForm = ({
           <div className="md:col-span-2">
             <TagEditor label="Team Members" tags={teamMembers} setTags={setTeamMembers} placeholder="Add a teammate name" />
           </div>
+          </>)}
 
           <div>
             <label className={labelClass}>Start Date</label>
@@ -262,9 +299,11 @@ const ProjectForm = ({
             <input {...register('endDate')} type="date" className={inputClass} />
           </div>
           <div>
-            <label className={labelClass}>Project Status</label>
+            <label className={labelClass}>{isOpportunity ? 'Posting Status' : 'Project Status'}</label>
             <select {...register('projectStatus')} className={inputClass}>
-              {STATUS_OPTIONS.map((status) => <option key={status}>{status}</option>)}
+              {isOpportunity
+                ? OPPORTUNITY_STATUS_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)
+                : STATUS_OPTIONS.map((status) => <option key={status}>{status}</option>)}
             </select>
           </div>
         </div>

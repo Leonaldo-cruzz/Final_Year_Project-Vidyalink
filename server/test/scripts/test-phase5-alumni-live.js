@@ -1,5 +1,6 @@
 /* global fetch */
 import mongoose from 'mongoose';
+import { DEFAULT_DB_NAME } from '../../src/config/db.js';
 import { env } from '../../src/config/env.js';
 import User from '../../src/models/user.model.js';
 import Endorsement from '../../src/models/endorsement.model.js';
@@ -14,7 +15,7 @@ async function main() {
   console.log('PHASE 5: ALUMNI ENDORSEMENTS & MOCK INTERVIEWS AUDIT');
   console.log('====================================================\n');
 
-  await mongoose.connect(env.MONGODB_URI);
+  await mongoose.connect(env.MONGODB_URI, { dbName: DEFAULT_DB_NAME });
 
   const prefix = `live_alumni_${Date.now()}`;
   const alumni = await User.create({

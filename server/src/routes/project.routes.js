@@ -14,9 +14,13 @@ const router = Router();
 
 router.use(authenticate);
 
+// Students create portfolio projects; recruiters and faculty create
+// opportunities. Ownership is enforced in the service.
+const PROJECT_AUTHORS = ['student', 'recruiter', 'faculty', 'admin'];
+
 router.post(
   '/',
-  authorize('student', 'admin'),
+  authorize(...PROJECT_AUTHORS),
   projectScreenshotUpload,
   validate(createProjectSchema),
   projectController.createProject
@@ -31,11 +35,11 @@ router.get('/:id', authorize('student', 'recruiter', 'faculty', 'alumni', 'admin
 router.post('/:id/verify-deployment', authorize('student', 'admin'), projectController.verifyDeployment);
 router.put(
   '/:id',
-  authorize('student', 'admin'),
+  authorize(...PROJECT_AUTHORS),
   projectScreenshotUpload,
   validate(updateProjectSchema),
   projectController.updateProject
 );
-router.delete('/:id', authorize('student', 'admin'), projectController.deleteProject);
+router.delete('/:id', authorize(...PROJECT_AUTHORS), projectController.deleteProject);
 
 export default router;

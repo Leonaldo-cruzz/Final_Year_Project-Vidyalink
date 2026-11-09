@@ -51,7 +51,7 @@ test('Resume PDF Validation — Text is machine-readable, selectable, and search
 
   const sampleGithub = {
     connectionStatus: 'Connected',
-    login: 'aarav-sharma',
+    githubUsername: 'aarav-sharma',
     publicRepos: 18,
   };
 

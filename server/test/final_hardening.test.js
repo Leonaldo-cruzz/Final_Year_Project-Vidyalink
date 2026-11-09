@@ -182,7 +182,9 @@ test('REGRESSION 6: Duplicate application to the same opportunity is rejected wi
   Project.findById = async () => ({
     _id: 'opportunity-1',
     status: 'open',
-    createdBy: 'recruiter-1',
+    userId: 'recruiter-1',
+    isOpportunity: true,
+    projectStatus: 'In Progress',
   });
 
   // Simulate existing application found

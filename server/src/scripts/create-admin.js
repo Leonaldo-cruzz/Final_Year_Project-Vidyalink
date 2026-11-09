@@ -18,6 +18,7 @@ import readline from 'node:readline';
 import { Writable } from 'node:stream';
 import mongoose from 'mongoose';
 import User from '../models/user.model.js';
+import { DEFAULT_DB_NAME } from '../config/db.js';
 import { env } from '../config/env.js';
 
 /**
@@ -139,7 +140,9 @@ export const provisionAdmin = async ({
 
   // 2. Connect to database
   logger.info('Connecting to database...');
-  await dbConnection.connect(mongoUri);
+  // Same database the API uses (config/db.js forces dbName 'vidyalink'), so
+  // the admin can log in even when the URI has no database path.
+  await dbConnection.connect(mongoUri, { dbName: DEFAULT_DB_NAME });
   logger.info('Connected to database successfully.');
 
   try {

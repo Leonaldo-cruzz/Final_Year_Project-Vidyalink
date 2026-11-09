@@ -455,7 +455,7 @@ describe('6. Verified Portfolio Comparison (resumeParserService.compareWithPortf
 
   const sampleGithub = {
     connectionStatus: 'Connected',
-    login: 'realstudent',
+    githubUsername: 'realstudent',
   };
 
   it('TC-INGEST-PORT1: Matches verified project and flags unverified resume project as UNVERIFIED_CLAIM', () => {
@@ -511,7 +511,7 @@ describe('6. Verified Portfolio Comparison (resumeParserService.compareWithPortf
     assert.ok(comparison.githubComparison.message.includes('realstudent'));
 
     // Test mismatch case
-    const mismatchGithub = { connectionStatus: 'Connected', login: 'different-user' };
+    const mismatchGithub = { connectionStatus: 'Connected', githubUsername: 'different-user' };
     const mismatchComparison = resumeParserService.compareWithPortfolio(
       parsedResume,
       sampleDbProjects,

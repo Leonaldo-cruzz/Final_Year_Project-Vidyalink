@@ -27,6 +27,7 @@ import {
   selectCandidate,
 } from '@/services/applicationService';
 import { getErrorMessage } from '@/utils/formatters';
+import { getProjectById } from '@/services/projectService';
 
 const STATUS_BADGES = {
   Applied: { label: 'Applied', variant: 'info' },
@@ -46,6 +47,7 @@ const ApplicantManagement = () => {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [actionError, setActionError] = useState('');
   const [filter, setFilter] = useState('all');
 
   // Active Schedule Interview Modal
@@ -62,12 +64,18 @@ const ApplicantManagement = () => {
       setLoading(true);
       setError('');
       if (projectId) {
-        const res = await getProjectApplications(projectId);
+        const [res, projectRes] = await Promise.all([
+          getProjectApplications(projectId),
+          getProjectById(projectId).catch(() => null),
+        ]);
         const data = res.data || [];
         setApplications(Array.isArray(data) ? data : []);
-        if (data.length > 0 && (data[0].projectOpportunityId?.title || data[0].project?.title)) {
-          setProjectTitle(data[0].projectOpportunityId?.title || data[0].project?.title);
-        }
+        setProjectTitle(
+          projectRes?.data?.title
+          || data[0]?.projectOpportunityId?.title
+          || data[0]?.project?.title
+          || 'Opportunity'
+        );
       } else {
         const res = await getRecruiterApplications();
         const data = res.data || [];
@@ -90,36 +98,31 @@ const ApplicantManagement = () => {
     setSelectedApp(app);
     setTargetStatus(status);
     setRecruiterNotes('');
+    setActionError('');
   };
 
   const handleConfirmStatus = async () => {
     if (!selectedApp || !targetStatus) return;
     try {
       setSubmittingStatus(true);
+      setActionError('');
+      // Errors propagate to the catch below — never fake a successful update.
       if (targetStatus === 'Selected') {
-        try {
-          await selectCandidate(selectedApp._id, { recruiterNotes });
-        } catch {
-          // fallback local update
-        }
+        await selectCandidate(selectedApp._id, { recruiterNotes });
       } else {
-        try {
-          await updateApplicationStatus(selectedApp._id, {
-            status: targetStatus,
-            recruiterNotes,
-          });
-        } catch {
-          // fallback local update
-        }
+        await updateApplicationStatus(selectedApp._id, {
+          status: targetStatus,
+          recruiterNotes,
+        });
       }
 
-      // Update local state smoothly
+      // Reflect the confirmed server-side change
       setApplications((prev) =>
         prev.map((a) => (a._id === selectedApp._id ? { ...a, status: targetStatus } : a))
       );
       setSelectedApp(null);
     } catch (err) {
-      setError(getErrorMessage(err));
+      setActionError(getErrorMessage(err));
     } finally {
       setSubmittingStatus(false);
     }
@@ -137,10 +140,10 @@ const ApplicantManagement = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <button
-              onClick={() => navigate('/dashboard/recruiter')}
+              onClick={() => navigate(projectId ? '/opportunities' : '/dashboard/recruiter')}
               className="inline-flex items-center text-xs font-semibold text-slate-400 hover:text-white mb-2 transition-colors"
             >
-              <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Back to Recruiter Hub
+              <ArrowLeft className="w-3.5 h-3.5 mr-1" /> {projectId ? 'Back to Opportunities' : 'Back to Recruiter Hub'}
             </button>
             <div className="flex items-center gap-2">
               <h1 className="page-title text-white">Applicant Management Workflow</h1>
@@ -401,6 +404,12 @@ const ApplicantManagement = () => {
                 className="form-input resize-none"
               />
             </div>
+
+            {actionError && (
+              <div role="alert" className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
+                {actionError}
+              </div>
+            )}
 
             <div className="flex justify-end gap-3 pt-2">
               <Button variant="ghost" onClick={() => setSelectedApp(null)}>

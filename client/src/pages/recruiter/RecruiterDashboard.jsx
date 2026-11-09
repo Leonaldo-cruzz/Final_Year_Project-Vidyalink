@@ -52,7 +52,8 @@ const RecruiterDashboard = () => {
         if (!isMounted) return;
 
         if (projRes.status === 'fulfilled') {
-          const projList = projRes.value?.data?.data || projRes.value?.data || [];
+          // GET /projects returns { projects, pagination, ... } inside data
+          const projList = projRes.value?.data?.data?.projects || [];
           setProjects(Array.isArray(projList) ? projList : []);
         }
 
@@ -249,9 +250,14 @@ const RecruiterDashboard = () => {
                 <p className="text-xs text-slate-400 max-w-md mx-auto">
                   Student applications for campus opportunities will appear here with verified academic evidence.
                 </p>
-                <Button size="sm" variant="secondary" onClick={() => navigate(ROUTES.PROJECTS)}>
-                  Browse Verified Talent
-                </Button>
+                <div className="flex flex-wrap justify-center gap-2">
+                  <Button size="sm" onClick={() => navigate(ROUTES.CREATE_OPPORTUNITY)}>
+                    Post an Opportunity
+                  </Button>
+                  <Button size="sm" variant="secondary" onClick={() => navigate(ROUTES.PROJECTS)}>
+                    Browse Verified Talent
+                  </Button>
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
@@ -384,6 +390,21 @@ const RecruiterDashboard = () => {
 
           <SectionCard title="Direct Recruiter Actions">
             <div className="space-y-2.5">
+              <Button
+                className="w-full justify-start text-xs"
+                leftIcon={Briefcase}
+                onClick={() => navigate(ROUTES.CREATE_OPPORTUNITY)}
+              >
+                Post Opportunity
+              </Button>
+              <Button
+                className="w-full justify-start text-xs"
+                variant="secondary"
+                leftIcon={Briefcase}
+                onClick={() => navigate(ROUTES.OPPORTUNITIES)}
+              >
+                Manage My Postings
+              </Button>
               <Button
                 className="w-full justify-start text-xs"
                 variant="secondary"

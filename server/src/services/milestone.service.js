@@ -57,7 +57,12 @@ class MilestoneService {
       throw ApiError.forbidden('Only workspace owner can modify milestone details');
     }
 
-    Object.assign(milestone, updateData);
+    // Only descriptive fields are editable here; status, workspace and
+    // deliverables change through the submit/verify flows.
+    const EDITABLE_FIELDS = ['title', 'description', 'dueDate', 'order'];
+    for (const field of EDITABLE_FIELDS) {
+      if (updateData?.[field] !== undefined) milestone[field] = updateData[field];
+    }
     await milestone.save();
     return milestone;
   }
@@ -100,7 +105,8 @@ class MilestoneService {
       type: 'verification',
       title: 'New Deliverable Submitted',
       message: `Deliverable evidence submitted for "${milestone.title}".`,
-      link: `/workspace/${milestone.workspace._id}`,
+      // Workspace pages were retired; send users to their role dashboard.
+      link: '/dashboard',
       metadata: { milestoneId: milestone._id, workspaceId: milestone.workspace._id },
     });
 
@@ -171,7 +177,8 @@ class MilestoneService {
       message: isVerified
         ? `Your deliverable for "${milestone.title}" has been verified.`
         : `Faculty feedback for "${milestone.title}": ${feedback || 'Changes requested.'}`,
-      link: `/workspace/${milestone.workspace._id}`,
+      // Workspace pages were retired; send users to their role dashboard.
+      link: '/dashboard',
       metadata: { milestoneId: milestone._id, workspaceId: milestone.workspace._id },
     });
 

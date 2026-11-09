@@ -85,7 +85,9 @@ const StudentDashboard = () => {
         setPortfolios(portfolioRes.value?.data || []);
       }
       if (projectRes.status === 'fulfilled') {
-        setProjects(projectRes.value?.data || []);
+        // GET /projects returns { projects, pagination, ... }
+        const projectList = projectRes.value?.data?.projects;
+        setProjects(Array.isArray(projectList) ? projectList : []);
       }
       if (verifRes.status === 'fulfilled') {
         setVerificationHistory(verifRes.value?.data || []);

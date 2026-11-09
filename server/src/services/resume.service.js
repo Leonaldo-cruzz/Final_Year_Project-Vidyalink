@@ -35,6 +35,28 @@ import resumeParserService from './resumeParser.service.js';
 
 const GENERATION_VERSION = '1.0.0';
 
+/**
+ * Projects attached to the student's issued portfolios, flagged when faculty
+ * verified them. Covers both the legacy workspace chain and the
+ * project-based portfolios issued by the faculty verification flow.
+ */
+const collectPortfolioProjects = (portfolios = []) => {
+  const seen = new Set();
+  return portfolios
+    .map((portfolio) => {
+      const project = portfolio.workspace?.project || portfolio.project;
+      if (!project || typeof project !== 'object' || !project._id) return null;
+      const id = String(project._id);
+      if (seen.has(id)) return null;
+      seen.add(id);
+      return {
+        ...project,
+        verifiedByFaculty: Boolean(portfolio.verifiedBy && portfolio.verificationHash),
+      };
+    })
+    .filter(Boolean);
+};
+
 // ── Snapshot ─────────────────────────────────────────────────────────────────
 
 /**
@@ -53,7 +75,7 @@ const computeSourceSnapshot = (user, profile, certificates, projects, github) =>
     } : null,
     c: certificates.map((c) => ({ t: c.title, i: c.issuer, d: c.issueDate })).sort((a, b) => a.t.localeCompare(b.t)),
     j: projects.map((p) => ({ t: p.title, tech: (p.technologies || []).slice().sort() })).sort((a, b) => a.t.localeCompare(b.t)),
-    g: github?.connectionStatus === 'Connected' ? github.login : null,
+    g: github?.connectionStatus === 'Connected' ? github.githubUsername : null,
   });
   return crypto.createHash('sha256').update(canonical).digest('hex');
 };
@@ -167,7 +189,7 @@ export const buildResumeText = ({
   // ── GitHub ────────────────────────────────────────────────────────────────
   if (include('github') && github?.connectionStatus === 'Connected') {
     const githubLines = [];
-    if (github.login)       githubLines.push(`GitHub: https://github.com/${github.login}`);
+    if (github.githubUsername)       githubLines.push(`GitHub: https://github.com/${github.githubUsername}`);
     if (github.publicRepos !== null && github.publicRepos !== undefined) githubLines.push(`Public Repositories: ${github.publicRepos}`);
     if (githubLines.length) {
       lines.push('GITHUB');
@@ -325,7 +347,7 @@ const generatePDF = ({
   // ── GitHub ────────────────────────────────────────────────────────────────
   if (include('github') && github?.connectionStatus === 'Connected') {
     const githubLines = [];
-    if (github.login)              githubLines.push(`GitHub: https://github.com/${github.login}`);
+    if (github.githubUsername)              githubLines.push(`GitHub: https://github.com/${github.githubUsername}`);
     if (github.publicRepos !== null && github.publicRepos !== undefined) githubLines.push(`Public Repositories: ${github.publicRepos}`);
     if (githubLines.length) {
       sectionHeader('GitHub');
@@ -513,13 +535,14 @@ class ResumeService {
       Profile.findOne({ user: userId }).lean(),
       GitHubAccount.findOne({ userId }).lean(),
       Certificate.find({ userId }).lean(),
-      Portfolio.find({ student: userId }).populate({ path: 'workspace', populate: { path: 'project' } }).lean(),
+      Portfolio.find({ student: userId })
+        .populate('project')
+        .populate({ path: 'workspace', populate: { path: 'project' } })
+        .lean(),
       Project.find({ userId, projectStatus: { $ne: 'Archived' } }).lean(),
     ]);
 
-    const verifiedProjects = portfolios
-      .filter((p) => p.workspace?.project)
-      .map((p) => ({ ...p.workspace.project, verifiedByFaculty: Boolean(p.verifiedBy && p.verificationHash) }));
+    const verifiedProjects = collectPortfolioProjects(portfolios);
 
     const portfolioProjectIds = new Set(verifiedProjects.map((p) => String(p._id)));
     const allProjects = [...verifiedProjects, ...ownProjects.filter((p) => !portfolioProjectIds.has(String(p._id)))];
@@ -547,7 +570,19 @@ class ResumeService {
   async importToProfile(userId, { skills = [], education = null } = {}) {
     let profile = await Profile.findOne({ user: userId });
     if (!profile) {
-      profile = await Profile.create({ user: userId, skills: [] });
+      // Profile requires fullName/college/branch — seed them from the account.
+      const account = await User.findById(userId).select('fullName college branch graduationYear').lean();
+      if (!account?.fullName || !account?.college || !account?.branch) {
+        throw ApiError.badRequest('Create your profile (name, college and branch) before importing resume data.');
+      }
+      profile = await Profile.create({
+        user: userId,
+        fullName: account.fullName,
+        college: account.college,
+        branch: account.branch,
+        graduationYear: account.graduationYear || null,
+        skills: [],
+      });
     }
 
     let updated = false;
@@ -649,15 +684,11 @@ class ResumeService {
     // Projects associated with the student via their workspaces/portfolios
     // Using Portfolio → Workspace → Project chain (faculty-verified first)
     const portfolios = await Portfolio.find({ student: userId })
+      .populate('project')
       .populate({ path: 'workspace', populate: { path: 'project' } })
       .lean();
 
-    const verifiedProjects = portfolios
-      .filter((p) => p.workspace?.project)
-      .map((p) => ({
-        ...p.workspace.project,
-        verifiedByFaculty: Boolean(p.verifiedBy && p.verificationHash),
-      }));
+    const verifiedProjects = collectPortfolioProjects(portfolios);
 
     // Also include student-owned projects not yet in a portfolio
     const ownProjects = await Project.find({ userId, projectStatus: { $ne: 'Archived' } }).lean();
@@ -680,6 +711,7 @@ class ResumeService {
 
     // ── 4. Generate PDF ──────────────────────────────────────────────────────
     const pdfBuffer = await generatePDF({ user, profile, certificates, projects, github, sections });
+    const pdfContentHash = crypto.createHash('sha256').update(pdfBuffer).digest('hex');
 
     // ── 5. Save PDF to disk ──────────────────────────────────────────────────
     const fileName = `resume-gen-${userId}-${Date.now()}.pdf`;
@@ -705,6 +737,10 @@ class ResumeService {
       resume.generatedAt        = now;
       resume.sourceSnapshot     = snapshot;
       resume.generationVersion  = GENERATION_VERSION;
+      // The stored text must describe the new PDF — ATS and comparisons read it.
+      resume.rawText            = resumeText;
+      resume.parsedData         = null;
+      resume.contentHash        = pdfContentHash;
       await resume.save();
     } else {
       resume = await Resume.create({
@@ -721,6 +757,8 @@ class ResumeService {
         generatedAt:        now,
         sourceSnapshot:     snapshot,
         generationVersion:  GENERATION_VERSION,
+        rawText:            resumeText,
+        contentHash:        pdfContentHash,
       });
     }
 

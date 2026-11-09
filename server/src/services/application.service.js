@@ -2,8 +2,30 @@ import Application from '../models/application.model.js';
 import Project from '../models/project.model.js';
 import Portfolio from '../models/portfolio.model.js';
 import AIEvaluation from '../models/aiEvaluation.model.js';
+import Profile from '../models/profile.model.js';
 import notificationService from './notification.service.js';
 import ApiError from '../utils/ApiError.js';
+
+const normalizeSkill = (value) => String(value || '').trim().toLowerCase();
+
+/**
+ * Percentage of the opportunity's technologies the applicant has, using the
+ * student's profile skills plus skills listed on the application.
+ * Returns undefined when the opportunity lists no technologies.
+ */
+const computeMatchScore = (project, profileSkills = [], applicationSkills = []) => {
+  const required = [...new Set((project?.technologies || []).map(normalizeSkill).filter(Boolean))];
+  if (required.length === 0) return undefined;
+  const owned = new Set([...profileSkills, ...applicationSkills].map(normalizeSkill).filter(Boolean));
+  const matched = required.filter((skill) => owned.has(skill)).length;
+  return Math.round((matched / required.length) * 100);
+};
+
+const loadProfileSkills = async (studentIds) => {
+  if (!studentIds.length) return new Map();
+  const profiles = await Profile.find({ user: { $in: studentIds } }).select('user skills');
+  return new Map(profiles.map((profile) => [String(profile.user), profile.skills || []]));
+};
 
 class ApplicationService {
   async applyToProject(studentId, data) {
@@ -13,8 +35,19 @@ class ApplicationService {
       throw ApiError.notFound('Project not found');
     }
 
+    // Only recruiter/faculty postings accept applications — never another
+    // student's portfolio project.
+    if (!project.isOpportunity) {
+      throw ApiError.badRequest('Applications are only accepted for posted opportunities');
+    }
+
+    if (project.userId?.toString() === studentId.toString()) {
+      throw ApiError.badRequest('You cannot apply to your own posting');
+    }
+
     // Check project status and deadline
-    if (project.status === 'closed' || project.status === 'completed') {
+    if (['Archived', 'Completed'].includes(project.projectStatus)
+      || project.status === 'closed' || project.status === 'completed') {
       throw ApiError.badRequest('Applications are closed for this project');
     }
 
@@ -43,7 +76,8 @@ class ApplicationService {
       project: projectId,
       studentId,
       student: studentId,
-      recruiterId: project.userId || project.createdBy || project.user,
+      // The opportunity's poster owns the hiring pipeline.
+      recruiterId: project.userId,
       coverLetter,
       pitch: coverLetter,
       resumeSnapshot,
@@ -55,7 +89,7 @@ class ApplicationService {
       status: 'Applied',
     });
 
-    const recruiterId = project.userId || project.createdBy || project.user;
+    const recruiterId = project.userId;
     if (recruiterId) {
       await notificationService.createNotification({
         recipient: recruiterId,
@@ -141,6 +175,7 @@ class ApplicationService {
         evalMap.set(ev.studentId.toString(), ev);
       }
     });
+    const profileSkillsMap = await loadProfileSkills(studentIds);
 
     return applications.map((app) => {
       const sId = (app.studentId?._id || app.student?._id)?.toString();
@@ -149,6 +184,7 @@ class ApplicationService {
         ...rawApp,
         portfolio: portfolioMap.get(sId) || null,
         aiEvaluation: evalMap.get(sId) || null,
+        matchScore: computeMatchScore(project, profileSkillsMap.get(sId), rawApp.skills),
       };
     });
   }
@@ -169,8 +205,8 @@ class ApplicationService {
     })
       .populate('studentId', 'fullName email avatar college branch graduationYear')
       .populate('student', 'fullName email avatar college branch graduationYear')
-      .populate('projectOpportunityId', 'title')
-      .populate('project', 'title')
+      .populate('projectOpportunityId', 'title technologies')
+      .populate('project', 'title technologies')
       .sort({ createdAt: -1 });
 
     const studentIds = applications.map((app) => app.studentId?._id || app.student?._id).filter(Boolean);
@@ -188,6 +224,7 @@ class ApplicationService {
         evalMap.set(ev.studentId.toString(), ev);
       }
     });
+    const profileSkillsMap = await loadProfileSkills(studentIds);
 
     return applications.map((app) => {
       const sId = (app.studentId?._id || app.student?._id)?.toString();
@@ -196,6 +233,11 @@ class ApplicationService {
         ...rawApp,
         portfolio: portfolioMap.get(sId) || null,
         aiEvaluation: evalMap.get(sId) || null,
+        matchScore: computeMatchScore(
+          rawApp.projectOpportunityId || rawApp.project,
+          profileSkillsMap.get(sId),
+          rawApp.skills
+        ),
       };
     });
   }

@@ -4,11 +4,15 @@ import { AccountStatus } from '../config/constants.js';
 import { env } from '../config/env.js';
 import ApiError from '../utils/ApiError.js';
 import {
+  generateAccessToken,
   generateTokenPair,
   hashRefreshToken,
   refreshTokensMatch,
   verifyRefreshToken,
 } from '../utils/jwt.util.js';
+
+// How long a just-rotated refresh token is still honoured (multi-tab races).
+const REFRESH_ROTATION_GRACE_MS = 30 * 1000;
 
 class AuthService {
   /**
@@ -19,6 +23,10 @@ class AuthService {
     const {
       password: _password,
       refreshToken: _refreshToken,
+      previousRefreshToken: _previousRefreshToken,
+      refreshTokenRotatedAt: _refreshTokenRotatedAt,
+      passwordResetToken: _passwordResetToken,
+      passwordResetExpires: _passwordResetExpires,
       __v: _version,
       ...safeUser
     } = userObj;
@@ -123,8 +131,9 @@ class AuthService {
     }
 
     const userId = decoded.sub || decoded._id;
-    const user = await User.findById(userId).select('+refreshToken');
-    if (!user || !refreshTokensMatch(user.refreshToken, incomingRefreshToken)) {
+    const user = await User.findById(userId)
+      .select('+refreshToken +previousRefreshToken +refreshTokenRotatedAt');
+    if (!user) {
       throw ApiError.unauthorized('Invalid refresh token');
     }
 
@@ -132,14 +141,43 @@ class AuthService {
       throw ApiError.forbidden('Your account has been deactivated or suspended');
     }
 
+    const issueAccessTokenOnly = () => ({
+      accessToken: generateAccessToken({
+        _id: String(user._id),
+        sub: String(user._id),
+        email: user.email,
+        role: user.role,
+      }),
+      // No new refresh token: the caller keeps the cookie set by the request
+      // that won the rotation.
+      refreshToken: null,
+    });
+
+    const isWithinGrace = () => Boolean(
+      user.previousRefreshToken
+      && user.refreshTokenRotatedAt
+      && Date.now() - new Date(user.refreshTokenRotatedAt).getTime() <= REFRESH_ROTATION_GRACE_MS
+      && refreshTokensMatch(user.previousRefreshToken, incomingRefreshToken)
+    );
+
+    if (!refreshTokensMatch(user.refreshToken, incomingRefreshToken)) {
+      if (isWithinGrace()) return issueAccessTokenOnly();
+      throw ApiError.unauthorized('Invalid refresh token');
+    }
+
     const { accessToken, refreshToken } = generateTokenPair(user);
     const updatedUser = await User.findOneAndUpdate(
       { _id: user._id, refreshToken: user.refreshToken },
-      { refreshToken: hashRefreshToken(refreshToken) }
+      {
+        refreshToken: hashRefreshToken(refreshToken),
+        previousRefreshToken: user.refreshToken,
+        refreshTokenRotatedAt: new Date(),
+      }
     );
 
     if (!updatedUser) {
-      throw ApiError.unauthorized('Refresh token has been revoked. Please log in again.');
+      // Another request rotated this exact token a moment ago.
+      return issueAccessTokenOnly();
     }
 
     return { accessToken, refreshToken };
@@ -171,13 +209,19 @@ class AuthService {
     const clientUrl = env.CLIENT_URL || 'http://localhost:5173';
     const resetUrl = `${clientUrl}/reset-password?token=${resetToken}`;
 
+    const resetPath = `/reset-password?token=${resetToken}`;
+
     if (process.env.NODE_ENV !== 'production') {
       console.log(`[AUTH] Password recovery generated for ${email}: ${resetUrl}`);
     }
 
+    // No mail service is wired into this platform by design, so the one-time
+    // reset link is returned to the client and shown on screen (all environments).
     return {
-      message: 'If an account exists with this email, password recovery instructions have been sent.',
-      ...(process.env.NODE_ENV !== 'production' ? { resetToken, resetUrl } : {}),
+      message: 'Password reset link generated. Use it within 1 hour to set a new password.',
+      resetToken,
+      resetUrl,
+      resetPath,
     };
   }
 
@@ -207,6 +251,9 @@ class AuthService {
     user.password = newPassword;
     user.passwordResetToken = null;
     user.passwordResetExpires = null;
+    // A password change ends existing sessions.
+    user.refreshToken = null;
+    user.previousRefreshToken = null;
     await user.save();
 
     return {

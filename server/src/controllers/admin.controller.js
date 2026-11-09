@@ -8,6 +8,9 @@ import Verification from '../models/verification.model.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
+import { ACCOUNT_STATUS_LIST } from '../config/constants.js';
+
+const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 export const getAdminStats = asyncHandler(async (_req, res) => {
   const [
@@ -25,7 +28,7 @@ export const getAdminStats = asyncHandler(async (_req, res) => {
     usersByRole,
   ] = await Promise.all([
     User.countDocuments(),
-    Project.countDocuments({ projectStatus: { $ne: 'Archived' } }),
+    Project.countDocuments({ projectStatus: { $ne: 'Archived' }, isOpportunity: { $ne: true } }),
     Portfolio.countDocuments(),
     Application.countDocuments(),
     Mentorship.countDocuments(),
@@ -70,7 +73,7 @@ export const getAdminUsers = asyncHandler(async (req, res) => {
   }
 
   if (search && search.trim()) {
-    const searchRegex = new RegExp(search.trim(), 'i');
+    const searchRegex = new RegExp(escapeRegExp(search.trim()), 'i');
     filter.$or = [
       { fullName: searchRegex },
       { email: searchRegex },
@@ -102,14 +105,25 @@ export const getAdminUsers = asyncHandler(async (req, res) => {
 
 export const toggleUserStatus = asyncHandler(async (req, res) => {
   const { id } = req.params;
+  const requestedStatus = req.body?.status;
+
+  if (String(req.user._id) === String(id)) {
+    throw ApiError.badRequest('You cannot change the status of your own account');
+  }
+
+  if (requestedStatus !== undefined && !ACCOUNT_STATUS_LIST.includes(requestedStatus)) {
+    throw ApiError.badRequest(`Status must be one of: ${ACCOUNT_STATUS_LIST.join(', ')}`);
+  }
+
   const user = await User.findById(id);
 
   if (!user) {
     throw ApiError.notFound('User not found');
   }
 
-  user.status = user.status === 'active' ? 'inactive' : 'active';
-  await user.save();
+  // Apply the explicit status when given; otherwise toggle active <-> inactive.
+  user.status = requestedStatus || (user.status === 'active' ? 'inactive' : 'active');
+  await user.save({ validateBeforeSave: false });
 
   return ApiResponse.ok(res, `User status updated to ${user.status}`, {
     _id: user._id,

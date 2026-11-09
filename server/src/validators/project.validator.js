@@ -42,7 +42,13 @@ const teamMembersSchema = z.preprocess(
 
 const screenshotsSchema = z.preprocess(
   parseArray,
-  z.array(z.string().trim().url('Please provide a valid screenshot URL').max(2048)).optional()
+  z.array(
+    z.string().trim().max(2048).refine(
+      // Uploaded screenshots are stored as server-relative paths.
+      (value) => value.startsWith('/uploads/projects/') || /^https?:\/\/\S+$/i.test(value),
+      'Please provide a valid screenshot URL'
+    )
+  ).optional()
 );
 
 const dateSchema = z.preprocess(
@@ -74,6 +80,11 @@ const createProjectBodySchema = z.object({
   endDate: dateSchema,
   projectStatus: z.enum(PROJECT_STATUSES).optional(),
   featured: z.preprocess(
+    (value) => (typeof value === 'string' ? value === 'true' : value),
+    z.boolean().optional()
+  ),
+  // Only honoured for admins; recruiter/faculty postings are always opportunities.
+  isOpportunity: z.preprocess(
     (value) => (typeof value === 'string' ? value === 'true' : value),
     z.boolean().optional()
   ),
@@ -124,6 +135,13 @@ export const getProjectsQuerySchema = z.object({
       search: z.string().trim().max(200).optional(),
       filter: z.string().trim().max(50).optional(),
       sort: z.string().trim().max(50).optional(),
+      // type=opportunity lists postings students can apply to; default lists portfolio projects.
+      type: z.enum(['portfolio', 'opportunity']).optional(),
+      // mine=true limits opportunities to the caller's own postings.
+      mine: z.preprocess(
+        (value) => (typeof value === 'string' ? value === 'true' : value),
+        z.boolean().optional()
+      ),
       page: z.preprocess(
         parseOptionalNumber,
         z.number({ invalid_type_error: 'Page must be a valid number' }).int('Page must be an integer').min(1, 'Page must be at least 1').optional()

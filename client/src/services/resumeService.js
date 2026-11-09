@@ -5,7 +5,7 @@
 // No fake data, no fallback data injected here.
 // ============================================================
 
-import api from './api.js';
+import api, { LONG_TIMEOUT_MS } from './api.js';
 
 // ── Existing upload-based operations ─────────────────────────────────────────
 
@@ -25,6 +25,7 @@ export const uploadResume = async (file) => {
   formData.append('resume', file);
   const response = await api.post('/resume', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: LONG_TIMEOUT_MS,
   });
   return response.data;
 };
@@ -37,6 +38,7 @@ export const replaceResume = async (file) => {
   formData.append('resume', file);
   const response = await api.put('/resume', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: LONG_TIMEOUT_MS,
   });
   return response.data;
 };
@@ -62,7 +64,7 @@ export const deleteResume = async () => {
  * @returns {Promise<{ resume: object, atsResult: object|null }>}
  */
 export const generateResume = async ({ jobDescription = null, sections = {} } = {}) => {
-  const response = await api.post('/resume/generate', { jobDescription, sections });
+  const response = await api.post('/resume/generate', { jobDescription, sections }, { timeout: LONG_TIMEOUT_MS });
   return response.data;
 };
 
@@ -107,7 +109,7 @@ export const importToProfile = async ({ skills = [], education = null } = {}) =>
  * Re-run ATS analysis on the uploaded resume against an optional job description.
  */
 export const reanalyzeATS = async (jobDescription = null) => {
-  const response = await api.post('/resume/reanalyze-ats', { jobDescription });
+  const response = await api.post('/resume/reanalyze-ats', { jobDescription }, { timeout: LONG_TIMEOUT_MS });
   return response.data;
 };
 

@@ -60,7 +60,7 @@ const ForgotPassword = () => {
 
           {resetToken && (
             <div className="mt-4 rounded border border-emerald-300 bg-white p-3 text-xs">
-              <p className="font-semibold text-gray-700">Development Reset Link:</p>
+              <p className="font-semibold text-gray-700">Your one-time reset link (valid for 1 hour):</p>
               <p className="mt-1 font-mono text-[11px] text-gray-600 break-all">
                 Token: {resetToken}
               </p>

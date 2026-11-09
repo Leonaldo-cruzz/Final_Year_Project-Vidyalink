@@ -1,7 +1,8 @@
 import mongoose from 'mongoose';
+import { DEFAULT_DB_NAME } from '../config/db.js';
 import crypto from 'crypto';
 import User from '../models/user.model.js';
-import StudentProfile from '../models/studentProfile.model.js';
+import Profile from '../models/profile.model.js';
 import Project from '../models/project.model.js';
 import Workspace from '../models/workspace.model.js';
 import Milestone from '../models/milestone.model.js';
@@ -112,8 +113,8 @@ const DEMO_USERS = [
 async function seedRichDemo() {
   try {
     const mongoUri = env.MONGODB_URI || 'mongodb://127.0.0.1:27017/vidyalink';
-    console.log(`Connecting to MongoDB at ${mongoUri}...`);
-    await mongoose.connect(mongoUri);
+    console.log(`Connecting to MongoDB (database: ${DEFAULT_DB_NAME})...`);
+    await mongoose.connect(mongoUri, { dbName: DEFAULT_DB_NAME });
 
     console.log('Seeding demo accounts with fictional institutional identities...');
     const usersMap = {};
@@ -140,38 +141,25 @@ async function seedRichDemo() {
     const recruiterUser = usersMap['recruiter@vidyalink.edu'];
 
     // 1. Student Profile for Alex Student
-    await StudentProfile.findOneAndUpdate(
+    // The API reads the Profile model (profile.model.js), not StudentProfile.
+    await Profile.findOneAndUpdate(
       { user: studentUser._id },
       {
         user: studentUser._id,
+        fullName: studentUser.fullName,
+        headline: 'Systems & ML Engineering Student',
         bio: 'Systems & ML engineering student passionate about high-throughput distributed inference pipelines and verifiable academic project evidence.',
         college: 'Vidya Institute of Technology (Demo)',
-        department: 'School of Engineering',
+        degree: 'Bachelor of Technology',
         branch: 'Computer Science & Engineering',
         graduationYear: 2026,
-        cgpa: 3.92,
+        currentYear: 4,
+        cgpa: 9.2,
         githubUsername: 'alexstudent-demo',
         skills: ['Distributed Systems', 'PyTorch', 'TypeScript', 'Node.js', 'Kubernetes', 'gRPC', 'Go'],
-        education: [
-          {
-            institution: 'Vidya Institute of Technology (Demo)',
-            degree: 'Bachelor of Technology',
-            fieldOfStudy: 'Computer Science & Engineering',
-            startYear: 2022,
-            endYear: 2026,
-            description: 'Major GPA: 3.92/4.00. Dean’s Honors List (2022–2026). Specialization in Distributed Cloud Systems.',
-          },
-        ],
-        certifications: [
-          {
-            name: 'Cloud Native Developer Certification (Demo)',
-            issuingOrganization: 'Cloud Native Computing Foundation (Demo)',
-            issueDate: new Date('2025-05-15'),
-            credentialId: 'CND-8849201',
-          },
-        ],
+        interests: ['Cloud Systems', 'AI Infrastructure'],
       },
-      { upsert: true, new: true }
+      { upsert: true, new: true, runValidators: true, setDefaultsOnInsert: true }
     );
     console.log('Upserted student profile for Alex Student');
 
@@ -190,8 +178,13 @@ async function seedRichDemo() {
         projectStatus: 'Completed',
         verificationStatus: 'Verified',
         featured: true,
+        isOpportunity: true,
       });
       console.log('Created faculty project');
+    }
+    if (!facultyProject.isOpportunity) {
+      facultyProject.isOpportunity = true;
+      await facultyProject.save({ validateBeforeSave: false });
     }
 
     let recruiterProject = await Project.findOne({ title: 'Autonomous Vision & Edge Telemetry (Demo)' });
@@ -208,8 +201,13 @@ async function seedRichDemo() {
         projectStatus: 'In Progress',
         verificationStatus: 'Verified',
         featured: true,
+        isOpportunity: true,
       });
       console.log('Created recruiter industry project');
+    }
+    if (!recruiterProject.isOpportunity) {
+      recruiterProject.isOpportunity = true;
+      await recruiterProject.save({ validateBeforeSave: false });
     }
 
     // 3. Application linking Alex to facultyProject
@@ -223,6 +221,7 @@ async function seedRichDemo() {
         project: facultyProject._id,
         studentId: studentUser._id,
         student: studentUser._id,
+        recruiterId: facultyUser._id,
         coverLetter: 'I have hands-on experience building distributed systems with Go and PyTorch, optimizing memory allocations for inference workloads.',
         skills: ['Distributed Systems', 'PyTorch', 'gRPC', 'Docker'],
         status: 'Selected',

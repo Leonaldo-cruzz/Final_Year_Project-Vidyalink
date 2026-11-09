@@ -12,19 +12,7 @@ import axios from 'axios';
 
 // ── In-Memory Token Store ────────────────────────────────────
 let _accessToken = null;
-let _isRefreshing = false;
-let _failedQueue = [];
-
-const processQueue = (error, token = null) => {
-  _failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token);
-    }
-  });
-  _failedQueue = [];
-};
+let _refreshPromise = null;
 
 /** Set the in-memory access token after login / refresh. */
 export const setAccessToken = (token) => {
@@ -39,6 +27,33 @@ export const clearAccessToken = () => {
 /** Get the current in-memory access token. */
 export const getAccessToken = () => _accessToken;
 
+// Render free-tier services sleep when idle and can take 30–60s to wake up.
+// Requests that may hit a cold service (session bootstrap, AI, uploads) use
+// these longer per-request timeouts instead of the 15s default.
+export const AUTH_TIMEOUT_MS = 60_000;
+export const LONG_TIMEOUT_MS = 120_000;
+
+// Endpoints whose 401 means "bad credentials / no session" — never a reason
+// to attempt a silent refresh (doing so used to hard-reload the login page and
+// hide the "Invalid email or password" message).
+const NO_REFRESH_ENDPOINTS = [
+  '/auth/login',
+  '/auth/register',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+  '/auth/refresh-token',
+  '/auth/logout',
+];
+
+// Pages that render without a session. A failed refresh while on one of these
+// must not bounce the visitor to /login.
+const PUBLIC_PATHS = ['/', '/login', '/register', '/forgot-password', '/reset-password'];
+const isPublicPath = (pathname = '') =>
+  PUBLIC_PATHS.includes(pathname) || pathname.startsWith('/portfolio/verify/');
+
+const isNoRefreshEndpoint = (url = '') =>
+  NO_REFRESH_ENDPOINTS.some((endpoint) => url.includes(endpoint));
+
 // ── Axios Instance ───────────────────────────────────────────
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api/v1',
@@ -46,8 +61,31 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
   withCredentials: true, // Required for HTTP-Only refresh token cookie
-  timeout: 15_000,       // 15-second timeout
+  timeout: 15_000,       // 15-second default timeout
 });
+
+/**
+ * Exchange the HTTP-only refresh cookie for a new access token.
+ * Single-flight: concurrent callers (session restore, StrictMode double
+ * effects, several 401s at once) share one request, so token rotation on the
+ * server never revokes a sibling request's token.
+ */
+export const refreshAccessToken = () => {
+  if (!_refreshPromise) {
+    _refreshPromise = api
+      .post('/auth/refresh-token', undefined, { timeout: AUTH_TIMEOUT_MS })
+      .then((response) => {
+        const { accessToken } = response.data?.data || {};
+        if (!accessToken) throw new Error('No access token in refresh response');
+        setAccessToken(accessToken);
+        return accessToken;
+      })
+      .finally(() => {
+        _refreshPromise = null;
+      });
+  }
+  return _refreshPromise;
+};
 
 // ── Request Interceptor ──────────────────────────────────────
 api.interceptors.request.use(
@@ -55,6 +93,14 @@ api.interceptors.request.use(
     // Attach access token from memory (never localStorage)
     if (_accessToken) {
       config.headers.Authorization = `Bearer ${_accessToken}`;
+    }
+    // Let the browser set the multipart boundary for file uploads.
+    if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+      if (typeof config.headers?.delete === 'function') {
+        config.headers.delete('Content-Type');
+      } else if (config.headers) {
+        delete config.headers['Content-Type'];
+      }
     }
     return config;
   },
@@ -71,7 +117,7 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
     // Guard 1: only act on 401 errors
-    if (error.response?.status !== 401) {
+    if (error.response?.status !== 401 || !originalRequest) {
       return Promise.reject(error);
     }
 
@@ -80,54 +126,29 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // Guard 3: CRITICAL — the refresh-token endpoint itself must NEVER
-    // trigger a recursive refresh attempt through this interceptor.
-    // Checking config.url (the relative path passed to axios) for the
-    // refresh endpoint path to bail out immediately.
-    if (originalRequest.url?.includes('/auth/refresh-token')) {
+    // Guard 3: CRITICAL — auth endpoints (including refresh-token itself)
+    // must NEVER trigger a refresh attempt through this interceptor.
+    if (isNoRefreshEndpoint(originalRequest.url)) {
       return Promise.reject(error);
-    }
-
-    // Queue concurrent requests while token is being refreshed
-    if (_isRefreshing) {
-      return new Promise((resolve, reject) => {
-        _failedQueue.push({ resolve, reject });
-      })
-        .then((token) => {
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          return api(originalRequest);
-        })
-        .catch((err) => Promise.reject(err));
     }
 
     // Attempt silent token refresh — mark retry to prevent looping
     originalRequest._retry = true;
-    _isRefreshing = true;
 
     try {
-      const response = await api.post('/auth/refresh-token');
-      const { accessToken } = response.data?.data || {};
-
-      if (!accessToken) throw new Error('No access token in refresh response');
-
-      setAccessToken(accessToken);
-      processQueue(null, accessToken);
-
+      const accessToken = await refreshAccessToken();
       originalRequest.headers.Authorization = `Bearer ${accessToken}`;
       return api(originalRequest);
     } catch (refreshError) {
-      // Refresh failed — clear state and redirect to login
-      processQueue(refreshError, null);
       clearAccessToken();
 
-      // Redirect without React Router (works from outside component tree)
-      if (typeof window !== 'undefined') {
+      // Session is gone. Only force a login when the user is on a page that
+      // needs one; public pages simply handle the failed request.
+      if (typeof window !== 'undefined' && !isPublicPath(window.location.pathname)) {
         window.location.href = '/login?session=expired';
       }
 
       return Promise.reject(refreshError);
-    } finally {
-      _isRefreshing = false;
     }
   },
 );

@@ -36,8 +36,21 @@ const uploadsDirectory = path.resolve(__dirname, '../uploads');
 
 const getAllowedOrigins = () => {
   const origins = `${env.CORS_ORIGIN || ''},${env.CLIENT_URL || ''}`;
-  return origins.split(',').map((origin) => origin.trim()).filter(Boolean);
+  return origins
+    .split(',')
+    .map((origin) => origin.trim().replace(/\/+$/, ''))
+    .filter(Boolean);
 };
+
+// Session bootstrap calls run on every page load and the health check is
+// probed by Render; neither should consume the shared request budget.
+const RATE_LIMIT_EXEMPT_PATHS = new Set(['/health', '/auth/refresh-token', '/auth/me']);
+
+// Credential endpoints get their own limiter (below) so that ordinary page
+// browsing can never use up the budget and lock a user out of signing in.
+const CREDENTIAL_PATHS = new Set(['/auth/login', '/auth/register', '/auth/forgot-password', '/auth/reset-password']);
+const AUTH_ATTEMPT_WINDOW_MS = 15 * 60 * 1000;
+const AUTH_ATTEMPT_MAX = 20;
 
 const isOriginAllowed = (origin, allowedOrigins) => {
   if (!origin) return true;
@@ -94,8 +107,15 @@ export const createApp = () => {
     },
   }));
   app.use(compression());
-  app.use(express.json({ limit: '10kb' }));
-  app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+  // Resume generation / ATS requests carry job descriptions of up to 50k chars.
+  app.use(express.json({ limit: '1mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+  // Express 5 leaves req.body undefined when a request has no body; handlers
+  // destructure it, so normalise to an empty object.
+  app.use((req, _res, next) => {
+    if (req.body === undefined) req.body = {};
+    next();
+  });
   app.use(cookieParser());
   app.morgan = morgan;
   app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
@@ -106,9 +126,22 @@ export const createApp = () => {
     max: env.RATE_LIMIT_MAX_REQUESTS,
     standardHeaders: true,
     legacyHeaders: false,
+    skip: (req) => RATE_LIMIT_EXEMPT_PATHS.has(req.path) || CREDENTIAL_PATHS.has(req.path),
     handler: (_req, res) => ApiResponse.error(res, 429, 'Too many requests. Please try again later.'),
   });
   app.use(apiPrefix, limiter);
+
+  // Brute-force protection: only failed credential attempts count.
+  const credentialLimiter = rateLimit({
+    windowMs: AUTH_ATTEMPT_WINDOW_MS,
+    max: AUTH_ATTEMPT_MAX,
+    standardHeaders: true,
+    legacyHeaders: false,
+    skipSuccessfulRequests: true,
+    skip: (req) => !CREDENTIAL_PATHS.has(req.path),
+    handler: (_req, res) => ApiResponse.error(res, 429, 'Too many attempts. Please wait a few minutes and try again.'),
+  });
+  app.use(apiPrefix, credentialLimiter);
 
   app.get('/', (_req, res) => ApiResponse.ok(res, 'VidyaLink API Server Running', {
     version: 'v1',

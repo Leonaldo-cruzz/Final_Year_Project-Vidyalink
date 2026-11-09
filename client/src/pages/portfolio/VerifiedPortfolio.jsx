@@ -17,10 +17,12 @@ import { getLatestAIResults, runAIEvaluation } from '@/services/aiService';
 import mentorshipService from '@/services/mentorshipService';
 import { getErrorMessage } from '@/utils/formatters';
 import { ROUTES } from '@/constants';
+import { useAuth } from '@/context/AuthContext';
 
 const VerifiedPortfolio = () => {
   const { certificateId } = useParams();
   const navigate = useNavigate();
+  const { isAuthenticated, loading: authLoading } = useAuth();
 
   const [portfolios, setPortfolios] = useState([]);
   const [singlePortfolio, setSinglePortfolio] = useState(null);
@@ -40,7 +42,9 @@ const VerifiedPortfolio = () => {
           const res = await verifyCertificate(certificateId);
           setSinglePortfolio(res.data);
           const studentId = res.data?.student?._id || res.data?.student;
-          if (studentId) {
+          // Endorsements need a session; anonymous visitors of a shared
+          // certificate link just see the verified portfolio.
+          if (studentId && isAuthenticated) {
             try {
               const endRes = await mentorshipService.getStudentEndorsements(studentId);
               setEndorsements(Array.isArray(endRes) ? endRes : endRes?.data || []);
@@ -90,8 +94,10 @@ const VerifiedPortfolio = () => {
         setLoading(false);
       }
     };
+    // Wait for session restore so we know whether endorsements are viewable.
+    if (authLoading) return;
     fetchPortfolioData();
-  }, [certificateId]);
+  }, [certificateId, isAuthenticated, authLoading]);
 
   const handleShare = (certId) => {
     const url = `${window.location.origin}/portfolio/verify/${certId}`;

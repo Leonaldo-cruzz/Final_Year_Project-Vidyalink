@@ -48,6 +48,8 @@ export const ROUTES = {
   APPLICATIONS: '/applications',
   PROJECT_DETAIL: '/projects/:id',
   CREATE_PROJECT: '/projects/new',
+  OPPORTUNITIES: '/opportunities',
+  CREATE_OPPORTUNITY: '/opportunities/new',
   PORTFOLIO: '/portfolio/me',
   RESUME: '/resume',
   CERTIFICATES: '/certificates',
@@ -56,7 +58,7 @@ export const ROUTES = {
   VERIFY_PORTFOLIO: '/portfolio/verify/:certificateId',
 
   // Fallback
-  NOT_FOUND: '*',
+  NOT_FOUND: '/not-found', // matched by the catch-all route
 };
 
 /** Maps a user's role to their dashboard route */
@@ -91,6 +93,7 @@ export const NAV_ITEMS = {
   [ROLES.STUDENT]: [
     { label: 'Dashboard',    icon: 'LayoutDashboard', path: ROUTES.STUDENT_DASHBOARD },
     { label: 'Projects',     icon: 'FolderKanban',    path: ROUTES.PROJECTS },
+    { label: 'Opportunities', icon: 'Briefcase',      path: ROUTES.OPPORTUNITIES },
     { label: 'Applications', icon: 'Send',            path: ROUTES.APPLICATIONS },
     { label: 'Certificates', icon: 'Award',           path: ROUTES.CERTIFICATES },
     { label: 'GitHub',       icon: 'Code2',           path: ROUTES.GITHUB },
@@ -102,12 +105,14 @@ export const NAV_ITEMS = {
   [ROLES.FACULTY]: [
     { label: 'Dashboard',     icon: 'LayoutDashboard', path: ROUTES.FACULTY_DASHBOARD },
     { label: 'Verifications', icon: 'Award',           path: '/faculty/verifications' },
+    { label: 'Opportunities', icon: 'Briefcase',       path: ROUTES.OPPORTUNITIES },
     { label: 'My Profile',    icon: 'UserCircle',      path: ROUTES.PROFILE },
   ],
   [ROLES.RECRUITER]: [
     { label: 'Talent Hub',    icon: 'LayoutDashboard', path: ROUTES.RECRUITER_DASHBOARD },
     { label: 'Applicants',    icon: 'Users',           path: '/recruiter/applicants' },
-    { label: 'Postings',      icon: 'FolderKanban',    path: ROUTES.PROJECTS },
+    { label: 'Postings',      icon: 'Briefcase',       path: ROUTES.OPPORTUNITIES },
+    { label: 'Talent Search', icon: 'FolderKanban',    path: ROUTES.PROJECTS },
     { label: 'My Profile',    icon: 'UserCircle',      path: ROUTES.PROFILE },
   ],
   [ROLES.ALUMNI]: [
@@ -117,6 +122,7 @@ export const NAV_ITEMS = {
   [ROLES.ADMIN]: [
     { label: 'Admin Console', icon: 'LayoutDashboard', path: ROUTES.ADMIN_DASHBOARD },
     { label: 'Verifications', icon: 'Award',           path: '/admin/verifications' },
+    { label: 'Opportunities', icon: 'Briefcase',       path: ROUTES.OPPORTUNITIES },
     { label: 'My Profile',    icon: 'UserCircle',      path: ROUTES.PROFILE },
   ],
 };

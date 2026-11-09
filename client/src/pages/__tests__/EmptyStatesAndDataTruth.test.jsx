@@ -44,21 +44,46 @@ vi.mock('@/services/resumeService', () => ({
   getResume: vi.fn().mockResolvedValue({ data: null }),
 }));
 
+// Mocks use the real service method names and response shapes so that
+// shape regressions (e.g. GET /projects returning { projects, pagination })
+// are caught here.
+vi.mock('@/services/projectService', () => ({
+  getProjects: vi.fn().mockResolvedValue({ success: true, data: { projects: [], pagination: { total: 0 } } }),
+}));
+
+vi.mock('@/services/verificationService', () => ({
+  getVerificationHistory: vi.fn().mockResolvedValue({ data: [] }),
+  getFacultyVerificationDashboard: vi.fn().mockResolvedValue({
+    data: { summary: { pendingRequests: 0, verifiedToday: 0 }, verifications: [] },
+  }),
+  submitVerification: vi.fn(),
+}));
+
 vi.mock('@/services/mentorshipService', () => ({
   default: {
-    getMentorships: vi.fn().mockResolvedValue({ data: [] }),
-    updateStatus: vi.fn().mockResolvedValue({ data: {} }),
+    getMyRequests: vi.fn().mockResolvedValue([]),
+    getMentees: vi.fn().mockResolvedValue([]),
+    getMyEndorsements: vi.fn().mockResolvedValue([]),
+    getMyMockInterviews: vi.fn().mockResolvedValue([]),
+    acceptRequest: vi.fn(),
+    declineRequest: vi.fn(),
+    endorseSkill: vi.fn(),
+    scheduleMockInterview: vi.fn(),
+    updateMockInterviewStatus: vi.fn(),
+    submitMockInterviewFeedback: vi.fn(),
   },
 }));
 
 vi.mock('@/services/referralService', () => ({
   default: {
-    getReferrals: vi.fn().mockResolvedValue({ data: [] }),
+    getMyReferrals: vi.fn().mockResolvedValue([]),
     createReferral: vi.fn().mockResolvedValue({ data: {} }),
   },
 }));
 
 vi.mock('@/services/api', () => ({
+  AUTH_TIMEOUT_MS: 60000,
+  LONG_TIMEOUT_MS: 120000,
   default: {
     get: vi.fn().mockResolvedValue({ data: [] }),
     post: vi.fn().mockResolvedValue({ data: {} }),
@@ -67,6 +92,7 @@ vi.mock('@/services/api', () => ({
 }));
 
 import { useAuth } from '@/context/AuthContext';
+import { getProjects } from '@/services/projectService';
 import Login from '../Login';
 import StudentDashboard from '../student/StudentDashboard';
 import FacultyDashboard from '../faculty/FacultyDashboard';
@@ -165,7 +191,7 @@ describe('Product Truth & Data Integrity Tests', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/no pending verification requests/i)).toBeInTheDocument();
-      expect(screen.getByText(/no supervised projects registered/i)).toBeInTheDocument();
+      expect(screen.getByText(/no opportunities posted yet/i)).toBeInTheDocument();
     });
 
     // Ensure no synthetic student submissions are displayed
@@ -225,6 +251,36 @@ describe('Product Truth & Data Integrity Tests', () => {
     expect(screen.queryByText('Arjun Nair')).not.toBeInTheDocument();
     expect(screen.queryByText('Sneha Patel')).not.toBeInTheDocument();
     expect(screen.queryByText('Rohan Das')).not.toBeInTheDocument();
+  });
+
+  it('TC-PT7: Student dashboard renders real projects from the { projects, pagination } payload', async () => {
+    useAuth.mockReturnValue({
+      user: { _id: 'stu-1', fullName: 'Real Student', email: 'stu@example.com', role: 'student' },
+    });
+    getProjects.mockResolvedValueOnce({
+      success: true,
+      data: {
+        projects: [{
+          _id: 'p1',
+          title: 'Campus Navigator',
+          shortDescription: 'Indoor navigation for campus buildings',
+          technologies: ['React'],
+          verificationStatus: 'Pending',
+        }],
+        pagination: { total: 1 },
+      },
+    });
+
+    render(
+      <MemoryRouter>
+        <StudentDashboard />
+      </MemoryRouter>
+    );
+
+    // Previously the payload object was stored as the list and .filter() crashed the page.
+    await waitFor(() => {
+      expect(screen.queryByText(/no verified projects yet/i)).toBeInTheDocument();
+    });
   });
 
   it('TC-PT6: Unspecified user fields render blank without fake fallback strings', async () => {

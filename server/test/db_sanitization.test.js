@@ -149,7 +149,7 @@ test('TC-DB-SEC-4: Runtime error handler sanitizes runtime database errors', asy
   const mockClient = {
     connect: async () => ({ connection: { host: 'cluster0.mongodb.net' } }),
     connection: {
-      once: (event, handler) => {
+      on: (event, handler) => {
         if (event === 'error') runtimeErrorHandler = handler;
       },
     },
@@ -257,4 +257,48 @@ test('TC-DB-SEC-7: connectDB enforces dbName: vidyalink regardless of URI databa
   // 3. Verify logs confirm (db: vidyalink) and no credentials
   assert.ok(infoLogs.every((log) => log.includes('(db: vidyalink)')));
   assert.ok(infoLogs.every((log) => !log.includes(FAKE_USER) && !log.includes(FAKE_PASS)));
+});
+
+test('TC-DB-SEC-8: connection error log reveals the real (redacted) driver cause and a hint', async () => {
+  const errorLogs = [];
+  const mockLogger = { log: () => {}, warn: () => {}, error: (msg) => errorLogs.push(msg) };
+
+  const authError = new Error(`bad auth : Authentication failed for user ${FAKE_USER} with password ${FAKE_PASS}`);
+  authError.name = 'MongoServerError';
+  authError.code = 8000;
+  authError.codeName = 'AtlasError';
+
+  const mockClient = { connect: async () => { throw authError; }, connection: {} };
+  await assert.rejects(() => connectDB(FAKE_URI, mockClient, mockLogger));
+
+  const logged = errorLogs[0];
+  assert.ok(logged.includes('bad auth : Authentication failed'), 'Real driver message must be logged');
+  assert.ok(logged.includes('8000 (AtlasError)'), 'codeName must be logged');
+  assert.ok(logged.includes('cluster0.abcde.mongodb.net'), 'Target host must be logged');
+  assert.ok(/hint:\s+Authentication failed/.test(logged), 'A hint must be logged');
+  assert.equal(logged.includes(FAKE_USER), false);
+  assert.equal(logged.includes(FAKE_PASS), false);
+  assert.equal(logged.includes('mongodb+srv://'), false);
+});
+
+test('TC-DB-SEC-9: server selection errors list each server error', async () => {
+  const errorLogs = [];
+  const mockLogger = { log: () => {}, warn: () => {}, error: (msg) => errorLogs.push(msg) };
+
+  const inner = new Error('connection <monitor> to 1.2.3.4:27017 timed out');
+  inner.name = 'MongoNetworkTimeoutError';
+  const selectionError = new Error('Server selection timed out after 30000 ms');
+  selectionError.name = 'MongooseServerSelectionError';
+  selectionError.reason = {
+    type: 'ReplicaSetNoPrimary',
+    servers: new Map([['ac-abc-shard-00-00.abcde.mongodb.net:27017', { type: 'Unknown', error: inner }]]),
+  };
+
+  const mockClient = { connect: async () => { throw selectionError; }, connection: {} };
+  await assert.rejects(() => connectDB(FAKE_URI, mockClient, mockLogger));
+
+  const logged = errorLogs[0];
+  assert.ok(logged.includes('topology: ReplicaSetNoPrimary'));
+  assert.ok(logged.includes('ac-abc-shard-00-00.abcde.mongodb.net:27017 type=Unknown → MongoNetworkTimeoutError'));
+  assert.ok(logged.includes('Network Access'), 'Timeout hint must mention Atlas Network Access');
 });

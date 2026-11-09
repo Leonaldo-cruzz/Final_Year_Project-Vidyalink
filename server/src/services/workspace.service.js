@@ -6,7 +6,7 @@ class WorkspaceService {
   async getUserWorkspaces(userId, role) {
     const query = role === 'student' ? { student: userId } : { owner: userId };
     return Workspace.find(query)
-      .populate('project', 'title description techStack projectId')
+      .populate('project', 'title shortDescription detailedDescription technologies category')
       .populate('student', 'fullName email avatar college branch')
       .populate('owner', 'fullName email avatar college')
       .sort({ updatedAt: -1 });

@@ -111,3 +111,60 @@ describe('Axios interceptor — URL guard logic (unit)', () => {
     }
   });
 });
+
+// ── Interceptor behaviour through the real request pipeline ──────────────────
+// A fake adapter answers requests so the response interceptor actually runs.
+const reject401 = (config, message = 'Unauthorized') => {
+  const error = new Error(message);
+  error.config = config;
+  error.response = { status: 401, data: { message }, config };
+  return Promise.reject(error);
+};
+
+describe('Axios interceptor — auth flows', () => {
+  it('TC-I7: failed login (401) surfaces the error without refreshing or redirecting', async () => {
+    const { api } = await getApi();
+    const calls = [];
+    api.defaults.adapter = (config) => {
+      calls.push(config.url);
+      return reject401(config, 'Invalid email or password');
+    };
+    window.history.pushState({}, '', '/login');
+
+    await expect(api.post('/auth/login', { email: 'a@b.co', password: 'x' }))
+      .rejects.toMatchObject({ response: { data: { message: 'Invalid email or password' } } });
+
+    expect(calls).toEqual(['/auth/login']);
+    expect(window.location.pathname).toBe('/login');
+  });
+
+  it('TC-I8: concurrent 401s share a single refresh request and retry with the new token', async () => {
+    const { api, setAccessToken } = await getApi();
+    setAccessToken('expired-token');
+    let refreshCalls = 0;
+    api.defaults.adapter = async (config) => {
+      if (config.url === '/auth/refresh-token') {
+        refreshCalls += 1;
+        return { data: { data: { accessToken: 'fresh-token' } }, status: 200, statusText: 'OK', headers: {}, config };
+      }
+      if (config.headers.Authorization === 'Bearer fresh-token') {
+        return { data: { ok: true, url: config.url }, status: 200, statusText: 'OK', headers: {}, config };
+      }
+      return reject401(config);
+    };
+
+    const results = await Promise.all([api.get('/projects'), api.get('/certificates'), api.get('/auth/me')]);
+
+    expect(refreshCalls).toBe(1);
+    expect(results.map((r) => r.data.ok)).toEqual([true, true, true]);
+  });
+
+  it('TC-I9: failed refresh on a public page does not force a redirect to /login', async () => {
+    const { api } = await getApi();
+    api.defaults.adapter = (config) => reject401(config);
+    window.history.pushState({}, '', '/portfolio/verify/abc123');
+
+    await expect(api.get('/mentorship/endorsements/student/s1')).rejects.toBeTruthy();
+    expect(window.location.pathname).toBe('/portfolio/verify/abc123');
+  });
+});

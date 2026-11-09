@@ -7,6 +7,7 @@ import Project from '../models/project.model.js';
 import User from '../models/user.model.js';
 import Profile from '../models/profile.model.js';
 import AIEvaluation from '../models/aiEvaluation.model.js';
+import Application from '../models/application.model.js';
 import ApiError from '../utils/ApiError.js';
 import {
   PROJECT_SCREENSHOT_DIRECTORY,
@@ -41,6 +42,13 @@ const getUploadedScreenshotUrls = (files = []) => files.map(
   (file) => `${PROJECT_SCREENSHOT_PUBLIC_PATH}${file.filename}`
 );
 
+const OPPORTUNITY_AUTHOR_ROLES = ['recruiter', 'faculty'];
+
+// Owner-scoped lookup; admins may manage any project.
+const ownedProjectQuery = (userId, id, userRole) => (
+  userRole === 'admin' ? { _id: id } : { _id: id, userId }
+);
+
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const removeStoredScreenshots = async (screenshotUrls) => {
@@ -58,13 +66,16 @@ const removeStoredScreenshots = async (screenshotUrls) => {
 };
 
 class ProjectService {
-  async createProject(userId, projectData, files = []) {
+  async createProject(userId, projectData, files = [], userRole = 'student') {
     const data = pickProjectFields(projectData);
+    const isOpportunity = OPPORTUNITY_AUTHOR_ROLES.includes(userRole)
+      || (userRole === 'admin' && projectData.isOpportunity === true);
     const project = await Project.create({
       userId,
       ...data,
       screenshots: getUploadedScreenshotUrls(files),
       verificationStatus: 'Pending',
+      isOpportunity,
     });
 
     return project;
@@ -82,11 +93,17 @@ class ProjectService {
       search,
       filter,
       sort,
+      type,
+      mine,
       page = 1,
       limit = 12,
     } = {},
     userRole = 'student'
   ) {
+    if (type === 'opportunity') {
+      return this.getOpportunities(userId, { category, technology, search, filter, sort, mine, page, limit }, userRole);
+    }
+
     const isRecruiterOrAlumni = ['alumni', 'recruiter'].includes(userRole);
     const isAdmin = userRole === 'admin';
 
@@ -101,7 +118,8 @@ class ProjectService {
       throw ApiError.forbidden('Candidate search filters are restricted to recruiters and administrators');
     }
 
-    const query = {};
+    // Portfolio listings never include recruiter/faculty opportunities.
+    const query = { isOpportunity: { $ne: true } };
 
     if (isRecruiterOrAlumni) {
       // Security: Recruiters and alumni can ONLY ever discover Verified projects
@@ -359,14 +377,109 @@ class ProjectService {
     } else {
       query = { _id: id, userId };
     }
-    const project = await Project.findOne(query)
-      .populate('userId', 'fullName email avatar college branch graduationYear');
+    // Opportunities are visible to every signed-in role.
+    const project = await Project.findOne({ $or: [query, { _id: id, isOpportunity: true }] })
+      .populate('userId', 'fullName email avatar college branch graduationYear role');
     if (!project) throw ApiError.notFound('Project not found');
     return project;
   }
 
-  async updateProject(userId, id, projectData, files = []) {
-    const project = await Project.findOne({ _id: id, userId });
+  /**
+   * Opportunities (recruiter/faculty postings). Everyone sees open postings;
+   * `mine` limits the list to the caller's own postings (any status) with
+   * applicant counts.
+   */
+  async getOpportunities(userId, {
+    category, technology, search, filter, sort, mine, page = 1, limit = 12,
+  } = {}, userRole = 'student') {
+    const query = { isOpportunity: true };
+    const ownOnly = Boolean(mine) && userRole !== 'student';
+
+    if (ownOnly) {
+      // Admins manage every posting; recruiters/faculty only their own.
+      if (userRole !== 'admin') query.userId = userId;
+    } else if (filter !== 'Archived') {
+      query.projectStatus = { $ne: 'Archived' };
+    }
+
+    if (['Completed', 'In Progress', 'Prototype', 'Archived'].includes(filter)) {
+      query.projectStatus = filter;
+    }
+    if (category && category !== 'All') query.category = category;
+    if (technology && technology.trim()) {
+      query.technologies = { $elemMatch: { $regex: new RegExp(escapeRegExp(technology.trim()), 'i') } };
+    }
+    if (search?.trim()) {
+      const searchRegex = new RegExp(escapeRegExp(search.trim()), 'i');
+      query.$or = [
+        { title: searchRegex },
+        { shortDescription: searchRegex },
+        { detailedDescription: searchRegex },
+        { domain: searchRegex },
+        { technologies: searchRegex },
+      ];
+    }
+
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 12));
+    const sortOptions = {
+      Oldest: { createdAt: 1 },
+      'A-Z': { title: 1 },
+      'Recently Updated': { updatedAt: -1 },
+      Newest: { createdAt: -1 },
+    };
+
+    const [total, rawProjects] = await Promise.all([
+      Project.countDocuments(query),
+      Project.find(query)
+        .populate('userId', 'fullName email avatar college role')
+        .sort(sortOptions[sort] || { createdAt: -1 })
+        .skip((pageNum - 1) * limitNum)
+        .limit(limitNum),
+    ]);
+
+    const projectIds = rawProjects.map((p) => p._id);
+    const showCounts = ownOnly || userRole === 'admin';
+    const [applicantCounts, myApplications] = await Promise.all([
+      showCounts
+        ? Application.aggregate([
+          { $match: { projectOpportunityId: { $in: projectIds }, status: { $ne: 'Withdrawn' } } },
+          { $group: { _id: '$projectOpportunityId', count: { $sum: 1 } } },
+        ])
+        : [],
+      userRole === 'student'
+        ? Application.find({ projectOpportunityId: { $in: projectIds }, studentId: userId })
+          .select('projectOpportunityId status')
+        : [],
+    ]);
+
+    const countMap = new Map(applicantCounts.map((entry) => [String(entry._id), entry.count]));
+    const myApplicationMap = new Map(myApplications.map((app) => [String(app.projectOpportunityId), app]));
+
+    const projects = rawProjects.map((p) => {
+      const obj = p.toObject ? p.toObject() : { ...p };
+      const id = String(obj._id);
+      if (showCounts) obj.applicantCount = countMap.get(id) || 0;
+      if (userRole === 'student') {
+        const application = myApplicationMap.get(id);
+        obj.myApplication = application ? { _id: application._id, status: application.status } : null;
+      }
+      return obj;
+    });
+
+    const totalPages = Math.max(1, Math.ceil(total / limitNum));
+    projects.pagination = {
+      total,
+      page: pageNum,
+      limit: limitNum,
+      totalPages,
+      hasMore: pageNum < totalPages,
+    };
+    return projects;
+  }
+
+  async updateProject(userId, id, projectData, files = [], userRole = 'student') {
+    const project = await Project.findOne(ownedProjectQuery(userId, id, userRole));
     if (!project) throw ApiError.notFound('Project not found');
 
     Object.assign(project, pickProjectFields(projectData));
@@ -390,9 +503,19 @@ class ProjectService {
     return project;
   }
 
-  async deleteProject(userId, id) {
-    const project = await Project.findOne({ _id: id, userId });
+  async deleteProject(userId, id, userRole = 'student') {
+    const project = await Project.findOne(ownedProjectQuery(userId, id, userRole));
     if (!project) throw ApiError.notFound('Project not found');
+
+    if (project.isOpportunity) {
+      const activeApplications = await Application.countDocuments({
+        projectOpportunityId: project._id,
+        status: { $nin: ['Withdrawn', 'Rejected'] },
+      });
+      if (activeApplications > 0) {
+        throw ApiError.conflict('This opportunity has active applications. Archive it instead of deleting it.');
+      }
+    }
 
     await removeStoredScreenshots(project.screenshots);
     await Project.deleteOne({ _id: id });
@@ -409,8 +532,8 @@ class ProjectService {
    *  unreachable  — URL returned 4xx or 5xx
    *  failed       — network error, timeout, or invalid URL
    */
-  async verifyDeployment(userId, id) {
-    const project = await Project.findOne({ _id: id, userId });
+  async verifyDeployment(userId, id, userRole = 'student') {
+    const project = await Project.findOne(ownedProjectQuery(userId, id, userRole));
     if (!project) throw ApiError.notFound('Project not found');
 
     const url = project.liveDeployment?.trim();

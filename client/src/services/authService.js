@@ -3,7 +3,12 @@
 // Consumes backend endpoints: /api/v1/auth/*
 // ============================================================
 
-import api, { setAccessToken, clearAccessToken } from './api';
+import api, {
+  setAccessToken,
+  clearAccessToken,
+  refreshAccessToken,
+  AUTH_TIMEOUT_MS,
+} from './api';
 
 export const authService = {
   /**
@@ -12,7 +17,7 @@ export const authService = {
    * Refresh token is set as HTTP-Only cookie by the server.
    */
   async login(credentials) {
-    const response = await api.post('/auth/login', credentials);
+    const response = await api.post('/auth/login', credentials, { timeout: AUTH_TIMEOUT_MS });
     const { accessToken, user } = response.data?.data || {};
 
     if (accessToken) {
@@ -27,7 +32,7 @@ export const authService = {
    * Returns registered user (no token — login separately).
    */
   async register(userData) {
-    const response = await api.post('/auth/register', userData);
+    const response = await api.post('/auth/register', userData, { timeout: AUTH_TIMEOUT_MS });
     return response.data?.data?.user || response.data;
   },
 
@@ -48,7 +53,7 @@ export const authService = {
    * Returns the currently authenticated user.
    */
   async getCurrentUser() {
-    const response = await api.get('/auth/me');
+    const response = await api.get('/auth/me', { timeout: AUTH_TIMEOUT_MS });
     return response.data?.data?.user;
   },
 
@@ -58,21 +63,15 @@ export const authService = {
    * Called automatically by the Axios interceptor on 401.
    */
   async refreshToken() {
-    const response = await api.post('/auth/refresh-token');
-    const { accessToken } = response.data?.data || {};
-
-    if (accessToken) {
-      setAccessToken(accessToken);
-    }
-
-    return accessToken;
+    // Shared single-flight refresh (see api.js) — never two rotations at once.
+    return refreshAccessToken();
   },
 
   /**
    * POST /api/v1/auth/forgot-password
    */
   async forgotPassword(email) {
-    const response = await api.post('/auth/forgot-password', { email });
+    const response = await api.post('/auth/forgot-password', { email }, { timeout: AUTH_TIMEOUT_MS });
     return response.data?.data || response.data;
   },
 

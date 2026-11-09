@@ -1,6 +1,7 @@
 /* global fetch */
 
 import mongoose from 'mongoose';
+import { DEFAULT_DB_NAME } from '../../src/config/db.js';
 import http from 'node:http';
 import { createApp } from '../../src/app.js';
 import User from '../../src/models/user.model.js';
@@ -40,7 +41,7 @@ async function apiCall(endpoint, { method = 'GET', body = null, token = null } =
 async function runAudit() {
   console.log('🚀 Starting VIDYALINK Live Faculty Verification Audit...');
   const mongoUri = env.MONGODB_URI || 'mongodb://127.0.0.1:27017/vidyalink';
-  await mongoose.connect(mongoUri);
+  await mongoose.connect(mongoUri, { dbName: DEFAULT_DB_NAME });
 
   const app = createApp();
   const server = http.createServer(app);
@@ -61,7 +62,7 @@ async function runAudit() {
       method: 'POST',
       body: { email: 'faculty@vidyalink.edu', password: 'Password123!' },
     });
-    const csFacultyToken = facultyLogin.data?.data?.accessToken;
+    let csFacultyToken = facultyLogin.data?.data?.accessToken;
     const csFacultyId = facultyLogin.data?.data?.user?.id || facultyLogin.data?.data?.user?._id;
 
     const adminLogin = await apiCall('/auth/login', {
@@ -155,6 +156,21 @@ async function runAudit() {
       });
     } else {
       recordResult('WF-SUBMIT', 'Verification submission failed', 'FAIL', submitRes.data);
+    }
+
+    // Submissions are load-balanced across every eligible faculty member in the
+    // student's branch, so act as whichever CS faculty member was assigned.
+    const assigned = verificationId
+      ? await Verification.findById(verificationId).populate('facultyId', 'email')
+      : null;
+    const assignedEmail = assigned?.facultyId?.email;
+    if (assignedEmail && assignedEmail !== 'faculty@vidyalink.edu') {
+      const assignedLogin = await apiCall('/auth/login', {
+        method: 'POST',
+        body: { email: assignedEmail, password: 'Password123!' },
+      });
+      csFacultyToken = assignedLogin.data?.data?.accessToken || csFacultyToken;
+      console.log(`   Request auto-assigned to ${assignedEmail}; continuing as that faculty member.`);
     }
 
     // 3. Duplicate submission prevention

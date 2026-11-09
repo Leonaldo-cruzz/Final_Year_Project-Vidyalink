@@ -212,7 +212,8 @@ test('TC-AUTH-RESET1: Forgot password generates secure SHA-256 token and expirat
 
   try {
     const res = await authService.forgotPassword('engineer@vidyalink.edu');
-    assert.match(res.message, /instructions have been sent/);
+    // No mailer by design: the one-time link is returned for on-screen display.
+    assert.match(res.message, /reset link generated/i);
     assert.ok(res.resetToken);
     assert.ok(res.resetUrl.includes('/reset-password?token='));
     assert.equal(savedUser, true);
