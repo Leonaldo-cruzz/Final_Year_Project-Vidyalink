@@ -63,7 +63,7 @@ const REAL_PROJECTS = [
 
 const REAL_GITHUB = {
   connectionStatus: 'Connected',
-  login:            'priyamal',
+  githubUsername:   'priyamal',
   publicRepos:      23,
 };
 

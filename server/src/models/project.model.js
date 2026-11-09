@@ -155,6 +155,13 @@ const projectSchema = new mongoose.Schema(
       default: 'not_provided',
       index: true,
     },
+    // true = an opportunity posted by a recruiter/faculty that students apply
+    // to; false = a student's own portfolio project.
+    isOpportunity: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
   },
   {
     timestamps: true,

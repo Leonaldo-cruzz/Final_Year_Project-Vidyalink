@@ -1,5 +1,6 @@
 /* global fetch */
 import mongoose from 'mongoose';
+import { DEFAULT_DB_NAME } from '../../src/config/db.js';
 import { env } from '../../src/config/env.js';
 import User from '../../src/models/user.model.js';
 import Project from '../../src/models/project.model.js';
@@ -16,7 +17,7 @@ async function main() {
   console.log('PHASE 2: CRITICAL AI EVALUATION REGRESSION AUDIT');
   console.log('====================================================\n');
 
-  await mongoose.connect(env.MONGODB_URI);
+  await mongoose.connect(env.MONGODB_URI, { dbName: DEFAULT_DB_NAME });
   console.log('✅ Connected to MongoDB:', mongoose.connection.name);
 
   // 1. UNIT & HEURISTIC TESTS ON FINGERPRINTING & CIRCULAR REFERENCES
@@ -83,7 +84,10 @@ async function main() {
   // Check against FastAPI AI service
   const weightsRes = await fetch(`${env.AI_SERVICE_URL || 'http://127.0.0.1:8000'}/api/v1/portfolio/evaluate`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(env.AI_SERVICE_API_KEY ? { 'X-VIDYALINK-INTERNAL-KEY': env.AI_SERVICE_API_KEY } : {}),
+    },
     body: JSON.stringify({
       student_id: 'test-student-1',
       name: 'Test Candidate',

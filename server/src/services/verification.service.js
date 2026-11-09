@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import Certificate from '../models/certificate.model.js';
 import GitHubAccount from '../models/githubAccount.model.js';
 import Profile from '../models/profile.model.js';
+import Portfolio from '../models/portfolio.model.js';
 import Project from '../models/project.model.js';
 import Resume from '../models/resume.model.js';
 import User from '../models/user.model.js';
@@ -556,7 +557,7 @@ class VerificationService {
     }
 
     const studentId = verification.studentId?._id || verification.studentId;
-    const [profile, projects, certificates, resume, github, history] = await Promise.all([
+    const [profile, projects, certificates, resume, github, history, latestPortfolio] = await Promise.all([
       Profile.findOne({ user: studentId }).populate('user', 'email fullName role avatar status'),
       Project.find({ userId: studentId }).sort({ createdAt: -1 }),
       Certificate.find({ userId: studentId }).sort({ createdAt: -1 }),
@@ -569,6 +570,8 @@ class VerificationService {
       })
         .populate('facultyId', 'fullName email role')
         .sort({ createdAt: 1, _id: 1 }),
+      // Latest issued portfolio — the id the AI results endpoint expects.
+      Portfolio.findOne({ student: studentId }).sort({ createdAt: -1 }).select('_id'),
     ]);
 
     const historyWithStatusChanges = history.map((historyItem, index) => ({
@@ -601,6 +604,7 @@ class VerificationService {
         resume,
         github,
       },
+      aiPortfolioId: latestPortfolio?._id || null,
       history: historyWithStatusChanges,
     };
   }

@@ -241,7 +241,8 @@ class AIOrchestratorService {
 
     const studentId = toId(portfolio.student);
     const preparedSource = await this.integration.getPortfolioSourceFingerprint(portfolio, studentId);
-    if (!preparedSource.project || !preparedSource.payload.projects?.[0]?.verified) {
+    // Any verified project is official evidence (not just the first one).
+    if (!preparedSource.project || !preparedSource.payload.projects?.some((item) => item.verified)) {
       return insufficientProfile('No verified project evidence is available for official evaluation.');
     }
 

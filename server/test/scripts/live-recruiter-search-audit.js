@@ -1,6 +1,7 @@
 /* global fetch */
 
 import mongoose from 'mongoose';
+import { DEFAULT_DB_NAME } from '../../src/config/db.js';
 import http from 'node:http';
 import { createApp } from '../../src/app.js';
 import User from '../../src/models/user.model.js';
@@ -17,7 +18,7 @@ const run = async () => {
   console.log('VIDYALINK — LIVE RECRUITER SEARCH & BACKEND FILTERING AUDIT');
   console.log('============================================================\n');
 
-  await mongoose.connect(env.MONGODB_URI);
+  await mongoose.connect(env.MONGODB_URI, { dbName: DEFAULT_DB_NAME });
   console.log(`[DB] Connected to MongoDB: ${mongoose.connection.name}`);
 
   const app = createApp();

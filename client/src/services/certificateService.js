@@ -1,4 +1,4 @@
-import api from './api';
+import api, { LONG_TIMEOUT_MS } from './api';
 
 /**
  * Fetch student certificates with filters, search, and sorting
@@ -29,6 +29,7 @@ export const createCertificate = async (formData) => {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
+    timeout: LONG_TIMEOUT_MS,
   });
   return response.data;
 };
@@ -41,6 +42,7 @@ export const updateCertificate = async (id, formData) => {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
+    timeout: LONG_TIMEOUT_MS,
   });
   return response.data;
 };

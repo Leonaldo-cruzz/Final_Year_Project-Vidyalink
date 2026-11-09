@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { DEFAULT_DB_NAME } from '../config/db.js';
 import User from '../models/user.model.js';
 import { env } from '../config/env.js';
 
@@ -96,8 +97,8 @@ const DEMO_USERS = [
 async function seed() {
   try {
     const mongoUri = env.MONGODB_URI || 'mongodb://127.0.0.1:27017/vidyalink';
-    console.log(`Connecting to MongoDB at ${mongoUri}...`);
-    await mongoose.connect(mongoUri);
+    console.log(`Connecting to MongoDB (database: ${DEFAULT_DB_NAME})...`);
+    await mongoose.connect(mongoUri, { dbName: DEFAULT_DB_NAME });
 
     console.log('Seeding demo accounts...');
 

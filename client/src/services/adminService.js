@@ -16,18 +16,22 @@ export const toggleUserStatus = async (id, status) => {
 };
 
 export const getAllVerifications = async ({ page = 1, limit = 10, status = 'ALL' } = {}) => {
-  const params = { page, limit };
+  // The dashboard endpoint returns the full filtered list (its query schema is
+  // strict and has no paging params), so paginate on the client.
+  const params = {};
   if (status && status !== 'ALL') params.status = status;
   const response = await api.get('/verification/dashboard', { params });
   const d = response.data?.data || response.data || {};
-  const list = d.verifications || [];
-  const total = d.summary?.totalRequests ?? list.length;
+  const all = Array.isArray(d.verifications) ? d.verifications : [];
+  const total = all.length;
+  const pages = Math.max(1, Math.ceil(total / limit));
+  const currentPage = Math.min(Math.max(1, page), pages);
   return {
     data: {
-      verifications: list,
+      verifications: all.slice((currentPage - 1) * limit, currentPage * limit),
       pagination: {
-        page,
-        pages: Math.max(1, Math.ceil(total / limit)),
+        page: currentPage,
+        pages,
         total,
       },
     },

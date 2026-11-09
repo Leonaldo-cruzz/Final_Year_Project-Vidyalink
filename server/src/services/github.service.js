@@ -271,7 +271,7 @@ const fetchAllGithubRepositories = async (username) => {
  *
  * @param {string} userId     Authenticated student's ObjectId (from JWT — never trusted from client)
  * @param {Array}  repos      Mapped repository objects from fetchAllGithubRepositories
- * @returns {{ imported: number, updated: number, markedDeleted: number }}
+ * @returns {{ imported: number, updated: number, markedDeleted: number, skipped: number }}
  */
 const syncProjectsFromRepositories = async (userId, repos) => {
   if (!repos || repos.length === 0) {
@@ -303,6 +303,7 @@ const syncProjectsFromRepositories = async (userId, repos) => {
 
   let imported = 0;
   let updated = 0;
+  let skipped = 0;
 
   for (const repo of repos) {
     // ── Attempt primary match: githubRepositoryId ─────────────────────────
@@ -334,36 +335,49 @@ const syncProjectsFromRepositories = async (userId, repos) => {
     } else {
       // ── IMPORT path ───────────────────────────────────────────────────────
       // Build a minimal safe description. Use actual repo description or leave honest empty.
-      const shortDesc = repo.description
-        ? repo.description.slice(0, 500)
-        : `GitHub repository: ${repo.fullName}`;
+      // Project requires shortDescription >= 10 and detailedDescription >= 20
+      // chars; short repo descriptions (e.g. "My site") fall back to a template.
+      const repoDescription = (repo.description || '').trim();
+      const shortDesc = repoDescription.length >= 10
+        ? repoDescription.slice(0, 500)
+        : `GitHub repository: ${repo.fullName}`.slice(0, 500);
 
-      const detailedDesc = repo.description
-        ? repo.description.slice(0, 2000)
-        : `This project was imported from GitHub repository ${repo.fullName}. `
+      const detailedDesc = repoDescription.length >= 20
+        ? repoDescription.slice(0, 2000)
+        : `${repoDescription ? `${repoDescription}. ` : ''}This project was imported from GitHub repository ${repo.fullName}. `
           + `Review and update the description to reflect your actual work.`;
+
+      let title = repoNameToTitle(repo.name);
+      if (title.length < 2) title = `${title} Repository`.trim();
+      title = title.slice(0, 150);
 
       const technologies = inferTechnologies(repo.language, repo.topics);
       const category = inferCategory(repo.language, repo.topics);
 
-      await Project.create({
-        userId,
-        title: repoNameToTitle(repo.name),
-        shortDescription: shortDesc,
-        detailedDescription: detailedDesc,
-        category,
-        technologies,
-        githubRepository: repo.htmlUrl,
-        githubRepositoryId: repo.id,
-        githubSyncStatus: 'synced',
-        githubSource: 'github_sync',
-        // CRITICAL: imported projects are NOT verified.
-        // They remain 'Pending' until faculty review.
-        verificationStatus: 'Pending',
-        projectStatus: repo.isArchived ? 'Archived' : 'In Progress',
-        deploymentStatus: 'not_provided',
-      });
-      imported++;
+      try {
+        await Project.create({
+          userId,
+          title,
+          shortDescription: shortDesc,
+          detailedDescription: detailedDesc,
+          category,
+          technologies,
+          githubRepository: repo.htmlUrl,
+          githubRepositoryId: repo.id,
+          githubSyncStatus: 'synced',
+          githubSource: 'github_sync',
+          // CRITICAL: imported projects are NOT verified.
+          // They remain 'Pending' until faculty review.
+          verificationStatus: 'Pending',
+          projectStatus: repo.isArchived ? 'Archived' : 'In Progress',
+          deploymentStatus: 'not_provided',
+        });
+        imported++;
+      } catch (error) {
+        // One unusual repository must not abort the whole sync.
+        skipped++;
+        console.warn(`[GitHub Sync] Skipped repository ${repo.fullName}: ${error.message}`);
+      }
     }
   }
 
@@ -387,7 +401,7 @@ const syncProjectsFromRepositories = async (userId, repos) => {
     markedDeleted = syncedProjectsNoLongerPresent.length;
   }
 
-  return { imported, updated, markedDeleted };
+  return { imported, updated, markedDeleted, skipped };
 };
 
 // ── GithubService class ──────────────────────────────────────────────────────
@@ -452,7 +466,7 @@ class GithubService {
     const repos = await fetchAllGithubRepositories(account.githubUsername);
 
     // 3+4. Match existing, import new, mark deleted
-    const { imported, updated, markedDeleted } = await syncProjectsFromRepositories(userId, repos);
+    const { imported, updated, markedDeleted, skipped } = await syncProjectsFromRepositories(userId, repos);
 
     return {
       account,
@@ -461,7 +475,7 @@ class GithubService {
         projectsImported: imported,
         projectsUpdated: updated,
         repositoriesMarkedDeleted: markedDeleted,
-        failed: 0,
+        failed: skipped || 0,
       },
     };
   }

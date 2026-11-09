@@ -27,6 +27,16 @@ const uniqueStrings = (values = []) => [...new Set(values.filter((value) => type
 
 const isValidId = (value) => mongoose.isValidObjectId(value);
 
+// FastAPI contract bounds (ai-service/src/models): resume text <= 50k chars,
+// graduation_year within 1950..2200. Out-of-range values would 422 → 502.
+const MAX_AI_TEXT_LENGTH = 50_000;
+const clampAiText = (text) => (typeof text === 'string' ? text.slice(0, MAX_AI_TEXT_LENGTH) : text);
+const aiGraduationYear = (...years) => {
+  const year = years.find((value) => Number.isInteger(Number(value)) && value !== null && value !== '');
+  const numeric = Number(year);
+  return Number.isInteger(numeric) && numeric >= 1950 && numeric <= 2200 ? numeric : null;
+};
+
 const insufficientEvidence = (reason, extra = {}) => ({
   status: 'insufficient_evidence',
   reason,
@@ -245,7 +255,7 @@ class AIIntegrationService {
           institution: profile.college || student.college || null,
           degree: profile.degree || null,
           field_of_study: profile.branch || student.branch || null,
-          graduation_year: profile.graduationYear || student.graduationYear || null,
+          graduation_year: aiGraduationYear(profile.graduationYear, student.graduationYear),
         },
       ].filter((education) => Object.values(education).some(Boolean)),
       projects: [],
@@ -255,9 +265,9 @@ class AIIntegrationService {
         verification_url: certificate.credentialUrl,
         verified: certificate.verificationStatus === 'Verified',
       })),
-      resume: resumeText ? { text: resumeText } : null,
+      resume: resumeText ? { text: clampAiText(resumeText) } : null,
       career_interests: uniqueStrings(profile.interests || []),
-      graduation_year: profile.graduationYear || student.graduationYear || null,
+      graduation_year: aiGraduationYear(profile.graduationYear, student.graduationYear),
     };
 
     if (context.github?.connectionStatus === 'Connected') {
@@ -296,8 +306,8 @@ class AIIntegrationService {
       seenProjectIds.add(p._id.toString());
       const isVerified = p.verificationStatus === 'Verified' || Boolean(
         portfolio?.verifiedBy && portfolio?.verificationHash && (
-          portfolio.project?.toString() === p._id.toString() ||
-          portfolio.workspace?.project?.toString() === p._id.toString()
+          toId(portfolio.project) === p._id.toString() ||
+          toId(portfolio.workspace?.project) === p._id.toString()
         )
       );
       payload.projects.push(mapProject(p, isVerified));
@@ -432,7 +442,8 @@ class AIIntegrationService {
     const studentId = toId(portfolio.student);
     const prepared = preparedSource || await this.getPortfolioSourceFingerprint(portfolio, studentId);
     const { payload, project } = prepared;
-    if (!project || !payload.projects[0].verified) {
+    // Any verified project is official evidence (not just the first one).
+    if (!project || !payload.projects.some((item) => item.verified)) {
       return insufficientEvidence('No verified project evidence is available for official evaluation.');
     }
 
@@ -494,8 +505,8 @@ class AIIntegrationService {
     if (!resumeText || !resumeText.trim()) return insufficientEvidence('No readable stored resume text is available.');
 
     const result = await this.client.analyzeATS({
-      resume_text: resumeText.trim(),
-      job_description: body.jobDescription || body.targetJobDescription || null,
+      resume_text: clampAiText(resumeText.trim()),
+      job_description: clampAiText(body.jobDescription || body.targetJobDescription || null),
     });
     const analysis = await this.storeAnalysis({
       studentId: target.studentId,
@@ -629,15 +640,16 @@ class AIIntegrationService {
         organization: profile.college || person.college || null,
         skills: profile.skills || [],
         domains: profile.interests || [],
-        graduation_year: person.graduationYear || profile.graduationYear || null,
+        graduation_year: aiGraduationYear(person.graduationYear, profile.graduationYear),
       };
     });
 
-    const recruiters = await this.models.User.find({ role: 'recruiter', status: 'active' }).select('_id fullName college').lean();
+    // Opportunities are postings by active recruiters and faculty (isOpportunity).
+    const posters = await this.models.User.find({ role: { $in: ['recruiter', 'faculty'] }, status: 'active' }).select('_id fullName college').lean();
     const opportunities = await this.models.Project.find({
-      userId: { $in: recruiters.map((person) => person._id) },
-      projectStatus: { $ne: 'Archived' },
-      verificationStatus: { $ne: 'Rejected' },
+      isOpportunity: true,
+      userId: { $in: posters.map((person) => person._id) },
+      projectStatus: { $nin: ['Archived', 'Completed'] },
     }).populate('userId', 'fullName college').lean();
     const availableJobOpportunities = opportunities.map((project) => ({
       id: project._id.toString(),

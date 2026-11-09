@@ -1,10 +1,11 @@
 import ProjectEngagement from '../models/projectEngagement.model.js';
+import Application from '../models/application.model.js';
 import Project from '../models/project.model.js';
 import User from '../models/user.model.js';
 import ApiError from '../utils/ApiError.js';
 
 const ENGAGEMENT_POPULATION = [
-  { path: 'projectOpportunityId', select: 'projectId title company status selectedStudent' },
+  { path: 'projectOpportunityId', select: 'title shortDescription technologies category projectStatus userId' },
   { path: 'studentId', select: 'fullName email avatar college branch graduationYear' },
   { path: 'recruiterId', select: 'fullName email avatar company' },
   { path: 'facultyId', select: 'fullName email avatar college branch' },
@@ -21,17 +22,18 @@ class ProjectEngagementService {
       throw ApiError.notFound('Project opportunity not found');
     }
 
-    const isProjectOwner = areIdsEqual(project.createdBy, recruiterId)
-      || areIdsEqual(project.user, recruiterId);
-    if (!isProjectOwner) {
+    // The project's owner (userId) is the recruiter who posted it.
+    if (!areIdsEqual(project.userId, recruiterId)) {
       throw ApiError.forbidden('Only the project recruiter can create an engagement');
     }
 
-    if (!project.selectedStudent) {
-      throw ApiError.badRequest('Select a student before creating an engagement');
-    }
-
-    if (!areIdsEqual(project.selectedStudent, engagementData.studentId)) {
+    // The student must have been selected through the application pipeline.
+    const selectedApplication = await Application.findOne({
+      projectOpportunityId: project._id,
+      studentId: engagementData.studentId,
+      status: 'Selected',
+    });
+    if (!selectedApplication) {
       throw ApiError.badRequest('The engagement student must be the selected student for this project');
     }
 

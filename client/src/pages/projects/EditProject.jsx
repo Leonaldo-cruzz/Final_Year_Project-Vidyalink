@@ -54,7 +54,7 @@ const EditProject = () => {
           <h1 className="page-title flex items-center gap-2 text-white"><FilePenLine className="h-6 w-6 text-orange-300" /> Edit Project</h1>
           <p className="mt-1 text-sm text-slate-400">Keep your project story and links up to date.</p>
         </div>
-        <ProjectForm initialValues={project} initialScreenshots={project.screenshots || []} onSubmit={handleSubmit} onCancel={() => navigate(`/projects/${projectId}`)} submitLabel="Save Changes" submitting={submitting} serverError={error} />
+        <ProjectForm initialValues={project} initialScreenshots={project.screenshots} onSubmit={handleSubmit} onCancel={() => navigate(`/projects/${projectId}`)} submitLabel="Save Changes" submitting={submitting} serverError={error} />
       </div>
     </DashboardLayout>
   );

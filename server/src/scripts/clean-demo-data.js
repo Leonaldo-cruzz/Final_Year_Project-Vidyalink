@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
+import { DEFAULT_DB_NAME } from '../config/db.js';
 import User from '../models/user.model.js';
 import StudentProfile from '../models/studentProfile.model.js';
+import Profile from '../models/profile.model.js';
 import Project from '../models/project.model.js';
 import Workspace from '../models/workspace.model.js';
 import Milestone from '../models/milestone.model.js';
@@ -14,9 +16,11 @@ const DEMO_EMAILS = [
   'recruiter@vidyalink.edu',
   'alumni@vidyalink.edu',
   'admin@vidyalink.edu',
+  // Synthetic candidates created by seed-rich-demo.js
   'priya.demo@institute.edu',
-  'rahul.demo@tech.edu',
-  'ananya.demo@metro.edu',
+  'rahul.demo@institute.edu',
+  'ananya.demo@institute.edu',
+  'karan.demo@institute.edu',
 ];
 
 const DEMO_PROJECT_TITLES = [
@@ -27,8 +31,8 @@ const DEMO_PROJECT_TITLES = [
 ];
 
 async function cleanDemoData() {
-  console.log('Connecting to MongoDB at:', env.MONGO_URI);
-  await mongoose.connect(env.MONGO_URI);
+  console.log(`Connecting to MongoDB (database: ${DEFAULT_DB_NAME})...`);
+  await mongoose.connect(env.MONGODB_URI, { dbName: DEFAULT_DB_NAME });
 
   console.log('Searching for demo accounts and records...');
 
@@ -39,14 +43,18 @@ async function cleanDemoData() {
 
   if (demoUserIds.length > 0) {
     // Clean associated profiles
-    const profRes = await StudentProfile.deleteMany({ user: { $in: demoUserIds } });
-    console.log(`Removed ${profRes.deletedCount} student profiles.`);
+    const [profRes, legacyProfRes] = await Promise.all([
+      Profile.deleteMany({ user: { $in: demoUserIds } }),
+      StudentProfile.deleteMany({ user: { $in: demoUserIds } }),
+    ]);
+    console.log(`Removed ${profRes.deletedCount + legacyProfRes.deletedCount} profiles.`);
 
     // Clean demo applications
     const appRes = await Application.deleteMany({
       $or: [
+        { studentId: { $in: demoUserIds } },
         { student: { $in: demoUserIds } },
-        { recruiter: { $in: demoUserIds } },
+        { recruiterId: { $in: demoUserIds } },
       ],
     });
     console.log(`Removed ${appRes.deletedCount} demo applications.`);
@@ -54,26 +62,27 @@ async function cleanDemoData() {
     // Clean demo workspaces & milestones
     const demoProjects = await Project.find({
       $or: [
-        { owner: { $in: demoUserIds } },
+        { userId: { $in: demoUserIds } },
         { title: { $in: DEMO_PROJECT_TITLES } },
       ],
     });
     const demoProjectIds = demoProjects.map((p) => p._id);
 
-    const wsRes = await Workspace.deleteMany({
+    const workspaceFilter = {
       $or: [
         { student: { $in: demoUserIds } },
+        { owner: { $in: demoUserIds } },
         { project: { $in: demoProjectIds } },
       ],
-    });
+    };
+    const demoWorkspaceIds = (await Workspace.find(workspaceFilter).select('_id')).map((w) => w._id);
+
+    // Milestones belong to workspaces.
+    const msRes = await Milestone.deleteMany({ workspace: { $in: demoWorkspaceIds } });
+
+    const wsRes = await Workspace.deleteMany({ _id: { $in: demoWorkspaceIds } });
     console.log(`Removed ${wsRes.deletedCount} demo workspaces.`);
 
-    const msRes = await Milestone.deleteMany({
-      $or: [
-        { student: { $in: demoUserIds } },
-        { project: { $in: demoProjectIds } },
-      ],
-    });
     console.log(`Removed ${msRes.deletedCount} demo milestones.`);
 
     const pfRes = await Portfolio.deleteMany({

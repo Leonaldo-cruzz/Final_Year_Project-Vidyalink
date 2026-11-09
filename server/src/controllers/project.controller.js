@@ -3,7 +3,7 @@ import ApiResponse from '../utils/ApiResponse.js';
 import asyncHandler from '../utils/asyncHandler.js';
 
 const createProject = asyncHandler(async (req, res) => {
-  const project = await projectService.createProject(req.user._id, req.body, req.files);
+  const project = await projectService.createProject(req.user._id, req.body, req.files, req.user.role);
   return ApiResponse.created(res, 'Project created successfully', project);
 });
 
@@ -35,17 +35,17 @@ const getProjectById = asyncHandler(async (req, res) => {
 });
 
 const updateProject = asyncHandler(async (req, res) => {
-  const project = await projectService.updateProject(req.user._id, req.params.id, req.body, req.files);
+  const project = await projectService.updateProject(req.user._id, req.params.id, req.body, req.files, req.user.role);
   return ApiResponse.ok(res, 'Project updated successfully', project);
 });
 
 const deleteProject = asyncHandler(async (req, res) => {
-  await projectService.deleteProject(req.user._id, req.params.id);
+  await projectService.deleteProject(req.user._id, req.params.id, req.user.role);
   return ApiResponse.ok(res, 'Project deleted successfully', null);
 });
 
 const verifyDeployment = asyncHandler(async (req, res) => {
-  const project = await projectService.verifyDeployment(req.user._id, req.params.id);
+  const project = await projectService.verifyDeployment(req.user._id, req.params.id, req.user.role);
   return ApiResponse.ok(res, 'Deployment verification completed', project);
 });
 

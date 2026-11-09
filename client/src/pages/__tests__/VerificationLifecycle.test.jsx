@@ -114,7 +114,7 @@ describe('Verification Lifecycle & Product Logic Regression Tests', () => {
     vi.clearAllMocks();
     useAuth.mockReturnValue({ user: mockStudent, isAuthenticated: true });
     getMyPortfolios.mockResolvedValue({ data: [] });
-    getProjects.mockResolvedValue({ data: [] });
+    getProjects.mockResolvedValue({ data: { projects: [] } });
     getVerificationHistory.mockResolvedValue({ data: [] });
   });
 
@@ -152,7 +152,7 @@ describe('Verification Lifecycle & Product Logic Regression Tests', () => {
   });
 
   it('3. Student with 0 projects sees "Add Project" CTA', async () => {
-    getProjects.mockResolvedValue({ data: [] });
+    getProjects.mockResolvedValue({ data: { projects: [] } });
 
     render(
       <MemoryRouter>
@@ -167,7 +167,7 @@ describe('Verification Lifecycle & Product Logic Regression Tests', () => {
   });
 
   it('4. Eligible student with project sees "Submit for Verification" CTA', async () => {
-    getProjects.mockResolvedValue({ data: [mockProjectEligible] });
+    getProjects.mockResolvedValue({ data: { projects: [mockProjectEligible] } });
 
     render(
       <MemoryRouter>
@@ -182,7 +182,7 @@ describe('Verification Lifecycle & Product Logic Regression Tests', () => {
   });
 
   it('5. Submitted student sees "Verification Pending" / "Under Faculty Review"', async () => {
-    getProjects.mockResolvedValue({ data: [mockProjectEligible] });
+    getProjects.mockResolvedValue({ data: { projects: [mockProjectEligible] } });
     getVerificationHistory.mockResolvedValue({
       data: [
         {
@@ -213,7 +213,7 @@ describe('Verification Lifecycle & Product Logic Regression Tests', () => {
   });
 
   it('6. Pending student cannot submit duplicate verification request', async () => {
-    getProjects.mockResolvedValue({ data: [mockProjectEligible] });
+    getProjects.mockResolvedValue({ data: { projects: [mockProjectEligible] } });
     getVerificationHistory.mockResolvedValue({
       data: [
         {
@@ -241,7 +241,7 @@ describe('Verification Lifecycle & Product Logic Regression Tests', () => {
 
   it('7. Faculty approves → student becomes Verified with portfolio record', async () => {
     getMyPortfolios.mockResolvedValue({ data: [mockVerifiedPortfolio] });
-    getProjects.mockResolvedValue({ data: [{ ...mockProjectEligible, verificationStatus: 'Verified' }] });
+    getProjects.mockResolvedValue({ data: { projects: [{ ...mockProjectEligible, verificationStatus: 'Verified' }] } });
     getVerificationHistory.mockResolvedValue({
       data: [
         {
@@ -269,7 +269,7 @@ describe('Verification Lifecycle & Product Logic Regression Tests', () => {
   });
 
   it('8. Faculty rejects → student sees Verification Rejected with remarks', async () => {
-    getProjects.mockResolvedValue({ data: [mockProjectEligible] });
+    getProjects.mockResolvedValue({ data: { projects: [mockProjectEligible] } });
     getVerificationHistory.mockResolvedValue({
       data: [
         {
@@ -298,7 +298,7 @@ describe('Verification Lifecycle & Product Logic Regression Tests', () => {
   });
 
   it('9. Faculty requests changes → student sees Changes Requested with remarks', async () => {
-    getProjects.mockResolvedValue({ data: [mockProjectEligible] });
+    getProjects.mockResolvedValue({ data: { projects: [mockProjectEligible] } });
     getVerificationHistory.mockResolvedValue({
       data: [
         {
@@ -328,7 +328,7 @@ describe('Verification Lifecycle & Product Logic Regression Tests', () => {
 
   it('10. Student opens submission modal and resubmits to move to Pending', async () => {
     submitVerification.mockResolvedValue({ success: true });
-    getProjects.mockResolvedValue({ data: [mockProjectEligible] });
+    getProjects.mockResolvedValue({ data: { projects: [mockProjectEligible] } });
     getVerificationHistory.mockResolvedValue({
       data: [
         {
@@ -361,7 +361,7 @@ describe('Verification Lifecycle & Product Logic Regression Tests', () => {
 
   it('11. Verified student sees "Verified Portfolio" CTA in header and action cards', async () => {
     getMyPortfolios.mockResolvedValue({ data: [mockVerifiedPortfolio] });
-    getProjects.mockResolvedValue({ data: [{ ...mockProjectEligible, verificationStatus: 'Verified' }] });
+    getProjects.mockResolvedValue({ data: { projects: [{ ...mockProjectEligible, verificationStatus: 'Verified' }] } });
 
     render(
       <MemoryRouter>

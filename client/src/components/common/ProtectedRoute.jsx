@@ -11,7 +11,7 @@ import { ROUTES } from '@/constants';
  * Optionally enforces role-based access.
  */
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { user, isAuthenticated, loading } = useAuth();
+  const { user, isAuthenticated, loading, signedOut } = useAuth();
   const location = useLocation();
 
   // Still restoring session from HTTP-Only cookie
@@ -21,7 +21,8 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
   // Not authenticated — redirect to login, preserving intended destination
   if (!isAuthenticated) {
-    return <Navigate to={ROUTES.LOGIN} state={{ from: location }} replace />;
+    // After an explicit sign-out the next login starts at its own dashboard.
+    return <Navigate to={ROUTES.LOGIN} state={signedOut ? undefined : { from: location }} replace />;
   }
 
   // Role guard

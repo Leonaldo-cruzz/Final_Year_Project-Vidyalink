@@ -86,6 +86,20 @@ const userSchema = new mongoose.Schema(
       default: null,
     },
 
+    // Previous refresh-token hash, accepted for a few seconds after rotation so
+    // that two tabs refreshing at the same moment don't log each other out.
+    previousRefreshToken: {
+      type: String,
+      select: false,
+      default: null,
+    },
+
+    refreshTokenRotatedAt: {
+      type: Date,
+      select: false,
+      default: null,
+    },
+
     passwordResetToken: {
       type: String,
       select: false,

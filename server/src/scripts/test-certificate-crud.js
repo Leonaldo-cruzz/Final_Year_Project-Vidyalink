@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { DEFAULT_DB_NAME } from '../config/db.js';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -38,7 +39,7 @@ async function runCertificateCrudTests() {
   try {
     // 1. Connect to MongoDB
     console.log('Connecting to MongoDB database...');
-    await mongoose.connect(env.MONGODB_URI);
+    await mongoose.connect(env.MONGODB_URI, { dbName: DEFAULT_DB_NAME });
     logPass('MongoDB Connected');
 
     // 2. Find or Create Test Student User

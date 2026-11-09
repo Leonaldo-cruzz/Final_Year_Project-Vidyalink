@@ -37,7 +37,7 @@ class PortfolioService {
       workspace: workspace._id,
       projectTitle: workspace.project.title,
       verifiedBy: workspace.owner._id,
-      skillsVerified: workspace.project.techStack || [],
+      skillsVerified: workspace.project.technologies || [],
       milestonesSummary: verifiedMilestones,
       verificationHash,
     });

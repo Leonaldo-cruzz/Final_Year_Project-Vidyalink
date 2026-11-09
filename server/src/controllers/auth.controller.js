@@ -57,7 +57,11 @@ class AuthController {
     const incomingRefreshToken = req.body?.refreshToken || req.cookies?.refreshToken;
     const { accessToken, refreshToken } = await authService.refreshToken(incomingRefreshToken);
 
-    res.cookie('refreshToken', refreshToken, getRefreshTokenCookieOptions());
+    // refreshToken is null when a concurrent request already rotated the
+    // cookie; keep that cookie instead of overwriting it.
+    if (refreshToken) {
+      res.cookie('refreshToken', refreshToken, getRefreshTokenCookieOptions());
+    }
 
     return ApiResponse.ok(res, 'Token refreshed successfully', { accessToken, refreshToken });
   });
@@ -66,7 +70,7 @@ class AuthController {
    * POST /api/v1/auth/forgot-password
    */
   forgotPassword = asyncHandler(async (req, res) => {
-    const { email } = req.body;
+    const { email } = req.body ?? {};
     const result = await authService.forgotPassword(email);
     return ApiResponse.ok(res, result.message, result);
   });
@@ -75,7 +79,7 @@ class AuthController {
    * POST /api/v1/auth/reset-password
    */
   resetPassword = asyncHandler(async (req, res) => {
-    const { token, newPassword } = req.body;
+    const { token, newPassword } = req.body ?? {};
     const result = await authService.resetPassword(token, newPassword);
     return ApiResponse.ok(res, result.message, result);
   });

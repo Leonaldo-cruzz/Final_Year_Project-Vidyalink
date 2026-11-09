@@ -162,9 +162,10 @@ npm run create:admin
    - **Output Directory:** `dist`
    - **Install Command:** `npm install`
 4. **Environment Variables:**
-   - `VITE_API_BASE_URL`: `https://<your-render-backend-url>/api/v1` (Optional if using the included `vercel.json` rewrite proxy).
+   - Leave `VITE_API_BASE_URL` **unset**. The included `vercel.json` rewrites `/api/*` and `/uploads/*` to Render, so the browser only talks to the Vercel domain and the refresh-token cookie stays first-party. Pointing `VITE_API_BASE_URL` straight at Render makes that cookie third-party, which Safari (and Chrome with third-party cookies blocked) drops — users would be logged out on every reload — and helmet's same-origin resource policy would block uploaded images/PDFs.
 5. Deploy the project.
-6. Once deployed, copy your production Vercel domain (e.g. `https://vidyalink.vercel.app`) and ensure `CLIENT_URL` and `CORS_ORIGIN` on your Render backend match this exact domain.
+6. Once deployed, copy your production Vercel domain (e.g. `https://vidyalink.vercel.app`) and ensure `CLIENT_URL` and `CORS_ORIGIN` on your Render backend match this exact domain. Browsers send this origin on every POST (including login) even through the rewrite, so a mismatch makes login fail with "Origin is not allowed by CORS". List extra domains (custom domain, preview URLs) comma-separated in `CORS_ORIGIN`.
+7. Render's free tier sleeps when idle; the first request after a pause can take 30–60 seconds. The client waits up to 60s for session/login requests and 120s for AI, resume and upload requests, and pings the API/AI health endpoint on page load to wake both services.
 
 ---
 

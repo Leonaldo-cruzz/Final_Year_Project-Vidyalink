@@ -8,8 +8,12 @@ const __dirname = path.dirname(__filename);
 const rootEnvPath = path.resolve(__dirname, '../../../.env');
 const serverEnvPath = path.resolve(__dirname, '../../.env');
 
-dotenv.config({ path: rootEnvPath });
+// dotenv never overwrites a variable that is already set, so the file loaded
+// first wins. server/.env (local settings) must win over the root .env, which
+// holds deployment values (NODE_ENV=production, hosted URLs, the hosted AI key).
+// Real environment variables (e.g. set on Render) still take precedence over both.
 dotenv.config({ path: serverEnvPath });
+dotenv.config({ path: rootEnvPath });
 
 // In production the AI_SERVICE_API_KEY must be present so the service
 // never starts unauthenticated. In non-production environments it is optional
@@ -52,7 +56,7 @@ export const env = Object.freeze({
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN || undefined,
   TRUST_PROXY: process.env.TRUST_PROXY || 'false',
   RATE_LIMIT_WINDOW_MS: Number.parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 15 * 60 * 1000,
-  RATE_LIMIT_MAX_REQUESTS: Number.parseInt(process.env.RATE_LIMIT_MAX_REQUESTS, 10) || 100,
+  RATE_LIMIT_MAX_REQUESTS: Number.parseInt(process.env.RATE_LIMIT_MAX_REQUESTS, 10) || 1000,
   AI_SERVICE_URL: process.env.AI_SERVICE_URL || 'http://localhost:8000',
   AI_SERVICE_TIMEOUT: Number.parseInt(process.env.AI_SERVICE_TIMEOUT, 10) || 30_000,
   AI_ORCHESTRATION_TIMEOUT: Number.parseInt(process.env.AI_ORCHESTRATION_TIMEOUT, 10) || 90_000,

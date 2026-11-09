@@ -1,5 +1,6 @@
 /* global fetch */
 import mongoose from 'mongoose';
+import { DEFAULT_DB_NAME } from '../../src/config/db.js';
 import { env } from '../../src/config/env.js';
 import User from '../../src/models/user.model.js';
 import Project from '../../src/models/project.model.js';
@@ -15,7 +16,7 @@ async function main() {
   console.log('PHASE 4: RECRUITER BACKEND FILTERING & RBAC AUDIT');
   console.log('====================================================\n');
 
-  await mongoose.connect(env.MONGODB_URI);
+  await mongoose.connect(env.MONGODB_URI, { dbName: DEFAULT_DB_NAME });
 
   const prefix = `rec_p4_${Date.now()}`;
   const recruiter = await User.create({
@@ -214,7 +215,8 @@ async function main() {
     body: JSON.stringify({ title: 'Hacked by Recruiter' }),
   });
   console.log('   Recruiter PUT /projects/:id HTTP Status:', editRes.status);
-  if (editRes.status === 403 || editRes.status === 401) {
+  // 404 is also a denial: updates are scoped to the caller's own projects.
+  if (editRes.status === 403 || editRes.status === 401 || editRes.status === 404) {
     console.log('✅ PASS: Recruiter blocked from editing student project.');
   } else {
     console.error('❌ FAIL: Recruiter was able to edit student project.');

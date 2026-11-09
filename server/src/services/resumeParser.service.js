@@ -383,7 +383,7 @@ class ResumeParserService {
     if (github?.connectionStatus === 'Connected') {
       if (resumeGithubUrl) {
         const resumeHandle = resumeGithubUrl.split('github.com/')[1]?.replace(/[^a-zA-Z0-9_-]/g, '').toLowerCase();
-        const dbHandle = (github.login || '').toLowerCase();
+        const dbHandle = (github.githubUsername || '').toLowerCase();
         const isMatch = Boolean(resumeHandle && dbHandle && (resumeHandle === dbHandle));
 
         githubComparison = {

@@ -13,6 +13,7 @@ import Card from '@/components/ui/Card';
 import { getProjectById, verifyDeployment } from '@/services/projectService';
 import { formatDate, getErrorMessage } from '@/utils/formatters';
 import { FullPageSpinner } from '@/components/ui/Spinner';
+import { useAuth } from '@/context/AuthContext';
 
 // ── Deployment status display config ─────────────────────────────────────────
 const DEPLOY_STATUS = {
@@ -54,6 +55,7 @@ const DEPLOY_STATUS = {
 };
 
 const ProjectDetails = () => {
+  const { user } = useAuth();
   const { projectId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -98,6 +100,10 @@ const ProjectDetails = () => {
   const deployStatus = DEPLOY_STATUS[project.deploymentStatus] || DEPLOY_STATUS.not_provided;
   const DeployIcon = deployStatus.icon;
 
+  // Only the owner (or an admin) may edit or re-check the deployment.
+  const ownerId = project.userId?._id || project.userId;
+  const canManage = user?.role === 'admin' || (ownerId && String(ownerId) === String(user?._id));
+
   return (
     <DashboardLayout>
       <div className="mx-auto max-w-5xl space-y-6">
@@ -128,9 +134,11 @@ const ProjectDetails = () => {
             <h1 className="page-title mt-3 text-white">{project.title}</h1>
             <p className="mt-2 max-w-3xl text-base text-slate-400">{project.shortDescription}</p>
           </div>
-          <Button variant="secondary" leftIcon={Edit3} onClick={() => navigate(`/projects/${projectId}/edit`)}>
-            Edit Project
-          </Button>
+          {canManage && (
+            <Button variant="secondary" leftIcon={Edit3} onClick={() => navigate(`/projects/${projectId}/edit`)}>
+              Edit Project
+            </Button>
+          )}
         </div>
 
         <Card className="overflow-hidden">
@@ -248,16 +256,18 @@ const ProjectDetails = () => {
                 Verify that your deployment URL is publicly reachable. This performs a real HTTP check.
               </p>
             </div>
-            <Button
-              variant="secondary"
-              size="sm"
-              leftIcon={verifying ? Loader2 : RefreshCw}
-              loading={verifying}
-              onClick={handleVerifyDeployment}
-              disabled={verifying}
-            >
-              {verifying ? 'Checking…' : 'Check Deployment'}
-            </Button>
+            {canManage && (
+              <Button
+                variant="secondary"
+                size="sm"
+                leftIcon={verifying ? Loader2 : RefreshCw}
+                loading={verifying}
+                onClick={handleVerifyDeployment}
+                disabled={verifying}
+              >
+                {verifying ? 'Checking…' : 'Check Deployment'}
+              </Button>
+            )}
           </div>
 
           {verifyError && (

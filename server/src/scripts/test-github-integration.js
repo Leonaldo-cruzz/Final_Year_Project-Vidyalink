@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import mongoose from 'mongoose';
+import { DEFAULT_DB_NAME } from '../config/db.js';
 import env from '../config/env.js';
 import User from '../models/user.model.js';
 import GitHubAccount from '../models/githubAccount.model.js';
@@ -49,7 +50,7 @@ const run = async () => {
   const previousFetch = globalThis.fetch;
 
   try {
-    await mongoose.connect(env.MONGODB_URI);
+    await mongoose.connect(env.MONGODB_URI, { dbName: DEFAULT_DB_NAME });
     testUser = await User.create({
       fullName: 'GitHub Integration Test Student',
       email: `github_integration_${Date.now()}@vidyalink.test`,

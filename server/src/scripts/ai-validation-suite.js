@@ -32,6 +32,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { performance } from 'node:perf_hooks';
 import mongoose from 'mongoose';
+import { DEFAULT_DB_NAME } from '../config/db.js';
 
 import { env } from '../config/env.js';
 import User from '../models/user.model.js';
@@ -138,7 +139,7 @@ async function runValidation() {
   // Connect MongoDB
   try {
     const mongoUri = env.MONGODB_URI || 'mongodb://127.0.0.1:27017/vidyalink';
-    await mongoose.connect(mongoUri);
+    await mongoose.connect(mongoUri, { dbName: DEFAULT_DB_NAME });
     validationResults.environment.mongoConnected = true;
     console.log(`Connected to MongoDB: ${mongoose.connection.host}\n`);
   } catch (err) {

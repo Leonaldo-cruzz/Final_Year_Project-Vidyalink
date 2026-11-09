@@ -94,15 +94,16 @@ const AdminDashboard = () => {
 
   const handleToggleStatus = async (userId, currentStatus, userName) => {
     try {
-      const res = await api.patch(`/admin/users/${userId}/status`);
+      const nextStatus = currentStatus === 'active' ? 'inactive' : 'active';
+      const res = await api.patch(`/admin/users/${userId}/status`, { status: nextStatus });
       const updated = res.data?.data;
       setUsersList((prev) =>
-        prev.map((u) => (u._id === userId ? { ...u, status: updated?.status || (currentStatus === 'active' ? 'inactive' : 'active') } : u))
+        prev.map((u) => (u._id === userId ? { ...u, status: updated?.status || nextStatus } : u))
       );
       setToastMessage(`Updated status for ${userName || 'user'}!`);
       setTimeout(() => setToastMessage(''), 3500);
-    } catch {
-      setToastMessage('Failed to update user status.');
+    } catch (err) {
+      setToastMessage(err?.response?.data?.message || 'Failed to update user status.');
       setTimeout(() => setToastMessage(''), 3500);
     }
   };
@@ -316,6 +317,8 @@ const AdminDashboard = () => {
                           size="xs"
                           variant={u.status === 'active' ? 'ghost' : 'outline'}
                           onClick={() => handleToggleStatus(u._id, u.status, u.fullName)}
+                          disabled={u._id === user?._id}
+                          title={u._id === user?._id ? 'You cannot deactivate your own account' : undefined}
                         >
                           {u.status === 'active' ? 'Deactivate' : 'Activate'}
                         </Button>

@@ -34,6 +34,8 @@ import GithubIntegration from '@/pages/student/GithubIntegration';
 import StudentApplications from '@/pages/student/StudentApplications';
 import AIInsights from '@/pages/student/AIInsights';
 import NotFound       from '@/pages/NotFound';
+import Opportunities  from '@/pages/opportunities/Opportunities';
+import PostOpportunity from '@/pages/opportunities/PostOpportunity';
 
 // Route guards
 import ProtectedRoute from '@/components/common/ProtectedRoute';
@@ -232,6 +234,31 @@ const AppRoutes = () => (
       element={
         <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
           <AIInsights />
+        </ProtectedRoute>
+      }
+    />
+
+    <Route
+      path="/opportunities"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.STUDENT, ROLES.FACULTY, ROLES.RECRUITER, ROLES.ADMIN]}>
+          <Opportunities />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/opportunities/new"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.FACULTY, ROLES.RECRUITER, ROLES.ADMIN]}>
+          <PostOpportunity />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/opportunities/:projectId/edit"
+      element={
+        <ProtectedRoute allowedRoles={[ROLES.FACULTY, ROLES.RECRUITER, ROLES.ADMIN]}>
+          <PostOpportunity />
         </ProtectedRoute>
       }
     />

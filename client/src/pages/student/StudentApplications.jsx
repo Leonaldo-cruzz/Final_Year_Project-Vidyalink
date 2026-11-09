@@ -81,7 +81,7 @@ const StudentApplications = () => {
             <p className="text-sm text-slate-400 max-w-md mx-auto mb-6">
               Browse available project opportunities and apply for roles that match your skills.
             </p>
-            <Button onClick={() => navigate('/projects')}>Explore Projects</Button>
+            <Button onClick={() => navigate('/opportunities')}>Browse Opportunities</Button>
           </SectionCard>
         ) : (
           <div className="space-y-4">
@@ -99,7 +99,11 @@ const StudentApplications = () => {
                         </Badge>
                       </div>
                       <p className="text-xs text-slate-400">
-                        {projectData.company || 'Company'} • {projectData.domain || 'Domain'}
+                        {/* Posted by the recruiter/faculty member (populated recruiterId). */}
+                        {[
+                          app.recruiterId?.college || app.recruiterId?.fullName,
+                          projectData.domain || projectData.category,
+                        ].filter(Boolean).join(' • ')}
                       </p>
                     </div>
 

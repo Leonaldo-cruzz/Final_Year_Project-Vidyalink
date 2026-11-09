@@ -20,6 +20,14 @@ const FieldError = ({ message }) => message && (
   </p>
 );
 
+// Return to the page that required sign-in, except role dashboards: those
+// belong to one role, so a different account lands on its own dashboard.
+const resolvePostLoginPath = (from, role) => {
+  const ownDashboard = ROLE_ROUTE_MAP[role] || ROUTES.STUDENT_DASHBOARD;
+  if (!from || from === ROUTES.LOGIN || from.startsWith('/dashboard')) return ownDashboard;
+  return from;
+};
+
 const Login = () => {
   const { login, isAuthenticated, user, loading } = useAuth();
   const navigate = useNavigate();
@@ -35,7 +43,7 @@ const Login = () => {
 
   useEffect(() => {
     if (!loading && isAuthenticated && user) {
-      navigate(from || ROLE_ROUTE_MAP[user.role] || ROUTES.STUDENT_DASHBOARD, { replace: true });
+      navigate(resolvePostLoginPath(from, user.role), { replace: true });
     }
   }, [from, isAuthenticated, loading, navigate, user]);
 
@@ -43,7 +51,7 @@ const Login = () => {
     setSubmitError('');
     try {
       const loggedInUser = await login(data);
-      navigate(from || ROLE_ROUTE_MAP[loggedInUser.role] || ROUTES.STUDENT_DASHBOARD, { replace: true });
+      navigate(resolvePostLoginPath(from, loggedInUser.role), { replace: true });
     } catch (error) {
       setSubmitError(error.message || 'Invalid email or password');
     }

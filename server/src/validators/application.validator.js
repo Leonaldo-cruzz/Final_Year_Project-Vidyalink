@@ -1,23 +1,34 @@
 import { z } from 'zod';
 
+const coverLetterField = z
+  .string()
+  .trim()
+  .min(10, 'Cover letter must be at least 10 characters')
+  .max(3000, 'Cover letter must not exceed 3000 characters');
+
+// Accepts either naming: projectOpportunityId/coverLetter (API) or
+// projectId/pitch (sent by the Apply modal). One of each pair is required.
 export const createApplicationSchema = z.object({
   body: z.object({
-    projectOpportunityId: z.string({ required_error: 'Project ID is required' }).or(z.string()),
-    projectId: z.string().optional(),
-    coverLetter: z
-      .string({ required_error: 'Cover letter is required' })
-      .trim()
-      .min(10, 'Cover letter must be at least 10 characters')
-      .max(3000, 'Cover letter must not exceed 3000 characters')
-      .or(z.string()),
-    pitch: z.string().optional(),
+    projectOpportunityId: z.string().trim().min(1).optional(),
+    projectId: z.string().trim().min(1).optional(),
+    coverLetter: coverLetterField.optional(),
+    pitch: coverLetterField.optional(),
     resumeSnapshot: z.string().url('Resume must be a valid URL').optional().nullable(),
-    resumeUrl: z.string().optional().nullable(),
+    resumeUrl: z.string().url('Resume must be a valid URL').max(2048).optional().nullable(),
     githubSnapshot: z.string().url('GitHub URL must be valid').optional().nullable(),
-    githubUrl: z.string().optional().nullable(),
+    githubUrl: z.string().url('GitHub URL must be valid').max(2048).optional().nullable(),
     portfolioSnapshot: z.string().url('Portfolio URL must be valid').optional().nullable(),
-    skills: z.array(z.string().trim().max(50)).optional(),
-  }),
+    skills: z.array(z.string().trim().max(50)).max(50).optional(),
+  })
+    .refine((body) => Boolean(body.projectOpportunityId || body.projectId), {
+      path: ['projectId'],
+      message: 'Project ID is required',
+    })
+    .refine((body) => Boolean(body.coverLetter || body.pitch), {
+      path: ['pitch'],
+      message: 'Cover letter is required',
+    }),
 });
 
 export const updateApplicationStatusSchema = z.object({

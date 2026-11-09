@@ -1,4 +1,4 @@
-import api from './api';
+import api, { LONG_TIMEOUT_MS } from './api';
 
 export const getProjects = async (params = {}) => {
   const response = await api.get('/projects', { params });
@@ -36,6 +36,7 @@ const buildProjectFormData = (data = {}) => {
 export const createProject = async (data) => {
   const response = await api.post('/projects', buildProjectFormData(data), {
     headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: LONG_TIMEOUT_MS,
   });
   return response.data;
 };
@@ -43,6 +44,7 @@ export const createProject = async (data) => {
 export const updateProject = async (id, data) => {
   const response = await api.put(`/projects/${id}`, buildProjectFormData(data), {
     headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: LONG_TIMEOUT_MS,
   });
   return response.data;
 };
@@ -57,7 +59,7 @@ export const deleteProject = async (id) => {
  * The server updates deploymentStatus to: reachable | unreachable | failed | not_provided
  */
 export const verifyDeployment = async (id) => {
-  const response = await api.post(`/projects/${id}/verify-deployment`);
+  const response = await api.post(`/projects/${id}/verify-deployment`, undefined, { timeout: LONG_TIMEOUT_MS });
   return response.data;
 };
 

@@ -19,6 +19,18 @@ const segmentToLabel = (segment) => {
   return map[segment] || segment.charAt(0).toUpperCase() + segment.slice(1);
 };
 
+// Intermediate segments are only links when they resolve to a real page;
+// others (e.g. /faculty, /admin, /recruiter) render as plain text.
+const LINKABLE_PATHS = [
+  /^\/dashboard$/,
+  /^\/projects$/,
+  /^\/projects\/[^/]+$/,
+  /^\/opportunities$/,
+  /^\/faculty\/verifications$/,
+  /^\/portfolio$/,
+];
+const isLinkable = (path) => LINKABLE_PATHS.some((pattern) => pattern.test(path));
+
 const Breadcrumb = () => {
   const { pathname } = useLocation();
   const segments = pathname.split('/').filter(Boolean);
@@ -26,7 +38,7 @@ const Breadcrumb = () => {
   if (segments.length === 0) return null;
 
   const crumbs = segments.map((seg, idx) => ({
-    label: segmentToLabel(seg),
+    label: seg === 'new' && segments[idx - 1] === 'opportunities' ? 'New Opportunity' : segmentToLabel(seg),
     path: '/' + segments.slice(0, idx + 1).join('/'),
     isLast: idx === segments.length - 1,
   }));
@@ -40,8 +52,8 @@ const Breadcrumb = () => {
       {crumbs.map(({ label, path, isLast }) => (
         <React.Fragment key={path}>
           <ChevronRight className="w-3 h-3 flex-shrink-0" />
-          {isLast ? (
-            <span className="text-slate-200 font-semibold">{label}</span>
+          {isLast || !isLinkable(path) ? (
+            <span className={isLast ? 'text-slate-200 font-semibold' : undefined}>{label}</span>
           ) : (
             <Link to={path} className="hover:text-slate-300 transition-colors">
               {label}

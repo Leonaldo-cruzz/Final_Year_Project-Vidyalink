@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import mongoose from 'mongoose';
+import { DEFAULT_DB_NAME } from '../config/db.js';
 import env from '../config/env.js';
 import User from '../models/user.model.js';
 import projectService from '../services/project.service.js';
@@ -8,7 +9,7 @@ const run = async () => {
   let testUser;
 
   try {
-    await mongoose.connect(env.MONGODB_URI);
+    await mongoose.connect(env.MONGODB_URI, { dbName: DEFAULT_DB_NAME });
     testUser = await User.create({
       fullName: 'Project Portfolio Test Student',
       email: `project_portfolio_${Date.now()}@vidyalink.test`,
